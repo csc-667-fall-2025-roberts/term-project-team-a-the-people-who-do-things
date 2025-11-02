@@ -1,0 +1,13 @@
+.idea
+*.iml
+*.iws
+out/
+notes.txt
+DB/
+temp_folder_for_word_DB/
+*node_modules/
+
+
+
+
+
