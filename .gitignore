@@ -1,3 +1,5 @@
+dist/
+.env
 .idea
 *.iml
 *.iws
@@ -6,8 +8,4 @@ notes.txt
 DB/
 temp_folder_for_word_DB/
 *node_modules/
-
-
-
-
 
