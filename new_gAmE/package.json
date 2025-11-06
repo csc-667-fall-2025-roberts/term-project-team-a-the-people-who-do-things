@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "NODE_ENV=development node server/index.js",
-    "start": "NODE_ENV=production node server/index.js",
+    "dev": "NODE_ENV=development node src/server/index.js",
+    "start": "NODE_ENV=production node src/server/index.js",
     "build": "vite build",
     "preview": "vite preview"
   },
