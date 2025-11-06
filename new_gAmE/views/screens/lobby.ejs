@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Lobby - Scrabble</title>
+    <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+<%- include('../components/header') %>
+
+<main class="lobby-page">
+    <div class="lobby-header">
+        <h1>Game Lobby</h1>
+        <button id="create-game-btn" class="btn btn-primary">Create New Game</button>
+    </div>
+
+    <div class="lobby-content">
+        <section class="games-list">
+            <h2>Available Games</h2>
+            <div id="games-container" class="games-grid">
+                <!-- Games will be loaded here -->
+            </div>
+        </section>
+
+        <aside class="lobby-chat">
+            <%- include('../components/chat', { gameId: 'lobby' }) %>
+        </aside>
+    </div>
+
+    <!-- Create Game Modal -->
+    <div id="create-game-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Create New Game</h2>
+
+            <form id="create-game-form">
+                <div class="form-group">
+                    <label for="max-players">Max Players</label>
+                    <select id="max-players" name="maxPlayers">
+                        <option value="2">2 Players</option>
+                        <option value="3">3 Players</option>
+                        <option value="4">4 Players</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="time-limit">Turn Time Limit (seconds)</label>
+                    <input type="number" id="time-limit" name="timeLimit" value="60" min="30" max="300">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Create Game</button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script src="/js/screens/lobby.js" type="module"></script>
+</body>
+</html>
