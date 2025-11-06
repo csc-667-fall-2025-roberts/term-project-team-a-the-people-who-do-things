@@ -24,9 +24,5 @@ dist-ssr
 *.sw?
 *.env
 
-src/style.css
-src/main.js
-src/javascript.svg
-src/counter.js
 
 
