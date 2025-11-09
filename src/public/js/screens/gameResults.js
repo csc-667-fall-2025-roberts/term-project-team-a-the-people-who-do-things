@@ -13,7 +13,7 @@ async function loadResults() {
     }
 }
 
-function renderScores(scores, participants) {
+function renderScores(scores, _participants) {
     const scoresList = document.getElementById('scores-list');
 
     const sortedScores = scores.sort((a, b) => b.value - a.value);

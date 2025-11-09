@@ -13,7 +13,7 @@ router.get('/lobby', requireAuth, async (req, res) => {
               COUNT(gp.user_id) as current_players
        FROM games g
        JOIN users u ON g.created_by = u.id
-       LEFT JOIN game_participants gp ON g.id = gp.game_id
+       LEFT JOIN participants gp ON g.id = gp.game_id
        WHERE g.status = 'waiting'
        GROUP BY g.id, u.display_name
        ORDER BY g.created_at DESC`,
@@ -45,7 +45,7 @@ router.post('/create', requireAuth, async (req, res) => {
         const game = gameResult.rows[0];
 
         await client.query(
-            `INSERT INTO game_participants (game_id, user_id, is_host)
+            `INSERT INTO participants (game_id, user_id, is_host)
        VALUES ($1, $2, true)`,
             [game.id, req.session.userId]
         );
@@ -71,7 +71,7 @@ router.post('/:gameId/join', requireAuth, async (req, res) => {
         const gameResult = await pool.query(
             `SELECT g.*, COUNT(gp.user_id) as current_players
        FROM games g
-       LEFT JOIN game_participants gp ON g.id = gp.game_id
+       LEFT JOIN participants gp ON g.id = gp.game_id
        WHERE g.id = $1 AND g.status = 'waiting'
        GROUP BY g.id`,
             [gameId]
@@ -87,7 +87,7 @@ router.post('/:gameId/join', requireAuth, async (req, res) => {
         }
 
         await pool.query(
-            `INSERT INTO game_participants (game_id, user_id)
+            `INSERT INTO participants (game_id, user_id)
        VALUES ($1, $2)
        ON CONFLICT DO NOTHING`,
             [gameId, req.session.userId]
@@ -115,7 +115,7 @@ router.get('/:gameId', requireAuth, async (req, res) => {
 
         const participantsResult = await pool.query(
             `SELECT gp.*, u.display_name 
-       FROM game_participants gp
+       FROM participants gp
        JOIN users u ON gp.user_id = u.id
        WHERE gp.game_id = $1
        ORDER BY gp.joined_at`,
@@ -149,7 +149,7 @@ router.post('/:gameId/start', requireAuth, async (req, res) => {
     try {
         // Verify user is host
         const hostCheck = await pool.query(
-            `SELECT * FROM game_participants 
+            `SELECT * FROM participants 
        WHERE game_id = $1 AND user_id = $2 AND is_host = true`,
             [gameId, req.session.userId]
         );
