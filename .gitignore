@@ -1,19 +1,44 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.idea
+*node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+>>>>>>> 7969275a44704432246ba9ef10889b796762b759
 .idea
-*.iml
-*.iws
-out/
-notes.txt
-DB/
-temp_folder_for_word_DB/
-*node_modules/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.env
 
 
 
+/notes.txt
+/.husky/
 
+<<<<<<< HEAD
 
 =======
 node_modules/
 dist/
 .env
 >>>>>>> af8c66a14ed3c567dc827afa923531e5a6f09936
+=======
+>>>>>>> 7969275a44704432246ba9ef10889b796762b759
