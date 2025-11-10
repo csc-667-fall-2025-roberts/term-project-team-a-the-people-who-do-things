@@ -5,7 +5,7 @@ export type Games = {
     max_players: number;
     settings?: JSON;
     created_by?: string;
-    created_at?: string;
-    started_at?: string;
-    ended_at?: string;
+    created_at?: Date;
+    started_at?: Date;
+    ended_at?: Date;
 }
