@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Results - Scrabble</title>
+    <link rel="stylesheet" href="../public/styles/main.css">
+</head>
+<body>
+<%- include('../components/header') %>
+
+<main class="results-page">
+    <div class="results-container">
+        <h1>Game Over!</h1>
+
+        <section class="final-scores">
+            <h2>Final Scores</h2>
+            <div id="scores-list" class="scores-list">
+                <!-- Scores will be loaded here -->
+            </div>
+        </section>
+
+        <section class="game-stats">
+            <h2>Game Statistics</h2>
+            <div id="stats-container">
+                <!-- Stats will be loaded here -->
+            </div>
+        </section>
+
+        <div class="results-actions">
+            <a href="/lobby" class="btn btn-primary">Return to Lobby</a>
+            <button id="rematch-btn" class="btn btn-secondary">Request Rematch</button>
+        </div>
+    </div>
+</main>
+
+<script>
+    window.GAME_ID = '<%= gameId %>';
+</script>
+<script src="/js/screens/gameResults.js" type="module"></script>
+</body>
+</html>

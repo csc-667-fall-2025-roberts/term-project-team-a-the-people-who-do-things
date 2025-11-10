@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrabble - Multiplayer Word Game</title>
+    <link rel="stylesheet" href="../public/styles/main.css">
+</head>
+<body>
+<%- include('../components/header') %>
+
+<main class="landing-page">
+    <section class="hero">
+        <h1>Welcome to Multiplayer Scrabble</h1>
+        <p>Challenge friends and players worldwide in the classic word game</p>
+
+        <% if (locals.user) { %>
+            <div class="cta-buttons">
+                <a href="/lobby" class="btn btn-primary">Go to Lobby</a>
+            </div>
+        <% } else { %>
+            <div class="cta-buttons">
+                <a href="/signup" class="btn btn-primary">Sign Up</a>
+                <a href="/login" class="btn btn-secondary">Log In</a>
+            </div>
+        <% } %>
+    </section>
+
+    <section class="features">
+        <div class="feature">
+            <h3>🎮 Real-time Multiplayer</h3>
+            <p>Play with friends or match with players online</p>
+        </div>
+        <div class="feature">
+            <h3>Live Chat</h3>
+            <p>Chat with opponents during gameplay</p>
+        </div>
+        <div class="feature">
+            <h3>Competitive Scoring</h3>
+            <p>Track your progress and compete for high scores</p>
+        </div>
+    </section>
+</main>
+
+<script src="/js/screens/landing.js" type="module"></script>
+</body>
+</html>
