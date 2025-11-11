@@ -20,8 +20,8 @@ router.put('/update', requireAuth, async (req, res) => {
         );
 
         res.json({ user: result.rows[0] });
-    } catch (error: any) {
-        if (error.code === '23505') {
+    } catch (error: any) {  //FIXME: we could check for database like error
+        if (error.code === '23505') {   
             return res.status(400).json({ error: 'Email already exists' });
         }
         console.error('Update user error:', error);
