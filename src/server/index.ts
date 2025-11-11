@@ -7,14 +7,17 @@ import path from "path";
 import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 
-import pool from "./config/database.js";
-import { attachUser, requireAuth } from "./middleware/auth.js";
-import authRoutes from "./routes/auth.js";
+import pool from "./config/database.ts";
+import { attachUser, requireAuth } from "./middleware/auth.ts";
+import authRoutes from "./routes/auth.ts";
 import chatRoutes from "./routes/chat.ts";
 import gameRoutes from "./routes/games.ts";
 import userRoutes from './routes/users.ts';
-import gameManager from "./services/gameManager.js";
-import {GameState} from "../types/gameState.js";
+import gameManager from "./services/gameManager.ts";
+import {GameState} from "../types/gameState.ts";
+import games from "./routes/games.ts";
+import ScrabbleGame from "./services/scrabbleEngine.js";
+import users from "./routes/users.ts";
 
 dotenv.config();
 
@@ -115,10 +118,10 @@ io.on("connection", (socket) => {
   console.log("User connected:", userId);
 
   // Join game room
-  socket.on("join-game", async (gameId) => {
+  socket.on("join-game", async (gameId: string) => {
     socket.join(gameId);
 
-    let game = gameManager.getGame(gameId);
+    let game: ScrabbleGame = gameManager.getGame(gameId);
     if (!game) {
       // Fetch participants from db
       const result = await pool.query(
@@ -126,8 +129,8 @@ io.on("connection", (socket) => {
         [gameId],
       );
 
-      const players = result.rows.map((r) => r.user_id);
-      game = gameManager.createGame(gameId, players);
+      const game_participants: any[] = result.rows.map((r: any) => r.user_id);
+      game = gameManager.createGame(gameId, game_participants);
     }
 
     // Send game state
