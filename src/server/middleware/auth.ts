@@ -1,28 +1,34 @@
-export const requireAuth = (req, res, next) => {
-    if (!req.session.userId) {
-        if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-        return res.redirect('/login');
+import type { Request, Response, NextFunction } from "express";
+import type { Pool } from "pg";
+
+// Protect routes
+export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.session.userId) {
+    if (req.xhr || req.headers.accept?.includes("json")) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
-    next();
+    return res.redirect("/login");
+  }
+  next();
 };
 
-export const attachUser = async (req, res, next) => {
-    if (req.session.userId) {
-        try {
-            const pool = (await import('../config/database.js')).default;
-            const result = await pool.query(
-                'SELECT id, email, display_name FROM users WHERE id = $1',
-                [req.session.userId]
-            );
-            if (result.rows.length > 0) {
-                req.user = result.rows[0];
-                res.locals.user = req.user;
-            }
-        } catch (error) {
-            console.error('Error attaching user:', error);
-        }
+// Attach req.user and res.locals.user if logged in
+export const attachUser = async (req: Request, res: Response, next: NextFunction) => {
+  if (req.session.userId) {
+    try {
+      // dynamic import avoids circular deps with index.ts
+      const { default: pool }: { default: Pool } = await import("../config/database.js");
+      const result = await pool.query(
+        "SELECT id, email, display_name FROM users WHERE id = $1",
+        [req.session.userId]
+      );
+      if (result.rows.length > 0) {
+        req.user = result.rows[0];
+        res.locals.user = req.user;
+      }
+    } catch (err) {
+      console.error("Error attaching user:", err);
     }
-    next();
+  }
+  next();
 };
