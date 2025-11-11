@@ -14,7 +14,7 @@ async function init() {
         currentUser = user;
 
         const gameData = await api.games.get(gameId);
-        renderPlayers(gameData.participants);
+        renderPlayers(gameData.game_participants);
         renderScores(gameData.scores);
 
         socket.emit('join-game', gameId);

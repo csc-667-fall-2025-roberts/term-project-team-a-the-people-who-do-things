@@ -1,11 +1,11 @@
 export type Games = {
+    created_at?: Date;
+    created_by?: string;
+    ended_at?: Date;
+    gameState?: JSON;
     id?: string;
-    type?: string;
-    state?: string;
     max_players: number;
     settings?: JSON;
-    created_by?: string;
-    created_at?: Date;
     started_at?: Date;
-    ended_at?: Date;
+    type?: string;
 }

@@ -6,8 +6,8 @@ const errorMessage = document.getElementById('error-message');
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    const email = document.getElementById('email').textContent;
+    const password = document.getElementById('password').textContent;
 
     try {
         await api.auth.login(email, password);
