@@ -24,8 +24,8 @@ dist-ssr
 *.sw?
 *.env
 
-
-
 /notes.txt
 /.husky/
 
+node_modules/
+dist/

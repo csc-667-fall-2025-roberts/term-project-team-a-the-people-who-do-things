@@ -5,8 +5,8 @@ const accountForm = document.getElementById('account-form');
 accountForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const displayName = document.getElementById('display-name').value;
-    const email = document.getElementById('email').value;
+    const displayName = document.getElementById('display-name').textContent;
+    const email = document.getElementById('email').textContent;
 
     try {
         await api.request('/api/users/update', {
@@ -66,9 +66,9 @@ const passwordForm = document.getElementById('password-form');
 passwordForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const currentPassword = document.getElementById('current-password').value;
-    const newPassword = document.getElementById('new-password').value;
-    const confirmPassword = document.getElementById('confirm-password').value;
+    const currentPassword = document.getElementById('current-password').textContent;
+    const newPassword = document.getElementById('new-password').textContent;
+    const confirmPassword = document.getElementById('confirm-password').textContent;
 
     if (newPassword !== confirmPassword) {
         alert('New passwords do not match');
@@ -87,7 +87,7 @@ passwordForm.addEventListener('submit', async (e) => {
         });
 
         alert('Password changed successfully!');
-        passwordForm.reset();
+        passwordForm.addEventListener('submit', async (e) => {});
     } catch (error) {
         alert('Failed to change password: ' + error.message);
     }

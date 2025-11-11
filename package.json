@@ -11,6 +11,7 @@
     "start": "node dist/server/index.js"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/connect-pg-simple": "^7.0.3",
     "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.5",
@@ -36,6 +37,7 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "src": "^1.1.2"
   }
 }

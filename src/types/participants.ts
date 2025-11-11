@@ -3,5 +3,5 @@ export type Participants = {
     role?: string;
     team?: string;
     is_host?: boolean;
-    joined_at?: string;
+    joined_at?: Date;
 };

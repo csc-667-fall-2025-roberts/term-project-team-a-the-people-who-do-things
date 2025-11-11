@@ -12,7 +12,8 @@
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "types": ["node", "express"],
-    "paths": { "*": ["./types/*.d.ts"] }
+    "paths": { "*": ["./types/*.d.ts"] },
+    "allowImportingTsExtensions": true,
   },
   "include": ["src/**/*"]
 }

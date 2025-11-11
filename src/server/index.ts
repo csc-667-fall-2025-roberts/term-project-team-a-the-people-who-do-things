@@ -10,10 +10,11 @@ import { fileURLToPath } from "url";
 import pool from "./config/database.js";
 import { attachUser, requireAuth } from "./middleware/auth.js";
 import authRoutes from "./routes/auth.js";
-import chatRoutes from "./routes/chat.js";
-import gameRoutes from "./routes/games.js";
-import userRoutes from "./routes/users.js";
+import chatRoutes from "./routes/chat.ts";
+import gameRoutes from "./routes/games.ts";
+import userRoutes from './routes/users.ts';
 import gameManager from "./services/gameManager.js";
+import {GameState} from "../types/gameState.js";
 
 dotenv.config();
 
@@ -121,7 +122,7 @@ io.on("connection", (socket) => {
     if (!game) {
       // Fetch participants from db
       const result = await pool.query(
-        "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
+        "SELECT user_id FROM participants WHERE game_id = $1 ORDER BY joined_at",
         [gameId],
       );
 
@@ -130,7 +131,7 @@ io.on("connection", (socket) => {
     }
 
     // Send game state
-    const gameState = game.getGameState();
+    const gameState: GameState = game.getGameState();
     const playerHand = game.getPlayerHand(userId);
 
     socket.emit("game-state", {
@@ -141,7 +142,7 @@ io.on("connection", (socket) => {
     socket.to(gameId).emit("player-joined", { userId });
   });
 
-  socket.on("make-move", async ({ gameId, tiles, words, score }) => {
+  socket.on("make-move", async ({ gameId, tiles, words, scores }) => {
     const game = gameManager.getGame(gameId);
     if (!game) {
       return socket.emit("error", { message: "Game not found" });
