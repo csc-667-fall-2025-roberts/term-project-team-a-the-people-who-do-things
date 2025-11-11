@@ -20,12 +20,13 @@ router.put('/update', requireAuth, async (req, res) => {
         );
 
         res.json({ user: result.rows[0] });
-    } catch (error: any) {
-        if (error.code === '23505') {
-            return res.status(400).json({ error: 'Email already exists' });
+    } catch (error) {
+        if (error.code !== '23505') {
+            console.error('Update user error:', error);
+            res.status(500).json({error: 'Server error'});
+        } else {
+            return res.status(400).json({error: 'Email already exists'});
         }
-        console.error('Update user error:', error);
-        res.status(500).json({ error: 'Server error' });
     }
 });
 

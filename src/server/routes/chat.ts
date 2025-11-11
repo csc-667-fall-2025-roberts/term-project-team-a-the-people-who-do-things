@@ -42,7 +42,7 @@ router.post('/:gameId', requireAuth, async (req, res) => {
     if (!message || message.trim().length === 0) {
         return res.status(400).json({ error: 'Message cannot be empty' });
     }
-
+chat_messages
     try {
         const result = await pool.query(
             `INSERT INTO chat_messages (game_id, user_id, message)

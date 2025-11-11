@@ -8,7 +8,7 @@ const createGameForm = document.getElementById('create-game-form');
 
 async function loadGames() {
     try {
-        const { games } = await api.games.getLobby();
+        const {games: games} = await api.games.getLobby();
         renderGames(games);
     } catch (error) {
         console.error('Failed to load games:', error);
