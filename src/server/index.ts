@@ -122,7 +122,7 @@ io.on("connection", (socket) => {
     if (!game) {
       // Fetch participants from db
       const result = await pool.query(
-        "SELECT user_id FROM participants WHERE game_id = $1 ORDER BY joined_at",
+        "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
         [gameId],
       );
 
