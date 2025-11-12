@@ -29,7 +29,7 @@ router.get('/lobby', requireAuth, async (_req, res) => {
 
 // new game
 router.post('/create', requireAuth, async (req, res) => {
-    const { maxPlayers = 2, settings = {} } = req.body;
+    const { maxPlayers = 2, user_settings} = req.body;
     const client = await pool.connect();
 
     try {
@@ -39,7 +39,7 @@ router.post('/create', requireAuth, async (req, res) => {
             `INSERT INTO games (game_type, status, max_players, settings_json, created_by)
        VALUES ('scrabble', 'waiting', $1, $2, $3)
        RETURNING *`,
-            [maxPlayers, JSON.stringify(settings), req.session.userId]
+            [maxPlayers, JSON.stringify(user_settings), req.session.userId]
         );
 
         const game = gameResult.rows[0];

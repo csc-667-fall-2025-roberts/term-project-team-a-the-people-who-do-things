@@ -1,11 +1,12 @@
 import "express";
-import type { User } from "./user";
-import {Participants} from "./participants";
-import {Games} from "./games";
-import {ChatMessages} from "./chat";
-import {Scores} from "./scores";
-import {Moves} from "./moves";
-import {GameState} from "./gameState";
+import type { Users } from "./users";
+import type {Participants} from "./participants";
+import type {Games} from "./games";
+import type {ChatMessages} from "./chat";
+import type {Scores} from "./scores";
+import type {Moves} from "./moves";
+import type {GameState} from "./gameState";
+import {UserSettings} from "./user_settings.js";
 
 declare global {
   namespace Express {
@@ -16,7 +17,8 @@ declare global {
         games?: Games;
         moves?: Moves;
         scores?: Scores;
-        user?: User;
+        users?: Users;
+        user_settings?: UserSettings;
     }
   }
 }

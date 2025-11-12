@@ -7,14 +7,14 @@ import path from "path";
 import { Server } from "socket.io";
 import { fileURLToPath } from "url";
 
-import pool from "./config/database.js";
-import { attachUser, requireAuth } from "./middleware/auth.js";
-import authRoutes from "./routes/auth.js";
+import pool from "./config/database.ts";
+import { attachUser, requireAuth } from "./middleware/auth.ts";
+import authRoutes from "./routes/auth.ts";
 import chatRoutes from "./routes/chat.ts";
 import gameRoutes from "./routes/games.ts";
-import userRoutes from './routes/users.ts';
-import gameManager from "./services/gameManager.js";
-import {GameState} from "../types/gameState.js";
+import usersRoutes from './routes/users.ts';
+import gameManager from "./services/gameManager.ts";
+import {GameState} from "../types/gameState.ts";
 
 dotenv.config();
 
@@ -58,43 +58,43 @@ app.set("views", path.join(__dirname, "../views"));
 app.use("/api/auth", authRoutes);
 app.use("/api/games", gameRoutes);
 app.use("/api/chat", chatRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/users", usersRoutes);
 
 // Page routes
 app.get("/", (req, res) => {
-  res.render("screens/landing", { user: req.user });
+  res.render("screens/landing", { users: req.users });
 });
 
 app.get("/signup", (req, res) => {
-  if (req.user) return res.redirect("/lobby");
+  if (req.users) return res.redirect("/lobby");
   res.render("screens/signup");
 });
 
 app.get("/login", (req, res) => {
-  if (req.user) return res.redirect("/lobby");
+  if (req.users) return res.redirect("/lobby");
   res.render("screens/login");
 });
 
 app.get("/lobby", requireAuth, (req, res) => {
-  res.render("screens/lobby", { user: req.user });
+  res.render("screens/lobby", { user: req.users. });
 });
 
 app.get("/game/:gameId", requireAuth, (req, res) => {
   res.render("screens/gameRoom", {
-    user: req.user,
+    user: req.users,
     gameId: req.params.gameId,
   });
 });
 
 app.get("/game/:gameId/results", requireAuth, (req, res) => {
   res.render("screens/gameResults", {
-    user: req.user,
+    user: req.users,
     gameId: req.params.gameId,
   });
 });
 
 app.get("/settings", requireAuth, (req, res) => {
-  res.render("screens/settings", { user: req.user });
+  res.render("screens/settings", { user: req.users });
 });
 
 // Socket config
@@ -115,7 +115,7 @@ io.on("connection", (socket) => {
   console.log("User connected:", userId);
 
   // Join game room
-  socket.on("join-game", async (gameId) => {
+  socket.on("join-game", async (gameId: string) => {
     socket.join(gameId);
 
     let game = gameManager.getGame(gameId);
