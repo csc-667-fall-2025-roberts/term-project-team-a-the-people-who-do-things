@@ -1,7 +1,8 @@
-import express from 'express';
+import express, {Router} from 'express';
 import bcrypt from 'bcrypt';
 import pool from '../config/database.js';
 import { requireAuth } from '../middleware/auth.js';
+import auth from "./auth.js";
 
 
 const router = express.Router();
@@ -20,12 +21,13 @@ router.put('/update', requireAuth, async (req, res) => {
         );
 
         res.json({ user: result.rows[0] });
-    } catch (error: any) {  //FIXME: we could check for database like error
-        if (error.code === '23505') {   
-            return res.status(400).json({ error: 'Email already exists' });
+    } catch (error) {
+        if (error.code !== '23505') { //FIXME: we could check for database like error
+            console.error('Update user error:', error);
+            res.status(500).json({error: 'Server error'});
+        } else {
+            return res.status(400).json({error: 'Email already exists'});
         }
-        console.error('Update user error:', error);
-        res.status(500).json({ error: 'Server error' });
     }
 });
 

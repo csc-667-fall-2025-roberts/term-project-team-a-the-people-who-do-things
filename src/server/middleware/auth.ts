@@ -23,8 +23,8 @@ export const attachUser = async (req: Request, res: Response, next: NextFunction
         [req.session.userId]
       );
       if (result.rows.length > 0) {
-        req.user = result.rows[0];     
-        res.locals.user = req.user; 
+        req.user = result.rows[0];
+        res.locals.user = req.user;
       }
     } catch (err) {
       console.error("Error attaching user:", err);
