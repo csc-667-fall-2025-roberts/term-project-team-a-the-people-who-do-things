@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 .env
 *.env
+package-lock.json
 
 /notes.txt
 /.husky/
