@@ -49,7 +49,10 @@
     </div>
 </main>
 
+<script src="/socket.io/socket.io.js"></script>
 <script>
+    // Make io available globally for socket.js
+    window.io = io;
     window.GAME_ID = '<%= gameId %>';
 </script>
 <script src="/js/screens/gameRoom.js" type="module"></script>
