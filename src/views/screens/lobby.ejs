@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Lobby - Scrabble</title>
-    <link rel="stylesheet" href="src/public/styles/main.css>
+    <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
 <%- include('../components/header') %>
@@ -53,7 +53,13 @@
             </form>
         </div>
     </div>
-</head>
+</main>
 
-<script src="src/public/js/screens/lobby.js" type="module"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    // Make io available globally for socket.js
+    window.io = io;
+</script>
+<script src="/js/screens/lobby.js" type="module"></script>
+</body>
 </html>
