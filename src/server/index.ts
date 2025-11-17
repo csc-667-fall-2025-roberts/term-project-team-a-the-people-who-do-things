@@ -117,6 +117,18 @@ io.on("connection", (socket) => {
 
   console.log("User connected:", userId);
 
+  // Join lobby room
+  socket.on("join-lobby", () => {
+    socket.join("lobby");
+    console.log("User joined lobby:", userId);
+  });
+
+  // Leave lobby room
+  socket.on("leave-lobby", () => {
+    socket.leave("lobby");
+    console.log("User left lobby:", userId);
+  });
+
   // Join game room
   socket.on("join-game", async (gameId: string) => {
     socket.join(gameId);
@@ -125,7 +137,7 @@ io.on("connection", (socket) => {
     if (!game) {
       // Fetch participants from db
       const result = await pool.query(
-        "SELECT user_id FROM participants WHERE game_id = $1 ORDER BY joined_at",
+        "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
         [gameId],
       );
 
@@ -243,9 +255,13 @@ io.on("connection", (socket) => {
   // Chat
   socket.on("send-message", async ({ gameId, message }) => {
     try {
+      // Handle lobby chat (gameId is 'lobby' or null)
+      const isLobby = gameId === "lobby" || gameId === null;
+      const dbGameId = isLobby ? null : gameId;
+
       const result = await pool.query(
         "INSERT INTO chat_messages (game_id, user_id, message) VALUES ($1, $2, $3) RETURNING *",
-        [gameId, userId, message],
+        [dbGameId, userId, message],
       );
 
       const userResult = await pool.query("SELECT display_name FROM users WHERE id = $1", [userId]);
@@ -253,9 +269,18 @@ io.on("connection", (socket) => {
       const chatMessage = {
         ...result.rows[0],
         display_name: userResult.rows[0].display_name,
+        game_id: result.rows[0].game_id, // Explicitly include game_id (null for lobby)
       };
 
-      io.to(gameId).emit("new-message", chatMessage);
+      console.log("Sending chat message:", chatMessage);
+
+      // Emit to lobby or game room
+      if (isLobby) {
+        console.log("Emitting to lobby room");
+        io.to("lobby").emit("new-message", chatMessage);
+      } else {
+        io.to(gameId).emit("new-message", chatMessage);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
     }

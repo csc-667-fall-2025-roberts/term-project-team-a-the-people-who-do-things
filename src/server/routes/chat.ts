@@ -9,16 +9,23 @@ router.get('/:gameId', requireAuth, async (req, res) => {
     const { limit = 50, before } = req.query;
 
     try {
+        // Handle lobby chat (gameId is 'lobby')
+        const isLobby = gameId === 'lobby';
+        
         let query = `
       SELECT cm.*, u.display_name
       FROM chat_messages cm
       JOIN users u ON cm.user_id = u.id
-      WHERE cm.game_id = $1
+      WHERE ${isLobby ? 'cm.game_id IS NULL' : 'cm.game_id = $1'}
     `;
-        const params = [gameId];
+        const params: any[] = [];
+        
+        if (!isLobby) {
+            params.push(gameId);
+        }
 
         if (before) {
-            query += ` AND cm.created_at < $2`;
+            query += ` AND cm.created_at < $${params.length + 1}`;
             params.push(before);
         }
 
@@ -42,13 +49,17 @@ router.post('/:gameId', requireAuth, async (req, res) => {
     if (!message || message.trim().length === 0) {
         return res.status(400).json({ error: 'Message cannot be empty' });
     }
-chat_messages
+
     try {
+        // Handle lobby chat (gameId is 'lobby')
+        const isLobby = gameId === 'lobby';
+        const dbGameId = isLobby ? null : gameId;
+
         const result = await pool.query(
             `INSERT INTO chat_messages (game_id, user_id, message)
        VALUES ($1, $2, $3)
        RETURNING *`,
-            [gameId, req.session.userId, message.trim()]
+            [dbGameId, req.session.userId, message.trim()]
         );
 
         const userResult = await pool.query(
