@@ -1,3 +1,4 @@
+
 // Scrabble board
 const BOARD_SIZE = 15;
 
@@ -25,26 +26,28 @@ const PREMIUM_SQUARES = {
 };
 
 export class ScrabbleGame {
-    gameId: string;
-    players: number;
-    board: any[][];
-    tileBag: any[];
-    constructor(gameId: string, players: number) {
-        this.gameId = gameId;
-        this.players = players;
-        this.board = this.createEmptyBoard();
-        this.tileBag = this.initializeTileBag();
-        this.currentPlayerIndex = 0;
-        this.playerHands = {};
-        this.scores = {};
-        this.consecutivePasses = 0;
+        gameId: string;
+        players: number;
+        board: any[][];
+        tileBag: any[];
+        playerHands: { [playerId: string]: string[] };
+        scores: { [playerId: string]: number };
+        consecutivePasses: number;
 
-        // Deal initial tiles
-        players.forEach(playerId => {
-            this.scores[playerId] = 0;
-            this.playerHands[playerId] = this.drawTiles(7);
-        });
-    }
+        constructor(gameId: string, players: string[]) {
+            this.gameId = gameId;
+            this.board = this.createEmptyBoard();
+            this.tileBag = this.initializeTileBag();
+            this.players = 0;
+            this.playerHands = {};
+            this.scores = {};
+            this.consecutivePasses = 0;
+
+            players.forEach((playerId: string) => {
+                this.scores[playerId] = 0;
+                this.playerHands[playerId] = this.drawTiles(7);
+            });
+        }
 
     createEmptyBoard() {
         return Array(BOARD_SIZE).fill(null).map(() =>
@@ -62,7 +65,7 @@ export class ScrabbleGame {
         return this.shuffle(tiles);
     }
 
-    shuffle(array) {
+    shuffle(array: any[]) {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -71,15 +74,15 @@ export class ScrabbleGame {
         return shuffled;
     }
 
-    drawTiles(count) {
-        const drawn = [];
-        for (let i = 0; i < count && this.tileBag.length > 0; i++) {
-            drawn.push(this.tileBag.pop());
+    drawTiles(count: number): string[] {
+            const drawn: string[] = [];
+            for (let i = 0; i < count && this.tileBag.length > 0; i++) {
+                drawn.push(this.tileBag.pop());
+            }
+            return drawn;
         }
-        return drawn;
-    }
 
-    getPremiumSquareType(row, col) {
+    getPremiumSquareType(row: number, col: number): string | null {
         for (const [type, positions] of Object.entries(PREMIUM_SQUARES)) {
             if (positions.some(([r, c]) => r === row && c === col)) {
                 return type;
@@ -88,10 +91,10 @@ export class ScrabbleGame {
         return null;
     }
 
-    validateMove(playerId, tiles) {
+    validateMove(playerId: string, tiles: number) {
         // tiles: [{ letter, row, col, isBlank }]
 
-        if (this.players[this.currentPlayerIndex] !== playerId) {
+        if (this.players[ScrabbleGame.players] !== playerId) {
             return { valid: false, error: 'Not your turn' };
         }
 
@@ -150,36 +153,35 @@ export class ScrabbleGame {
         return { valid: true };
     }
 
-    calculateScore(tiles) {
-        let score = 0;
-        let wordMultiplier = 1;
-        const wordsFormed = this.getFormedWords(tiles);
+        calculateScore(tiles: any[]) {
+            let score = 0;
+            let wordMultiplier = 1;
 
-        for (const tile of tiles) {
-            let letterScore = LETTER_VALUES[tile.letter];
-            const premium = this.getPremiumSquareType(tile.row, tile.col);
+            for (const tile of tiles) {
+                let letterScore: number = LETTER_VALUES[tile.letter as keyof typeof LETTER_VALUES];
+                const premium = this.getPremiumSquareType(tile.row, tile.col);
 
-            if (!this.board[tile.row][tile.col]) { // Only count premium on new tiles
-                if (premium === 'DL') letterScore *= 2;
-                if (premium === 'TL') letterScore *= 3;
-                if (premium === 'DW') wordMultiplier *= 2;
-                if (premium === 'TW') wordMultiplier *= 3;
+                if (!this.board[tile.row][tile.col]) { // Only count premium on new tiles
+                    if (premium === 'DL') letterScore *= 2;
+                    if (premium === 'TL') letterScore *= 3;
+                    if (premium === 'DW') wordMultiplier *= 2;
+                    if (premium === 'TW') wordMultiplier *= 3;
+                }
+
+                score += letterScore;
             }
 
-            score += letterScore;
+            score *= wordMultiplier;
+
+            // bonus for using all 7 tiles
+            if (tiles.length === 7) {
+                score += 50;
+            }
+
+            return score;
         }
 
-        score *= wordMultiplier;
-
-        // bonus for using all 7 tiles
-        if (tiles.length === 7) {
-            score += 50;
-        }
-
-        return score;
-    }
-
-    getFormedWords(tiles) {
+    getFormedWords(tiles: number) {
         // need full word detection logic
         const words = [];
 
@@ -210,14 +212,14 @@ export class ScrabbleGame {
         return words;
     }
 
-    applyMove(playerId, tiles, score) {
+    applyMove(playerId: string, tiles: number, score: number) {
         // place tiles on board
         for (const tile of tiles) {
             this.board[tile.row][tile.col] = tile.letter;
         }
 
         // remove tiles from hand
-        const usedLetters = tiles.map(t => t.isBlank ? '*' : t.letter);
+        const usedLetters: string = tiles.map(t => t.isBlank ? '*' : t.letter);
         for (const letter of usedLetters) {
             const index = this.playerHands[playerId].indexOf(letter);
             this.playerHands[playerId].splice(index, 1);
@@ -259,7 +261,7 @@ export class ScrabbleGame {
         };
     }
 
-    exchangeTiles(playerId, tilesToExchange) {
+    exchangeTiles(playerId: string, tilesToExchange: number) {
         if (this.players[this.currentPlayerIndex] !== playerId) {
             return { valid: false, error: 'Not your turn' };
         }
@@ -304,7 +306,7 @@ export class ScrabbleGame {
         };
     }
 
-    getPlayerHand(playerId) {
+    getPlayerHand(playerId: string) {
         return this.playerHands[playerId] || [];
     }
 }

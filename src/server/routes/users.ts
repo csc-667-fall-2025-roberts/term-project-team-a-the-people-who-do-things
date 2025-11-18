@@ -12,7 +12,7 @@ router.put('/update', requireAuth, async (req, res) => {
 
     try {
         const result = await pool.query(
-            `UPDATE users 
+            `UPDATE users
        SET display_name = $1, email = $2, updated_at = now()
        WHERE id = $3
        RETURNING id, email, display_name`,
@@ -57,7 +57,7 @@ router.put('/preferences', requireAuth, async (req, res) => {
         await pool.query(
             `INSERT INTO user_settings (user_id, preferences)
        VALUES ($1, $2)
-       ON CONFLICT (user_id) 
+       ON CONFLICT (user_id)
        DO UPDATE SET preferences = $2, updated_at = now()`,
             [req.session.userId, JSON.stringify(preferences)]
         );

@@ -1,6 +1,6 @@
 import express from "express";
-import pool from "../config/database.js";
-import { requireAuth } from "../middleware/auth.js";
+import pool from "../config/database.ts";
+import { requireAuth } from "../middleware/auth.ts";
 
 const router = express.Router();
 
@@ -9,7 +9,6 @@ router.get("/:gameId", requireAuth, async (req, res) => {
   const { limit = 50, before } = req.query;
 
   try {
-    // Handle lobby chat (gameId is 'lobby')
     const isLobby = gameId === "lobby";
 
     let query = `
@@ -53,7 +52,6 @@ router.post("/:gameId", requireAuth, async (req, res) => {
   }
 
   try {
-    // Handle lobby chat (gameId is 'lobby')
     const isLobby = gameId === "lobby";
     const dbGameId = isLobby ? null : gameId;
 
