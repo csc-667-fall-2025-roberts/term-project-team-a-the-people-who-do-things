@@ -25,7 +25,11 @@ const PREMIUM_SQUARES = {
 };
 
 export class ScrabbleGame {
-    constructor(gameId, players) {
+    gameId: string;
+    players: number;
+    board: any[][];
+    tileBag: any[];
+    constructor(gameId: string, players: number) {
         this.gameId = gameId;
         this.players = players;
         this.board = this.createEmptyBoard();

@@ -19,6 +19,7 @@
     "@types/node": "^24.10.0",
     "@types/pg": "^8.15.6",
     "@types/socket.io": "^3.0.1",
+    "@types/socket.io-client": "^1.4.36",
     "cpy-cli": "^6.0.0",
     "cross-env": "^10.1.0",
     "express-session": "^1.18.2",
@@ -38,7 +39,7 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
     "socket.io": "^4.8.1",
-    "src": "^1.1.2",
+    "src": "^1.0.0",
     "types": "^0.1.1"
   }
 }

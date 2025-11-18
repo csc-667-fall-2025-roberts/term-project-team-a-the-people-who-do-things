@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { socket } from '../socket.js';
+import { socket } from '../socket.ts';
 import ScrabbleBoard from '../scrabbleBoard.js';
 
 const gameId = window.GAME_ID;

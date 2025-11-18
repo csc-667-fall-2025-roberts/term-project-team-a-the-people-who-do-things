@@ -1,4 +1,5 @@
 export class SocketManager {
+    socket: any;
     constructor() {
         // Use global io if available, otherwise try to import it
         if (typeof io === 'undefined') {
@@ -8,7 +9,7 @@ export class SocketManager {
         this.listeners = new Map();
     }
 
-    on(event, callback) {
+    on(event: string, callback: any) {
         this.socket.on(event, callback);
 
         if (!this.listeners.has(event)) {
@@ -17,11 +18,11 @@ export class SocketManager {
         this.listeners.get(event).push(callback);
     }
 
-    emit(event, data) {
+    emit(event: string, data: { gameId: any; tiles?: any[]; words?: string[]; score?: any; message?: any; }) {
         this.socket.emit(event, data);
     }
 
-    off(event, callback) {
+    off(event: string, callback: any) {
         this.socket.off(event, callback);
 
         if (this.listeners.has(event)) {
@@ -33,10 +34,10 @@ export class SocketManager {
         }
     }
 
-    removeAllListeners(event) {
+    removeAllListeners(event: string) {
         if (this.listeners.has(event)) {
             const callbacks = this.listeners.get(event);
-            callbacks.forEach(callback => {
+            callbacks.forEach((callback: any) => {
                 this.socket.off(event, callback);
             });
             this.listeners.delete(event);
@@ -44,4 +45,3 @@ export class SocketManager {
     }
 }
 
-export const socket = new SocketManager();

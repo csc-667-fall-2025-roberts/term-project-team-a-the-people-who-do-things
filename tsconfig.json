@@ -15,5 +15,8 @@
     "paths": { "*": ["./types/*.d.ts"] },
     "allowImportingTsExtensions": true,
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*",
+    "node_modules/@types/socket.io-client/index.d.ts"
+  ]
 }

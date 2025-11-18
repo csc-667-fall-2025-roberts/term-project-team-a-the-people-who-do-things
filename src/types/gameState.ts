@@ -1,8 +1,8 @@
-import {User} from "./src/types/users.ts";
+import {Users} from "./users.ts";
 
 export type GameState = {
     board?: Array<number>;
-    currentPlayer?: keyof User;
+    currentPlayer?: keyof Users;
     scores?: number;
     tilesRemaining?: number;
 }

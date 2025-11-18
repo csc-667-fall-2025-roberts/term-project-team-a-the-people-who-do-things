@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { socket } from '../socket.js';
+import { socket } from '../socket.ts';
 
 const gamesContainer = document.getElementById('games-container');
 const createGameBtn = document.getElementById('create-game-btn');
