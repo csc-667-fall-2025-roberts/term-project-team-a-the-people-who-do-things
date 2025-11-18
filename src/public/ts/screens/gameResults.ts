@@ -1,0 +1,105 @@
+import { api } from "../api.ts";
+
+type ScoreEntry = {
+  user_id: string;
+  display_name: string;
+  value: number;
+};
+
+type GameResult = {
+  id: string;
+  max_players: number;
+  settings_json: Record<string, unknown>;
+  started_at: string;
+  ended_at: string;
+};
+
+type GameResultResponse = {
+  game: GameResult;
+  participants: unknown[];
+  scores: ScoreEntry[];
+};
+
+declare global {
+  interface Window {
+    GAME_ID: string;
+  }
+}
+
+const gameId = window.GAME_ID;
+
+async function loadResults() {
+  try {
+    const { game, participants, scores } = (await api.games.get(gameId)) as GameResultResponse;
+
+    renderScores(scores, participants);
+    renderStats(game);
+  } catch (error) {
+    console.error("Failed to load results:", error);
+  }
+}
+
+function renderScores(scores: ScoreEntry[], _participants: unknown) {
+  const scoresList = document.getElementById("scores-list");
+  if (!scoresList) return;
+
+  const sortedScores = [...scores].sort((a, b) => b.value - a.value);
+
+  scoresList.innerHTML = sortedScores
+    .map(
+      (score, index) => `
+    <div class="score-item ${index === 0 ? "winner" : ""}">
+      <span class="rank">#${index + 1}</span>
+      <span class="player-name">${score.display_name}</span>
+      <span class="score-value">${score.value} points</span>
+      ${index === 0 ? '<span class="badge gold">Winner!</span>' : ""}
+    </div>
+  `,
+    )
+    .join("");
+}
+
+function renderStats(game: GameResult) {
+  const statsContainer = document.getElementById("stats-container");
+  if (!statsContainer) return;
+
+  const startTime = new Date(game.started_at);
+  const endTime = new Date(game.ended_at);
+  const duration = Math.max(1, Math.floor((endTime.getTime() - startTime.getTime()) / 1000 / 60));
+
+  statsContainer.innerHTML = `
+    <div class="stat-item">
+      <span class="stat-label">Game Duration:</span>
+      <span class="stat-value">${duration} minutes</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Game Type:</span>
+      <span class="stat-value">${game.max_players} Players</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Started:</span>
+      <span class="stat-value">${startTime.toLocaleString()}</span>
+    </div>
+  `;
+}
+
+document.getElementById("rematch-btn")?.addEventListener("click", async () => {
+  try {
+    const { game: currentGame } = (await api.games.get(gameId)) as GameResultResponse;
+    const { game: newGame } = (await api.games.create(
+      currentGame.max_players,
+      currentGame.settings_json,
+    )) as { game: { id: string } };
+    window.location.href = `/game/${newGame.id}`;
+  } catch (error) {
+    if (error instanceof Error) {
+      alert(`Failed to create rematch: ${error.message}`);
+    } else {
+      alert("Failed to create rematch. Please try again.");
+    }
+  }
+});
+
+void loadResults();
+
+

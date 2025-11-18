@@ -25,6 +25,10 @@ dist-ssr
 .env
 *.env
 
+# Vite build output (compiled JS goes to dist/public/js/)
+dist/public/js/
+dist/public/assets/
+
 /notes.txt
 /.husky/
 

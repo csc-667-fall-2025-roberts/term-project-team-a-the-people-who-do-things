@@ -55,6 +55,10 @@
     window.io = io;
     window.GAME_ID = '<%= gameId %>';
 </script>
-<script src="/js/screens/gameRoom.js" type="module"></script>
+<% if (process.env.NODE_ENV === 'production') { %>
+<script type="module" src="/js/main.js"></script>
+<% } else { %>
+<script type="module" src="http://localhost:5173/ts/main.ts"></script>
+<% } %>
 </body>
 </html>
