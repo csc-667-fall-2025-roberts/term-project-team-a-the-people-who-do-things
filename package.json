@@ -8,7 +8,12 @@
     "build": "tsc -p tsconfig.json && npm run copy:views && npm run copy:public",
     "copy:views": "cpy src/views/**/* dist/views --parents",
     "copy:public": "cpy public/**/* dist/public --parents",
-    "start": "node dist/server/index.ts"
+    "start": "node dist/server/index.ts",
+    "migrate:up": "node-pg-migrate up -m src/DB/migrations --tsx",
+    "migrate:down": "node-pg-migrate down -m src/DB/migrations --tsx",
+    "migrate:create": "node-pg-migrate create -m src/DB/migrations -j ts",
+    "migrate:fake": "node-pg-migrate up --fake -m src/DB/migrations --tsx",
+    "db:reset": "node-pg-migrate down --count 999 -m src/DB/migrations --tsx && node-pg-migrate up -m src/DB/migrations --tsx"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -23,6 +28,7 @@
     "cpy-cli": "^6.0.0",
     "cross-env": "^10.1.0",
     "express-session": "^1.18.2",
+    "node-pg-migrate": "^8.0.3",
     "prettier": "^3.6.2",
     "prettier-plugin-ejs": "^1.0.3",
     "prettier-plugin-organize-imports": "^4.3.0",

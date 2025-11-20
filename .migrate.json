@@ -1,0 +1,8 @@
+{
+  "migrations-dir": "src/DB/migrations",
+  "migrations-table": "pgmigrations",
+  "schema": "public",
+  "database-url-var": "DATABASE_URL",
+  "migration-file-language": "ts",
+  "tsconfig": "tsconfig.json"
+}

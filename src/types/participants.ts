@@ -1,7 +1,9 @@
+import { Users } from "./users.ts";
+
 export type Participants = {
-    id?: string;
-    role?: string;
-    team?: string;
-    is_host?: boolean;
-    joined_at?: Date;
+  playerID?: keyof Users;
+  role?: string;
+  team?: string;
+  is_host?: boolean;
+  joined_at?: Date;
 };

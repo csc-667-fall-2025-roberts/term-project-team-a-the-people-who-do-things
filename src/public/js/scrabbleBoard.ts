@@ -1,17 +1,12 @@
-import type { Tile } from "../../types/client/dom.js";
+import e from "express";
+import { type } from "os";
+import type { Tile, PremiumType, SelectedTile } from "../../types/client/dom.ts";
 
-interface SelectedTile {
-  row: number;
-  col: number;
-  letter: string;
-}
-
-type PremiumType = "TW" | "DW" | "TL" | "DL";
 
 class ScrabbleBoard {
   container: HTMLElement | null;
   boardSize: number;
-  board: (string | null)[][];
+  board: (Tile | null)[][];
   selectedTiles: SelectedTile[];
   hand: Tile[];
 
@@ -55,7 +50,7 @@ class ScrabbleBoard {
         if (this.board[row][col]) {
           const tile = document.createElement("div");
           tile.className = "tile";
-          tile.textContent = this.board[row][col];
+          tile.textContent = this.board[row][col]?.letter || "";
           cell.appendChild(tile);
         }
 
@@ -63,78 +58,19 @@ class ScrabbleBoard {
       }
     }
   }
+    handleCellClick(_row: number, _col: number): any {
+        throw new Error("Method not implemented.");
+    }
+    // handleDrop(e: DragEvent, row: number, col: number): any {
+    //     throw new Error("Method not implemented.");
+    // }
+    // handleCellClick(row: number, col: number): any {
+    //     throw new Error("Method not implemented.");
+    // }
 
   getPremiumType(row: number, col: number): PremiumType | null {
     const premiums: Record<PremiumType, number[][]> = {
-      TW: [
-        [0, 0],
-        [0, 7],
-        [0, 14],
-        [7, 0],
-        [7, 14],
-        [14, 0],
-        [14, 7],
-        [14, 14],
-      ],
-      DW: [
-        [1, 1],
-        [2, 2],
-        [3, 3],
-        [4, 4],
-        [1, 13],
-        [2, 12],
-        [3, 11],
-        [4, 10],
-        [13, 1],
-        [12, 2],
-        [11, 3],
-        [10, 4],
-        [13, 13],
-        [12, 12],
-        [11, 11],
-        [10, 10],
-      ],
-      TL: [
-        [1, 5],
-        [1, 9],
-        [5, 1],
-        [5, 5],
-        [5, 9],
-        [5, 13],
-        [9, 1],
-        [9, 5],
-        [9, 13],
-        [13, 5],
-        [13, 9],
-      ],
-      DL: [
-        [0, 3],
-        [0, 11],
-        [2, 6],
-        [2, 8],
-        [3, 0],
-        [3, 7],
-        [3, 14],
-        [6, 2],
-        [6, 6],
-        [6, 8],
-        [6, 12],
-        [7, 3],
-        [7, 11],
-        [8, 2],
-        [8, 6],
-        [8, 8],
-        [8, 12],
-        [11, 0],
-        [11, 7],
-        [11, 14],
-        [12, 6],
-        [12, 8],
-        [14, 3],
-        [14, 11],
-      ],
-    };
-
+     
     for (const [type, positions] of Object.entries(premiums)) {
       if (positions.some(([r, c]) => r === row && c === col)) {
         return type as PremiumType;
@@ -152,32 +88,34 @@ class ScrabbleBoard {
     if (!e.dataTransfer) return;
 
     const letter = e.dataTransfer.getData("letter");
-    if (letter && !this.board[row][col]) {
+    if (_letter && !this.board[row][col]) {
       this.placeTile(row, col, letter);
     }
   }
 
   placeTile(row: number, col: number, letter: string): void {
-    this.board[row][col] = letter;
+    // Find the tile value for this letter (simplified - you may need proper letter values)
+    const letterValues: Record<string, number> = {
+    
+    this.board[row][col] = { letter, value: letterValues[letter] || 0 };
     this.selectedTiles.push({ row, col, letter });
     this.render();
   }
 
   removeTile(row: number, col: number): void {
-    const letter = this.board[row][col];
-    if (!letter) return;
+    const tile = this.board[row][col];
+    if (!tile) return;
 
     this.board[row][col] = null;
     this.selectedTiles = this.selectedTiles.filter((t) => t.row !== row || t.col !== col);
 
-    // Convert letter back to Tile format
-    this.hand.push({ letter, value: 0 }); // Value would need to be calculated properly
+    // Return tile to hand
+    this.hand.push(tile);
     this.render();
   }
 
   updateBoard(boardState: (Tile | null)[][]): void {
-    // Convert Tile objects to letters for internal board representation
-    this.board = boardState.map((row) => row.map((tile) => (tile ? tile.letter : null)));
+    this.board = boardState;
     this.render();
   }
 

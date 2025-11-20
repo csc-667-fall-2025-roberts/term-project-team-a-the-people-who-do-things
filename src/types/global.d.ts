@@ -7,6 +7,7 @@ declare global {
     GAME_ID: string;
     USER_ID?: string;
     DISPLAY_NAME?: string;
+    
   }
 }
 

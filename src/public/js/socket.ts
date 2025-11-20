@@ -8,7 +8,7 @@ export class SocketManager {
     // Use global io if available, otherwise try to import it
     if (typeof io === "undefined") {
       throw new Error(
-        'Socket.IO client library not loaded. Make sure to include <script src="/socket.io/socket.io.js"></script> before this script.',
+        'Sohit'
       );
     }
     this.socket = io();

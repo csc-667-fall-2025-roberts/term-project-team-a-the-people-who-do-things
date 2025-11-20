@@ -12,7 +12,7 @@ export interface MakeMoveData {
 export interface PassTurnData {
   gameId: string;
 }
-
+//tilesRemaining
 export interface SendMessageData {
   gameId: string;
   message: string;
@@ -82,7 +82,7 @@ export interface Tile {
 
 // Socket event map
 export interface SocketEvents {
-  // Client to Server events
+  // Client to Server
   "join-game": JoinGameData;
   "make-move": MakeMoveData;
   "pass-turn": PassTurnData;

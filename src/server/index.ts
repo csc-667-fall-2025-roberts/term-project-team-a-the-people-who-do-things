@@ -1,22 +1,20 @@
 import pgSession from "connect-pg-simple";
 import dotenv from "dotenv";
 import express from "express";
+import { Request, RequestHandler, Response } from "express";
 import session from "express-session";
 import { createServer } from "http";
 import path from "path";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { fileURLToPath } from "url";
 import pool from "./config/database.ts";
 import { attachUser, requireAuth } from "./middleware/auth.ts";
 import authRoutes from "./routes/auth.ts";
 import chatRoutes from "./routes/chat.ts";
 import gameRoutes from "./routes/games.ts";
-import usersRoutes from './routes/users.ts';
+import usersRoutes from "./routes/users.ts";
 import gameManager from "./services/gameManager.ts";
-import {GameState} from "../types/gameState.ts";
-import ScrabbleGame from "./services/scrabbleEngine.js";
-import { Participants } from "../types/participants.ts";
-import games from "./routes/games.ts";
+import { User } from "../types/client/dom.ts";
 
 dotenv.config();
 
@@ -99,13 +97,26 @@ app.get("/settings", requireAuth, (req, res) => {
   res.render("screens/settings", { user: req.users });
 });
 
+interface SocketSession extends Socket {
+  request: Request & {
+    response: Response;
+    session: {
+      userId: keyof User | null;
+    };
+  };
+}
+  
 // Socket config
-io.use((socket, next) => {
-  sessionMiddleware(socket.request, {} as any, next);
-});
+function wrap(middleware: RequestHandler) {
+  return (socket: Socket, next: (err?: Error) => void) => {
+    middleware(socket.request as Request, {} as Response, next as any);
+  };
+}
 
-io.on("connection", (socket) => {
-  const userId = socket.request.session?.userId;
+io.use(wrap(sessionMiddleware));
+
+io.on("connection", (socket: Socket) => {
+  const userId = (socket.request as any).session?.userId;
 
   if (!userId) {
     socket.disconnect();
@@ -113,6 +124,12 @@ io.on("connection", (socket) => {
   }
 
   console.log("User connected:", userId);
+  
+  socket.data.userId = userId;
+  
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', userId);
+  });
 
   // Join lobby room
   socket.on("join-lobby", () => {
@@ -265,7 +282,7 @@ io.on("connection", (socket) => {
       const chatMessage = {
         ...result.rows[0],
         display_name: userResult.rows[0].display_name,
-        game_id: result.rows[0].game_id, 
+        game_id: result.rows[0].game_id,
       };
 
       console.log("Sending chat message:", chatMessage);

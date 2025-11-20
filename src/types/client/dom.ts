@@ -41,6 +41,14 @@ export interface Tile {
   isPlaced?: boolean;
 }
 
+export interface SelectedTile {
+  row: number;
+  col: number;
+  letter: string;
+}
+
+
+
 // Game state interface
 export interface GameState {
   board: (Tile | null)[][];
@@ -89,6 +97,8 @@ export type LetterValues = {
     | "X"
     | "Y"
     | "Z"]: number;
-};
+}
+
+export type PremiumType = "TW" | "DW" | "TL" | "DL";
 
 export {};

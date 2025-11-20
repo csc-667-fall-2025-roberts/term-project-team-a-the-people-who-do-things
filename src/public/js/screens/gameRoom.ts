@@ -1,5 +1,4 @@
-import type {
-  ChatMessage,
+import type { ChatMessage,
   ElementById,
   GameParticipant,
   GameState,

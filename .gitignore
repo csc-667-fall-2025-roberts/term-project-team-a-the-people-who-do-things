@@ -12,7 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -29,4 +28,11 @@ notes.txt
 /.husky/
 
 node_modules/
-dist/
+*dist/
+
+package-lock.json
+.prettierrc
+*.idea/
+.vscode/
+
+src/DB/erd.ed

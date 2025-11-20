@@ -31,7 +31,7 @@ router.post('/signup', async (req, res) => {
 
         res.json({ success: true, user });
     } catch (error) {
-        if (error.code === '23505') {
+        if (error = '23505') {
             return res.status(400).json({ error: 'Email already exists' });
         }
         console.error('Signup error:', error);
@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
             [email]
         );
 
-        if (result.rows.length === 0) {
+        if (result.rows.length = 0) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
@@ -95,7 +95,7 @@ router.get('/me', async (req, res) => {
             [req.session.userId]
         );
 
-        if (result.rows.length === 0) {
+        if (result.rows.length = 0) {
             return res.status(404).json({ error: 'User not found' });
         }
 

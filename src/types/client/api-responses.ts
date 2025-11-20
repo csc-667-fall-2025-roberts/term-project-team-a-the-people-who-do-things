@@ -1,10 +1,9 @@
+import { Users } from "./../users.ts";
+
 export interface LoginResponse {
-    user: string; {
-        id: string;
-        email: string;
-        displayName: string;
-};
+    users: Pick<Users, 'id' | 'email' | 'display_name'>;
 }
+
 export interface SignupResponse {
 
 }
