@@ -1,18 +1,18 @@
-import e from "express";
-import { type } from "os";
-import type { Tile, PremiumType, SelectedTile } from "../../types/client/dom.ts";
-
+import type { PremiumType, SelectedTile, Tile } from "../../types/client/dom.ts";
+import { LETTER_DISTRIBUTION, LETTER_VALUES, BOARD_SIZE, PREMIUM_SQUARES } from "../../server/services/scrabbleConstants.ts";
+import { BaseOptions } from "node:vm";
 
 class ScrabbleBoard {
   container: HTMLElement | null;
-  boardSize: number;
+  boardSize: typeof BOARD_SIZE;
   board: (Tile | null)[][];
   selectedTiles: SelectedTile[];
   hand: Tile[];
 
+
   constructor(containerId: string) {
     this.container = document.getElementById(containerId);
-    this.boardSize = 15;
+    this.boardSize = BOARD_SIZE;
     this.board = Array(this.boardSize)
       .fill(null)
       .map(() => Array(this.boardSize).fill(null));
@@ -34,9 +34,9 @@ class ScrabbleBoard {
         cell.dataset.row = row.toString();
         cell.dataset.col = col.toString();
 
-        const premium = this.getPremiumType(row, col);
-        if (premium) {
-          cell.classList.add(premium);
+        const premiumTile = this.getPremiumTile(row, col);
+        if (premiumTile) {
+          cell.classList.add(premiumTile);
         }
 
         if (row === 7 && col === 7) {
@@ -58,24 +58,10 @@ class ScrabbleBoard {
       }
     }
   }
-    handleDrop(e: DragEvent, row: number, col: number): any {
-        throw new Error("Method not implemented.");
-    }
-    handleCellClick(_row: number, _col: number): any {
-        throw new Error("Method not implemented.");
-    }
-    // handleDrop(e: DragEvent, row: number, col: number): any {
-    //     throw new Error("Method not implemented.");
-    // }
-    // handleCellClick(row: number, col: number): any {
-    //     throw new Error("Method not implemented.");
-    // }
 
-  getPremiumType(row: number, col: number): PremiumType | null {
-    const premiums: Record<PremiumType, number[][]> = {
-     
-    for (const [type, positions] of Object.entries(premiums)) {
-      if (positions.some(([r, c]) => r === row && c === col)) {
+  getPremiumTile(row: number, col: number): PremiumType | null {
+    for (const [type, positions] of Object.entries(PREMIUM_SQUARES)) {
+      if (positions.some(([r, c]: [number, number]) => r === row && c === col)) {
         return type as PremiumType;
       }
     }
@@ -83,7 +69,6 @@ class ScrabbleBoard {
   }
 
   handleCellClick(row: number, col: number): void {
-    // Implementation for cell click handling
   }
 
   handleDrop(e: DragEvent, row: number, col: number): void {
@@ -91,19 +76,16 @@ class ScrabbleBoard {
     if (!e.dataTransfer) return;
 
     const letter = e.dataTransfer.getData("letter");
-    if (_letter && !this.board[row][col]) {
+    if (letter && !this.board[row][col]) {
       this.placeTile(row, col, letter);
     }
   }
 
   placeTile(row: number, col: number, letter: string): void {
-    // Find the tile value for this letter (simplified - you may need proper letter values)
-    const letterValues: Record<string, number> = {
-    
-    this.board[row][col] = { letter, value: letterValues[letter] || 0 };
-    this.selectedTiles.push({ row, col, letter });
-    this.render();
-  }
+      this.board[row][col] = { letter, value: LETTER_VALUES[letter] || 0 };
+      this.selectedTiles.push({ row, col, letter });
+      this.render();
+    }
 
   removeTile(row: number, col: number): void {
     const tile = this.board[row][col];
