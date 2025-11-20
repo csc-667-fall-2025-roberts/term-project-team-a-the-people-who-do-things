@@ -3,7 +3,7 @@ import { resolve } from 'path';
 
 export default defineConfig({
   root: 'src/public',
-  publicDir: false, // Don't use a public directory since we're serving from root
+  publicDir: false,
   build: {
     outDir: '../../dist/public',
     emptyOutDir: true,
