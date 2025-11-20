@@ -58,6 +58,9 @@ class ScrabbleBoard {
       }
     }
   }
+    handleDrop(e: DragEvent, row: number, col: number): any {
+        throw new Error("Method not implemented.");
+    }
     handleCellClick(_row: number, _col: number): any {
         throw new Error("Method not implemented.");
     }
