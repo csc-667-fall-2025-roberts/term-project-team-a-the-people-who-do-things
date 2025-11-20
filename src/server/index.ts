@@ -29,11 +29,11 @@ const io = new Server(httpServer);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files - in production, serve from dist/public, in dev serve from src/public
+// Serve static 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../public")));
 } else {
-  // In development, Vite serves the frontend
+  
   app.use(express.static(path.join(__dirname, "../public")));
 }
 
