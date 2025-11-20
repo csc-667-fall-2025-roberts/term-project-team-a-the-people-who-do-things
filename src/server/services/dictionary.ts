@@ -7,12 +7,12 @@ const VALID_WORDS = new Set([
     // Add more SHIT or make an api
 ]);
 
-export function isValidWord(word) {
+export function isValidWord(word: string):boolean {
     return VALID_WORDS.has(word.toUpperCase());
 }
 
-export function validateWords(words) {
-    const invalid = words.filter(word => !isValidWord(word));
+export function validateWords(words: string[])  {
+    const invalid = words.filter((word: string) => !isValidWord(word));
     return {
         valid: invalid.length === 0,
         invalidWords: invalid
