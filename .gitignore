@@ -42,5 +42,6 @@ package-lock.json
 
 *erd.md
 
-src/public/js/screens
+src/public/js/screens/*.ts
+src/public/*js/
 
