@@ -40,4 +40,7 @@ package-lock.json
 *.idea/
 .vscode/
 
-src/DB/erd.ed
+/src/DB/erd.ed
+
+/src/public/js/screens/
+
