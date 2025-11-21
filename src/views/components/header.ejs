@@ -21,7 +21,7 @@
 <% if (locals.user) { %>
     <script type="module">
         <% if (process.env.NODE_ENV === 'production') { %>
-        import { api } from '/js/api.js';
+        import { api } from '/ts/api.ts';
         <% } else { %>
         import { api } from 'http://localhost:5173/ts/api.ts';
         <% } %>
