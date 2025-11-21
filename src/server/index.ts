@@ -1,23 +1,20 @@
 import pgSession from "connect-pg-simple";
 import dotenv from "dotenv";
 import express from "express";
+import { Request, RequestHandler, Response } from "express";
 import session from "express-session";
 import { createServer } from "http";
 import path from "path";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { fileURLToPath } from "url";
-
 import pool from "./config/database.ts";
 import { attachUser, requireAuth } from "./middleware/auth.ts";
 import authRoutes from "./routes/auth.ts";
 import chatRoutes from "./routes/chat.ts";
 import gameRoutes from "./routes/games.ts";
-import userRoutes from './routes/users.ts';
+import usersRoutes from "./routes/users.ts";
 import gameManager from "./services/gameManager.ts";
-import {GameState} from "../types/gameState.ts";
-import games from "./routes/games.ts";
-import ScrabbleGame from "./services/scrabbleEngine.js";
-import users from "./routes/users.ts";
+import { User } from "../types/client/dom.ts";
 
 dotenv.config();
 
@@ -31,7 +28,14 @@ const io = new Server(httpServer);
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "../public")));
+
+// Serve static 
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../public")));
+} else {
+  
+  app.use(express.static(path.join(__dirname, "../public")));
+}
 
 // Session config
 const PgSession = pgSession(session);
@@ -61,54 +65,65 @@ app.set("views", path.join(__dirname, "../views"));
 app.use("/api/auth", authRoutes);
 app.use("/api/games", gameRoutes);
 app.use("/api/chat", chatRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/users", usersRoutes);
 
 // Page routes
 app.get("/", (req, res) => {
-  res.render("screens/landing", { user: req.user });
+  res.render("screens/landing", { users: req.users });
 });
 
 app.get("/signup", (req, res) => {
-  if (req.user) return res.redirect("/lobby");
+  if (req.users) return res.redirect("/lobby");
   res.render("screens/signup");
 });
 
 app.get("/login", (req, res) => {
-  if (req.user) return res.redirect("/lobby");
+  if (req.users) return res.redirect("/lobby");
   res.render("screens/login");
 });
 
 app.get("/lobby", requireAuth, (req, res) => {
-  res.render("screens/lobby", { user: req.user });
+  res.render("screens/lobby", { user: req.users });
 });
 
-app.get("/game/:gameId", requireAuth, (req, res) => {
+app.get("/games/:gameId", requireAuth, (req, res) => {
   res.render("screens/gameRoom", {
-    user: req.user,
+    user: req.users,
     gameId: req.params.gameId,
   });
 });
 
-app.get("/game/:gameId/results", requireAuth, (req, res) => {
+app.get("/games/:gameId/results", requireAuth, (req, res) => {
   res.render("screens/gameResults", {
-    user: req.user,
+    user: req.users,
     gameId: req.params.gameId,
   });
 });
 
 app.get("/settings", requireAuth, (req, res) => {
-  res.render("screens/settings", { user: req.user });
+  res.render("screens/settings", { user: req.users });
 });
 
+interface SocketSession extends Socket {
+  request: Request & {
+    response: Response;
+    session: {
+      userId: keyof User | null;
+    };
+  };
+}
+  
 // Socket config
-io.use((socket, next) => {
-  // @ts-expect-error
-  sessionMiddleware(socket.request, {} as any, next);
-});
+function wrap(middleware: RequestHandler) {
+  return (socket: Socket, next: (err?: Error) => void) => {
+    middleware(socket.request as Request, {} as Response, next as any);
+  };
+}
 
-io.on("connection", (socket) => {
-  // @ts-expect-error
-  const userId = socket.request.session?.userId;
+io.use(wrap(sessionMiddleware));
+
+io.on("connection", (socket: Socket) => {
+  const userId = (socket.request as any).session?.userId;
 
   if (!userId) {
     socket.disconnect();
@@ -116,6 +131,12 @@ io.on("connection", (socket) => {
   }
 
   console.log("User connected:", userId);
+  
+  socket.data.userId = userId;
+  
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', userId);
+  });
 
   // Join lobby room
   socket.on("join-lobby", () => {
@@ -133,21 +154,21 @@ io.on("connection", (socket) => {
   socket.on("join-game", async (gameId: string) => {
     socket.join(gameId);
 
-    let game: ScrabbleGame = gameManager.getGame(gameId);
-    if (!game) {
+    let games = gameManager.getGame(gameId);
+    if (!games) {
       // Fetch participants from db
       const result = await pool.query(
         "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
         [gameId],
       );
 
-      const game_participants: any[] = result.rows.map((r: any) => r.user_id);
-      game = gameManager.createGame(gameId, game_participants);
+      const game_participants: number[] = result.rows.map((r: any) => r.user_id);
+      games = gameManager.createGame(gameId, userId);
     }
 
     // Send game state
-    const gameState: GameState = game.getGameState();
-    const playerHand = game.getPlayerHand(userId);
+    const gameState = games.getGameState();
+    const playerHand = games.getPlayerHand(userId);
 
     socket.emit("game-state", {
       ...gameState,
@@ -193,9 +214,9 @@ io.on("connection", (socket) => {
       );
 
       await pool.query(
-        `INSERT INTO scores (game_id, user_id, value) 
+        `INSERT INTO scores (game_id, user_id, value)
          VALUES ($1, $2, $3)
-         ON CONFLICT (game_id, user_id) DO UPDATE 
+         ON CONFLICT (game_id, user_id) DO UPDATE
          SET value = scores.value + $3`,
         [gameId, userId, calculatedScore],
       );
@@ -255,7 +276,6 @@ io.on("connection", (socket) => {
   // Chat
   socket.on("send-message", async ({ gameId, message }) => {
     try {
-      // Handle lobby chat (gameId is 'lobby' or null)
       const isLobby = gameId === "lobby" || gameId === null;
       const dbGameId = isLobby ? null : gameId;
 
@@ -269,12 +289,11 @@ io.on("connection", (socket) => {
       const chatMessage = {
         ...result.rows[0],
         display_name: userResult.rows[0].display_name,
-        game_id: result.rows[0].game_id, // Explicitly include game_id (null for lobby)
+        game_id: result.rows[0].game_id,
       };
 
       console.log("Sending chat message:", chatMessage);
 
-      // Emit to lobby or game room
       if (isLobby) {
         console.log("Emitting to lobby room");
         io.to("lobby").emit("new-message", chatMessage);

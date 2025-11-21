@@ -12,7 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -26,8 +25,24 @@ dist-ssr
 *.env
 package-lock.json
 
-/notes.txt
+
+dist/public/js/
+dist/public/assets/
+
+notes.txt
+
 /.husky/
 
 node_modules/
-dist/
+*dist/
+
+package-lock.json
+.prettierrc
+*.idea/
+.vscode/
+
+*erd.md
+
+# Ignore TypeScript files in screens directory
+src/public/js/screens/*.ts
+

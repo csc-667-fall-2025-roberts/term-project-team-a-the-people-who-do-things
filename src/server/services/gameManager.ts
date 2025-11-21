@@ -1,23 +1,30 @@
-import ScrabbleGame from './scrabbleEngine.js';
+import ScrabbleGame, * as scrabbleEngine from './scrabbleEngine.ts';
+import express from 'express';
+
+interface Game {
+  gameId: string;
+  players: number;
+}
 
 class GameManager {
-    constructor() {
-        this.games = new Map();
-    }
+  games: Map<string, ScrabbleGame>;
+  constructor() {
+    this.games = new Map();
+  }
 
-    createGame(gameId, players) {
-        const game = new ScrabbleGame(gameId, players);
-        this.games.set(gameId, game);
-        return game;
-    }
+  createGame(gameId: string, players: string[]) {
+    const game = new ScrabbleGame(gameId, players);
+    this.games.set(gameId, game);
+    return game;
+  }
 
-    getGame(gameId) {
-        return this.games.get(gameId);
-    }
+  getGame(gameId: string): ScrabbleGame | undefined {
+    return this.games.get(gameId);
+  }
 
-    removeGame(gameId) {
-        this.games.delete(gameId);
-    }
+  removeGame({ gameId }: Game): boolean {
+    return this.games.delete(gameId);
+  }
 }
 
 export default new GameManager();

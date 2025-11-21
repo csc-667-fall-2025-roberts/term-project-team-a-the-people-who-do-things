@@ -5,7 +5,7 @@ export type Games = {
     gameState?: JSON;
     id?: string;
     max_players: number;
-    settings?: JSON;
+    user_settings?: JSON;
     started_at?: Date;
     type?: string;
 }

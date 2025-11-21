@@ -1,6 +1,7 @@
 import express from 'express';
-import pool from '../config/database.js';
-import { requireAuth } from '../middleware/auth.js';
+import pool from '../config/database.ts';
+import { requireAuth } from '../middleware/auth.ts';
+import ScrabbleGame from '../services/scrabbleEngine.ts';
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ router.get('/lobby', requireAuth, async (_req, res) => {
 
 // new game
 router.post('/create', requireAuth, async (req, res) => {
-    const { maxPlayers = 2, settings = {} } = req.body;
+    const { maxPlayers = 2, user_settings} = req.body;
     const client = await pool.connect();
 
     try {
@@ -39,15 +40,15 @@ router.post('/create', requireAuth, async (req, res) => {
             `INSERT INTO games (game_type, status, max_players, settings_json, created_by)
        VALUES ('scrabble', 'waiting', $1, $2, $3)
        RETURNING *`,
-            [maxPlayers, JSON.stringify(settings), req.session.userId]
+            [maxPlayers, JSON.stringify(user_settings), req.session.userId]
         );
 
-        const game = gameResult.rows[0];
+        const game: ScrabbleGame = gameResult.rows[0];
 
         await client.query(
             `INSERT INTO game_participants (game_id, user_id, is_host)
        VALUES ($1, $2, true)`,
-            [game.id, req.session.userId]
+            [game.gameId, req.session.userId]
         );
 
         await client.query('COMMIT');

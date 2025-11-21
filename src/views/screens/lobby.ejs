@@ -60,6 +60,10 @@
     // Make io available globally for socket.js
     window.io = io;
 </script>
-<script src="/js/screens/lobby.js" type="module"></script>
+<% if (process.env.NODE_ENV === 'production') { %>
+<script type="module" src="/js/main.js"></script>
+<% } else { %>
+<script type="module" src="http://localhost:5173/ts/main.ts"></script>
+<% } %>
 </body>
 </html>

@@ -1,11 +1,15 @@
+import { UserSettings } from "../../types/user_settings.ts";
+
+type NewType = string;
+
 export const api = {
-    async request(url, options = {}) {
+    async request(url: string | URL | Request, options = {}) {
         const response = await fetch(url, {
             ...options,
             headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
+                            'Content-Type': 'application/json',
+                            ...(options as any).headers
+                        }
         });
 
         const data = await response.json();
@@ -18,14 +22,14 @@ export const api = {
     },
 
     auth: {
-        signup(email, password, displayName) {
+        signup(email:string, password: any, displayName:string) {
             return api.request('/api/auth/signup', {
                 method: 'POST',
                 body: JSON.stringify({ email, password, displayName })
             });
         },
 
-        login(email, password) {
+        login(email: any, password: string) {
             return api.request('/api/auth/login', {
                 method: 'POST',
                 body: JSON.stringify({ email, password })
@@ -48,24 +52,24 @@ export const api = {
             return api.request('/api/games/lobby');
         },
 
-        create(maxPlayers, settings) {
+        create(maxPlayers: number, settings: UserSettings) {
             return api.request('/api/games/create', {
                 method: 'POST',
                 body: JSON.stringify({ maxPlayers, settings })
             });
         },
 
-        join(gameId) {
+        join(gameId: string) {
             return api.request(`/api/games/${gameId}/join`, {
                 method: 'POST'
             });
         },
 
-        get(gameId) {
+        get(gameId: string) {
             return api.request(`/api/games/${gameId}`);
         },
 
-        start(gameId) {
+        start(gameId: string) {
             return api.request(`/api/games/${gameId}/start`, {
                 method: 'POST'
             });
@@ -73,13 +77,13 @@ export const api = {
     },
 
     chat: {
-        getMessages(gameId, before = null) {
+        getMessages(gameId: string, before = null) {
             const params = new URLSearchParams();
             if (before) params.set('before', before);
             return api.request(`/api/chat/${gameId}?${params}`);
         },
 
-        sendMessage(gameId, message) {
+        sendMessage(gameId: string, message: string) {
             return api.request(`/api/chat/${gameId}`, {
                 method: 'POST',
                 body: JSON.stringify({ message })
