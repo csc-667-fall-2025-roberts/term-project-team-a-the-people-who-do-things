@@ -1,4 +1,4 @@
-migrations/*
-database.json
+#migrations/*
+#database.json
 README.md
-erd.ed
+*erd.ed

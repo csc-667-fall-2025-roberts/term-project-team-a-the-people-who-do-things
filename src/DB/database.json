@@ -1,0 +1,30 @@
+{
+  "dev": {
+    "driver": "pg",
+    "host": "localhost",
+    "port": 5432,
+    "database": "scrabble",
+    "user": "scrabble_admin",
+    "password": "scrabble_dev_2025",
+    "schema": "public"
+  },
+  "test": {
+    "driver": "pg",
+    "host": "localhost",
+    "port": 5432,
+    "database": "scrabble_test",
+    "user": "scrabble_admin",
+    "password": "scrabble_dev_2025",
+    "schema": "public"
+  },
+  "production": {
+    "driver": "pg",
+    "host": { "ENV": "DB_HOST" },
+    "port": { "ENV": "DB_PORT" },
+    "database": { "ENV": "DB_NAME" },
+    "user": { "ENV": "DB_USER" },
+    "password": { "ENV": "DB_PASSWORD" },
+    "schema": "public",
+    "ssl": true
+  }
+}
