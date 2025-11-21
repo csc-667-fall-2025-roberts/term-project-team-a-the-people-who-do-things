@@ -16,8 +16,10 @@ type LobbyChatMessage = {
 };
 
 const gamesContainer = document.getElementById("games-container");
-const createGameBtn = document.getElementById("create-game-btn");
-const createGameModal = document.getElementById("create-game-modal");
+const joinTab = document.getElementById("join-tab");
+const createTab = document.getElementById("create-tab");
+const joinTabContent = document.getElementById("join-tab-content");
+const createTabContent = document.getElementById("create-tab-content");
 const createGameForm = document.getElementById("create-game-form") as HTMLFormElement | null;
 
 // Chat setup
@@ -36,7 +38,7 @@ function escapeHtml(text: string) {
 // Add chat message to the UI
 function addChatMessage(message: LobbyChatMessage) {
   if (!chatMessages) {
-    console.error("chatMessages element not found in addChatMessage");
+    console.error("chatMessages element not found");
     return;
   }
 
@@ -46,11 +48,13 @@ function addChatMessage(message: LobbyChatMessage) {
   }
 
   const messageEl = document.createElement("div");
-  messageEl.className = "chat-message";
+  messageEl.className = "chat-message mb-3 p-2 bg-gray-50 rounded";
   messageEl.innerHTML = `
-        <strong>${escapeHtml(message.display_name)}:</strong>
-        <span>${escapeHtml(message.message)}</span>
-    `;
+    <div class="flex items-start gap-2" style="max-width: 100%; word-wrap: break-word;">
+      <span class="font-semibold text-blue-600" style="flex-shrink: 0;">${escapeHtml(message.display_name)}:</span>
+      <span class="text-gray-700" style="word-wrap: break-word; overflow-wrap: break-word; max-width: 100%;">${escapeHtml(message.message)}</span>
+    </div>
+  `;
   chatMessages.appendChild(messageEl);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -59,14 +63,10 @@ function addChatMessage(message: LobbyChatMessage) {
 async function loadLobbyMessages() {
   try {
     const { messages } = (await api.chat.getMessages(LOBBY_ID)) as { messages: LobbyChatMessage[] };
-    console.log("Loaded lobby messages:", messages);
-    if (!chatMessages) {
-      console.error("chatMessages element not found");
-      return;
-    }
+    if (!chatMessages) return;
+    
     chatMessages.innerHTML = "";
     messages.forEach((message) => {
-      console.log("Adding message:", message);
       addChatMessage({
         ...message,
         game_id: message.game_id ?? null,
@@ -79,21 +79,13 @@ async function loadLobbyMessages() {
 
 // Initialize lobby chat
 function initLobbyChat() {
-  // Check if chat elements exist
   if (!chatForm || !chatInput || !chatMessages) {
-    console.error("Chat elements not found:", {
-      chatForm: !!chatForm,
-      chatInput: !!chatInput,
-      chatMessages: !!chatMessages,
-    });
+    console.error("Chat elements not found");
     return;
   }
 
-  console.log("Initializing lobby chat...");
-
   // Join lobby room
   socket.emit("join-lobby");
-  console.log("Joined lobby room");
 
   // Load existing messages
   void loadLobbyMessages();
@@ -105,73 +97,74 @@ function initLobbyChat() {
     const message = chatInput.value.trim();
     if (!message) return;
 
-    // Clear input immediately for better UX
     chatInput.value = "";
-
-    // Send message via socket
     socket.emit("send-message", { gameId: LOBBY_ID, message });
-    console.log("Sent message:", message);
   });
 
-  // Listen for new messages - remove any existing listeners first to avoid duplicates
+  // Listen for new messages
   socket.removeAllListeners("new-message");
   socket.on("new-message", (message: LobbyChatMessage) => {
-    console.log("Received new-message event:", message);
-    console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
-
     const isLobbyMessage =
       message.game_id === null || message.game_id === undefined || message.game_id === LOBBY_ID;
 
     if (isLobbyMessage) {
-      console.log("Adding lobby message to UI");
       addChatMessage({ ...message, game_id: message.game_id ?? null });
-    } else {
-      console.log("Ignoring non-lobby message, game_id:", message.game_id);
     }
   });
 }
 
-// Cleanup when leaving the page
-window.addEventListener("beforeunload", () => {
-  socket.emit("leave-lobby");
-});
-
+// Load games
 async function loadGames() {
   try {
     const { games } = (await api.games.getLobby()) as { games: GameSummary[] };
     renderGames(games);
   } catch (error) {
     console.error("Failed to load games:", error);
+    if (gamesContainer) {
+      gamesContainer.innerHTML = '<p class="text-red-500 text-center py-8">Failed to load games. Please refresh.</p>';
+    }
   }
 }
 
+// Render games
 function renderGames(games: GameSummary[]) {
   if (!gamesContainer) return;
 
   if (games.length === 0) {
-    gamesContainer.innerHTML = '<p class="no-games">No games available. Create one!</p>';
+    gamesContainer.innerHTML = `
+      <div class="text-center py-12">
+        <p class="text-gray-600 text-lg mb-4">No games available</p>
+        <p class="text-gray-500">Create a new game to get started!</p>
+      </div>
+    `;
     return;
   }
 
   gamesContainer.innerHTML = games
     .map(
       (game) => `
-    <div class="game-card" data-game-id="${game.id}">
-      <h3>${game.creator_name}'s Game</h3>
-      <p>Players: ${game.current_players}/${game.max_players}</p>
-      <button class="btn btn-primary join-game-btn" data-game-id="${game.id}">
-        Join Game
-      </button>
+    <div class="game-card-item hover:shadow-md transition-shadow">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="font-semibold text-lg text-gray-800">${escapeHtml(game.creator_name)}'s Game</h3>
+          <p class="text-gray-600 text-sm mt-1">Players: ${game.current_players}/${game.max_players}</p>
+        </div>
+        <button class="join-game-btn" data-game-id="${game.id}">
+          JOIN
+        </button>
+      </div>
     </div>
   `,
     )
     .join("");
 
+  // Add event listeners to join buttons
   document.querySelectorAll<HTMLButtonElement>(".join-game-btn").forEach((button) => {
     button.addEventListener("click", joinGame);
   });
 }
 
+// Join game
 async function joinGame(event: Event) {
   const target = event.currentTarget as HTMLElement | null;
   const gameId = target?.dataset.gameId;
@@ -189,16 +182,26 @@ async function joinGame(event: Event) {
   }
 }
 
-createGameBtn?.addEventListener("click", () => {
-  if (createGameModal) {
-    createGameModal.setAttribute("style", "display: block;");
+// Tab switching
+function switchTab(tab: "join" | "create") {
+  // Update tab buttons
+  if (tab === "join") {
+    joinTab?.classList.add("lobby-tab-active");
+    createTab?.classList.remove("lobby-tab-active");
+    joinTabContent?.classList.add("lobby-tab-content-active");
+    createTabContent?.classList.remove("lobby-tab-content-active");
+  } else {
+    createTab?.classList.add("lobby-tab-active");
+    joinTab?.classList.remove("lobby-tab-active");
+    createTabContent?.classList.add("lobby-tab-content-active");
+    joinTabContent?.classList.remove("lobby-tab-content-active");
   }
-});
+}
 
-createGameModal
-  ?.querySelector<HTMLButtonElement>(".close")
-  ?.addEventListener("click", () => createGameModal.setAttribute("style", "display: none;"));
+joinTab?.addEventListener("click", () => switchTab("join"));
+createTab?.addEventListener("click", () => switchTab("create"));
 
+// Create game form handler
 createGameForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -232,7 +235,7 @@ socket.on("game-started", () => {
   void loadGames();
 });
 
-// Wait for DOM to be ready
+// Initialize on page load
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     void loadGames();
@@ -243,9 +246,7 @@ if (document.readyState === "loading") {
   initLobbyChat();
 }
 
-// Refresh every 5 seconds
+// Refresh games every 5 seconds
 setInterval(() => {
   void loadGames();
 }, 5000);
-
-

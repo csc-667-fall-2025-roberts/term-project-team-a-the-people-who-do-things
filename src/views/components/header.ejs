@@ -1,14 +1,22 @@
 <header class="main-header">
     <div class="header-content">
-        <a href="/" class="logo">
-            <h1>Scrabble</h1>
-        </a>
+        <div class="logo" id="scrabble-logo-wrapper">
+            <div class="scrabble-logo-container" id="scrabble-logo">
+                <span class="scrabble-tile" data-letter="S" data-points="1"></span>
+                <span class="scrabble-tile" data-letter="C" data-points="3"></span>
+                <span class="scrabble-tile" data-letter="R" data-points="1"></span>
+                <span class="scrabble-tile" data-letter="A" data-points="1"></span>
+                <span class="scrabble-tile" data-letter="B" data-points="3"></span>
+                <span class="scrabble-tile" data-letter="B" data-points="3"></span>
+                <span class="scrabble-tile" data-letter="L" data-points="1"></span>
+                <span class="scrabble-tile" data-letter="E" data-points="1"></span>
+            </div>
+            <a href="/" class="logo-link" id="scrabble-logo-link">Scrabble</a>
+        </div>
 
         <nav class="main-nav">
             <% if (locals.user) { %>
                 <a href="/lobby">Lobby</a>
-                <a href="/settings">Settings</a>
-                <span class="user-name"><%= user.display_name %></span>
                 <button id="logout-btn" class="btn btn-small">Logout</button>
             <% } else { %>
                 <a href="/login">Login</a>

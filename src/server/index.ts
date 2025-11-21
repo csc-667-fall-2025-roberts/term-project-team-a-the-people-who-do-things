@@ -86,6 +86,13 @@ app.get("/lobby", requireAuth, (req, res) => {
   res.render("screens/lobby", { user: req.users });
 });
 
+app.get("/game/:gameId", requireAuth, (req, res) => {
+  res.render("screens/gameRoom", {
+    user: req.users,
+    gameId: req.params.gameId,
+  });
+});
+
 app.get("/games/:gameId", requireAuth, (req, res) => {
   res.render("screens/gameRoom", {
     user: req.users,

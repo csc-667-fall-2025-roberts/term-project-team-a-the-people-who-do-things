@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
     margin: 0;
     padding: 0;
@@ -25,16 +29,29 @@ body.dark-theme {
     --border-color: #334155;
 }
 
+html {
+    overflow: hidden; /* Prevent page scrolling */
+    height: 100%;
+    background-color: #e5e7eb; /* Background color to show around the border */
+}
+
 body {
+    overflow: hidden; /* Prevent page scrolling */
+    height: calc(100% - 16px); /* Account for top and bottom margins */
+    margin: 8px; /* Small margin to show the border */
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     line-height: 1.6;
+    border: 1rem solid #2563eb; /* Dark blue border matching button */
+    border-top: none; /* No border on top */
+    border-radius: 12px; /* Rounded corners */
+    box-sizing: border-box;
 }
 
 /* Header */
 .main-header {
-    background: var(--card-bg);
+    background: #2563eb; /* Dark blue matching button */
     box-shadow: var(--shadow);
     padding: 1rem 0;
     position: sticky;
@@ -51,10 +68,168 @@ body {
     align-items: center;
 }
 
+.logo {
+    text-decoration: none;
+    display: inline-block;
+}
+
 .logo h1 {
     color: var(--primary-color);
     font-size: 1.5rem;
     text-decoration: none;
+}
+
+/* Update text colors for brown navbar */
+.main-nav {
+    color: #ffffff;
+}
+
+.user-name {
+    color: #fef3c7; /* Light cream color */
+}
+
+/* Scrabble Logo Wrapper */
+#scrabble-logo-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+/* Scrabble Logo Container - Horizontal Layout */
+.scrabble-logo-container {
+    display: flex;
+    flex-direction: row;
+    gap: 0.25rem;
+    align-items: center;
+    position: relative;
+    flex-wrap: nowrap; /* Prevent wrapping */
+    min-width: fit-content; /* Don't shrink below content */
+}
+
+/* Logo link (hidden, for accessibility) */
+.logo-link {
+    display: none; /* Hide the text link, tiles handle navigation */
+}
+
+/* Scrabble Tile Styling - White tiles */
+.scrabble-tile {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    min-width: 40px; /* Prevent shrinking */
+    flex-shrink: 0; /* Don't shrink on small screens */
+    background: #ffffff;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+    color: #1a1a1a;
+    box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.06);
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    transition: transform 0.1s ease, opacity 0.1s ease, box-shadow 0.1s ease;
+}
+
+.scrabble-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.15),
+        0 2px 4px rgba(0, 0, 0, 0.1);
+    border-color: #9ca3af;
+}
+
+.scrabble-tile:active {
+    cursor: grabbing;
+}
+
+/* Make the letter display from data attribute */
+.scrabble-tile::before {
+    content: attr(data-letter);
+    display: block;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 1;
+    color: #1a1a1a;
+}
+
+/* Hide any text content */
+.scrabble-tile {
+    font-size: 0;
+    text-align: center;
+}
+
+/* Hide points completely */
+.scrabble-tile .tile-points {
+    display: none !important;
+}
+
+.scrabble-tile:hover:not(:active):not(.dragging) {
+    transform: translateY(-2px);
+    box-shadow: 
+        inset 0 1px 2px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.2),
+        0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.scrabble-tile:active,
+.scrabble-tile.dragging {
+    cursor: grabbing !important;
+    transform: scale(1.1) rotate(5deg);
+    z-index: 50;
+    box-shadow: 
+        inset 0 1px 2px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.2),
+        0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Responsive sizing for smaller screens */
+@media (max-width: 768px) {
+    .scrabble-tile {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+    }
+    
+    .scrabble-tile::before {
+        font-size: 16px;
+    }
+    
+    .scrabble-logo-container {
+        gap: 0.15rem; /* Smaller gap on mobile */
+    }
+}
+
+/* Very small screens - make tiles even smaller but still visible */
+@media (max-width: 480px) {
+    .scrabble-tile {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+    }
+    
+    .scrabble-tile::before {
+        font-size: 14px;
+    }
+    
+    .scrabble-logo-container {
+        gap: 0.1rem;
+    }
 }
 
 .main-nav {
@@ -64,18 +239,18 @@ body {
 }
 
 .main-nav a {
-    color: var(--text-color);
+    color: #ffffff; /* White text on dark blue navbar */
     text-decoration: none;
     transition: color 0.2s;
 }
 
 .main-nav a:hover {
-    color: var(--primary-color);
+    color: #dbeafe; /* Light blue on hover */
 }
 
 .user-name {
     font-weight: 600;
-    color: var(--primary-color);
+    color: #ffffff; /* White for dark blue navbar */
 }
 
 /* Buttons */
@@ -250,6 +425,302 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     padding: 2rem 1rem;
+}
+
+/* Lobby Layout - Force games on left, chat on right */
+.lobby-main-content {
+    padding: 2rem 2rem 2rem 2rem !important; /* Explicit equal padding on all sides */
+    min-height: calc(100vh - 80px);
+    box-sizing: border-box;
+}
+
+/* Lobby Tabs */
+.lobby-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+    align-items: center; /* Align with chat tiles */
+    margin-bottom: 0; /* Remove bottom margin to move tabs up */
+}
+
+/* Chat header tiles - align with tabs */
+.chat-header-tiles {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem 1rem 1rem !important; /* Match tab padding, more bottom padding */
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: -2px; /* Align with tab border */
+}
+
+.chat-tiles {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem; /* More space between letters */
+    align-items: center;
+}
+
+/* Responsive styles for tabs and chat */
+@media (max-width: 768px) {
+    .lobby-tabs {
+        flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
+        gap: 0.25rem;
+    }
+    
+    .lobby-tab {
+        padding: 0.5rem 1rem; /* Smaller padding on tablets */
+        font-size: 0.875rem;
+    }
+    
+    .chat-tiles .scrabble-tile {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+    }
+    
+    .chat-tiles .scrabble-tile::before {
+        font-size: 14px;
+    }
+    
+    .chat-tiles {
+        gap: 0.3rem; /* Slightly less gap on mobile */
+    }
+    
+    .chat-header-tiles {
+        padding: 0.5rem 0.75rem 0.75rem 0.75rem !important; /* Less padding on mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    .lobby-games-section {
+        max-height: calc(100vh - 150px) !important; /* Shorter on mobile */
+    }
+    
+    .lobby-tab-content {
+        max-height: calc(100vh - 150px) !important; /* Match games section on mobile */
+    }
+    
+    .chat-wrapper {
+        height: calc(100vh - 150px) !important;
+        max-height: calc(100vh - 150px) !important;
+    }
+    
+    .lobby-tab {
+        padding: 0.5rem 0.75rem; /* Even smaller padding on mobile */
+        font-size: 0.8rem;
+    }
+    
+    .chat-tiles .scrabble-tile {
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+    }
+    
+    .chat-tiles .scrabble-tile::before {
+        font-size: 12px;
+    }
+    
+    .chat-tiles {
+        gap: 0.2rem; /* Even less gap on very small screens */
+    }
+    
+    .chat-header-tiles {
+        padding: 0.4rem 0.5rem 0.6rem 0.5rem !important; /* Minimal padding on very small screens */
+    }
+}
+
+.lobby-tab {
+    padding: 0.75rem 1.5rem;
+    background: rgba(159, 224, 255, 0.3); /* #9fe0ff with 30% opacity */
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--secondary-color);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -2px; /* Align with border */
+    border-radius: 0.5rem 0.5rem 0 0; /* Rounded top corners */
+}
+
+.lobby-tab:hover {
+    background: rgba(159, 224, 255, 0.5); /* Slightly more opaque on hover */
+    color: var(--primary-color);
+}
+
+.lobby-tab-active {
+    background: #8ad4fb; /* Fully opaque - no transparency */
+    color: var(--primary-color);
+    border-bottom-color: #8ad4fb;
+    font-weight: 600;
+}
+
+.lobby-tab-content {
+    display: none !important;
+    background: rgba(159, 224, 255, 0.3); /* #9fe0ff with 30% opacity */
+    border-radius: 0 0 0.5rem 0.5rem; /* Rounded bottom corners only, not top */
+    padding: 1.5rem 1.5rem 2rem 1.5rem; /* More bottom padding for white space */
+    max-height: calc(100vh - 220px); /* Match games section height */
+    box-sizing: border-box;
+    overflow-y: auto; /* Allow scrolling if content is too tall */
+}
+
+.lobby-tab-content-active {
+    display: block !important;
+    background: #8ad4fb !important; /* Fully opaque - no transparency */
+    padding: 1.5rem 1.5rem 2rem 1.5rem !important; /* More bottom padding for white space */
+}
+
+/* Make the white game list card blend better with the tab background */
+.lobby-tab-content-active .bg-white {
+    background: rgba(255, 255, 255, 0.9) !important; /* Slightly transparent white to blend */
+    border: 1px solid rgba(138, 212, 251, 0.3); /* Subtle border matching tab color */
+}
+
+/* Game card styling */
+.game-card-item {
+    background: rgba(191, 234, 255, 0.5) !important; /* Much lighter blue background */
+    border-radius: 0.75rem !important; /* Rounded corners */
+    padding: 1rem 1.25rem !important; /* Padding inside the card */
+    border-bottom: none !important; /* No underline */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Override any Tailwind background classes on game cards */
+.game-card-item.bg-white,
+.game-card-item.bg-gray-50 {
+    background: rgba(191, 234, 255, 0.5) !important;
+}
+
+.game-card-item > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+/* Join game button */
+.join-game-btn {
+    margin-left: auto; /* Push button to far right */
+    text-transform: uppercase; /* Ensure JOIN is in caps */
+    letter-spacing: 0.05em; /* Slight letter spacing for all caps */
+    background: #2563eb; /* Dark blue matching active tab font color */
+    color: white;
+    border: none; /* No border */
+    padding: 0.75rem 1.5rem; /* Bigger padding for larger button */
+    border-radius: 9999px; /* Fully rounded (pill shape) */
+    font-weight: 600;
+    font-size: 0.875rem; /* Slightly larger text */
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.join-game-btn:hover {
+    background: #a677f7 !important; /* Purple on hover */
+    transform: scale(1.05); /* Slight scale on hover */
+}
+
+.lobby-container {
+    max-width: 1400px;
+    margin: 0 !important; /* Remove any centering */
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 !important; /* Ensure no padding on container */
+}
+
+.lobby-layout-container {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .lobby-layout-container {
+        grid-template-columns: 3.5fr 1fr !important; /* Make chat even skinnier */
+    }
+    
+    .lobby-games-section {
+        grid-column: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        max-height: calc(100vh - 220px); /* Slightly shorter games list */
+    }
+    
+    .lobby-chat-section {
+        grid-column: 2 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end; /* Align chat to right */
+    }
+    
+    .lobby-chat-section > div {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .chat-wrapper {
+        height: calc(100vh - 200px) !important; /* Slightly longer height */
+        max-height: calc(100vh - 200px) !important;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .lobby-tab-content {
+        flex: 1; /* Fill available space */
+        display: none !important;
+    }
+    
+    .lobby-tab-content-active {
+        display: block !important;
+    }
+    
+    #games-container {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+    
+    #games-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    #games-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+    }
+    
+    #games-container::-webkit-scrollbar-thumb {
+        background: rgba(159, 224, 255, 0.6);
+        border-radius: 4px;
+    }
+    
+    #games-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(159, 224, 255, 0.8);
+    }
+    
+    /* Responsive game cards - only apply on mobile */
+    @media (max-width: 767px) {
+        .game-card-item {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 1rem;
+        }
+        
+        .game-card-item > div {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            width: 100%;
+            gap: 0.75rem;
+        }
+        
+        .join-game-btn {
+            margin-left: 0 !important;
+            width: 100%;
+        }
+    }
 }
 
 .lobby-header {
@@ -532,24 +1003,65 @@ body {
     height: 100%;
 }
 
+.chat-wrapper {
+    height: calc(100vh - 200px) !important; /* Hard set height */
+    max-height: calc(100vh - 200px) !important;
+    position: sticky;
+    top: 100px;
+}
+
 .chat-header {
     padding: 1rem;
     border-bottom: 2px solid var(--border-color);
 }
 
-.chat-messages {
+.chat-messages-container {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
     padding: 1rem;
+    min-height: 0; /* Allow flex shrinking */
+    max-height: calc(100% - 120px); /* Leave space for header and input */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .chat-message {
     margin-bottom: 0.75rem;
+    word-wrap: break-word !important; /* Break long words */
+    overflow-wrap: break-word !important; /* Break long words */
+    word-break: break-word !important; /* Break long words */
+    max-width: 100% !important; /* Constrain to container */
+    overflow: hidden !important; /* Hide overflow */
+    box-sizing: border-box;
+}
+
+.chat-message > div {
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
 }
 
 .chat-message strong {
     color: var(--primary-color);
     margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+.chat-message span {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 100% !important;
+    display: inline-block;
+}
+
+.chat-input-wrapper {
+    display: flex;
+    padding: 1rem;
+    gap: 0.5rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: auto; /* Push to bottom */
+    flex-shrink: 0; /* Don't shrink */
 }
 
 .chat-input {
@@ -566,6 +1078,8 @@ body {
     border-radius: 0.375rem;
     background: var(--bg-color);
     color: var(--text-color);
+    word-wrap: break-word; /* Prevent long text from breaking layout */
+    overflow-wrap: break-word;
 }
 
 /* Results Page */
@@ -702,6 +1216,80 @@ body {
     .scrabble-board {
         grid-template-columns: repeat(15, 30px);
         grid-template-rows: repeat(15, 30px);
+    }
+}
+
+/* Responsive border adjustments - border is always half the header padding */
+/* Large screens - laptops and desktops */
+@media (min-width: 1024px) {
+    body {
+        margin: 12px; /* Larger margin on laptops */
+        height: calc(100% - 24px); /* Account for larger margins */
+        border-width: 1rem; /* Double thickness (1rem) */
+        border-top: none; /* No border on top */
+        border-color: #2563eb; /* Dark blue matching button */
+        border-radius: 16px; /* Larger border radius */
+    }
+    
+    .lobby-games-section {
+        max-height: calc(100vh - 240px) !important; /* Slightly taller on large screens */
+    }
+    
+    .lobby-tab-content {
+        max-height: calc(100vh - 240px) !important; /* Match games section on large screens */
+    }
+    
+    .chat-wrapper {
+        height: calc(100vh - 240px) !important;
+        max-height: calc(100vh - 240px) !important;
+    }
+}
+
+/* Extra large screens - large desktops */
+@media (min-width: 1440px) {
+    body {
+        margin: 16px; /* Even larger margin on large desktops */
+        height: calc(100% - 32px); /* Account for larger margins */
+        border-width: 1rem; /* Double thickness (1rem) */
+        border-top: none; /* No border on top */
+        border-color: #2563eb; /* Dark blue matching button */
+        border-radius: 20px; /* Larger border radius */
+    }
+}
+
+/* Huge screens - 4K and ultra-wide monitors */
+@media (min-width: 1920px) {
+    body {
+        margin: 20px; /* Maximum margin on huge screens */
+        height: calc(100% - 40px); /* Account for maximum margins */
+        border-width: 1rem; /* Double thickness (1rem) */
+        border-top: none; /* No border on top */
+        border-color: #2563eb; /* Dark blue matching button */
+        border-radius: 24px; /* Largest border radius */
+    }
+}
+
+/* Tablets and smaller */
+@media (max-width: 768px) {
+    body {
+        margin: 4px; /* Smaller margin on tablets */
+        height: calc(100% - 8px); /* Account for reduced margins */
+        border-width: 1rem; /* Double thickness (1rem) */
+        border-top: none; /* No border on top */
+        border-color: #2563eb; /* Dark blue matching button */
+        border-radius: 8px; /* Smaller border radius */
+    }
+}
+
+/* Mobile devices */
+@media (max-width: 480px) {
+    body {
+        margin: 2px; /* Minimal margin on mobile */
+        height: calc(100% - 4px); /* Account for minimal margins */
+        border-width: 1rem; /* Double thickness (1rem) */
+        border-top: none; /* No border on top */
+        border-color: #2563eb; /* Dark blue matching button */
+        border-radius: 6px; /* Smaller border radius on mobile */
     }
 }
 
