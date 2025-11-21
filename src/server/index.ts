@@ -28,7 +28,14 @@ const io = new Server(httpServer);
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "../public")));
+
+// Serve static 
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../public")));
+} else {
+  
+  app.use(express.static(path.join(__dirname, "../public")));
+}
 
 // Session config
 const PgSession = pgSession(session);

@@ -5,7 +5,6 @@ export class SocketManager {
   listeners: Map<string, Function[]>;
 
   constructor() {
-    // Use global io if available, otherwise try to import it
     if (typeof io === "undefined") {
       throw new Error(
         'Sohit'

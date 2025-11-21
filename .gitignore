@@ -24,7 +24,12 @@ dist-ssr
 .env
 *.env
 
+
+dist/public/js/
+dist/public/assets/
+
 notes.txt
+
 /.husky/
 
 node_modules/
