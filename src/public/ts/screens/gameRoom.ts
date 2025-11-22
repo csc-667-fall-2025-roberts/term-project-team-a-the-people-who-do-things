@@ -1,6 +1,6 @@
 import { api } from "../api.ts";
-import { socket } from "../socket.ts";
 import ScrabbleBoard from "../scrabbleBoard.ts";
+import { socket } from "../socket.ts";
 
 type SelectedTile = {
   row: number;
@@ -70,37 +70,42 @@ async function init() {
 }
 
 // Socket events
-socket.on("game-state", (state: GameStatePayload) => {
+socket.on("game-state", (data: any) => {
+  const state = data as GameStatePayload;
   gameState = state;
   board.updateBoard(state.board);
   board.setHand(state.hand);
   updateGameInfo(state);
 });
 
-socket.on("move-made", (data: MoveMadePayload) => {
-  board.updateBoard(data.gameState.board);
-  updateGameInfo(data.gameState);
-  updateScores(data.gameState.scores);
+socket.on("move-made", (data: any) => {
+  const move = data as MoveMadePayload;
+  board.updateBoard(move.gameState.board);
+  updateGameInfo(move.gameState);
+  updateScores(move.gameState.scores);
 
-  if (currentUser && data.userId === currentUser.id) {
+  if (currentUser && move.userId === currentUser.id) {
     board.clearSelection();
   }
 });
 
-socket.on("new-tiles", (data: { tiles: string[] }) => {
-  board.setHand(data.tiles);
+socket.on("new-tiles", (data: any) => {
+  const hand = data as { tiles: string[] };
+  board.setHand(hand.tiles);
 });
 
-socket.on("turn-passed", (data: { currentPlayer: string }) => {
-  updateCurrentTurn(data.currentPlayer);
+socket.on("turn-passed", (data: any) => {
+  const turn = data as { currentPlayer: string };
+  updateCurrentTurn(turn.currentPlayer);
 });
 
 socket.on("game-over", () => {
   window.location.href = `/game/${gameId}/results`;
 });
 
-socket.on("error", (data: { message: string }) => {
-  alert(data.message);
+socket.on("error", (data: any) => {
+  const error = data as { message: string };
+  alert(error.message);
 });
 
 document.getElementById("submit-move-btn")?.addEventListener("click", () => {
@@ -112,7 +117,10 @@ document.getElementById("submit-move-btn")?.addEventListener("click", () => {
   }
 
   const words = [tiles.map((tile) => tile.letter).join("")];
-  const score = tiles.reduce((sum, tile) => sum + (LETTER_VALUES[tile.letter as LetterKey] || 0), 0);
+  const score = tiles.reduce(
+    (sum, tile) => sum + (LETTER_VALUES[tile.letter as LetterKey] || 0),
+    0,
+  );
 
   socket.emit("make-move", {
     gameId,
@@ -153,7 +161,8 @@ chatForm?.addEventListener("submit", (event) => {
   chatInput.value = "";
 });
 
-socket.on("new-message", (message: ChatMessage) => {
+socket.on("new-message", (data: any) => {
+  const message = data as ChatMessage;
   addChatMessage(message);
 });
 
@@ -261,4 +270,3 @@ const LETTER_VALUES = {
 type LetterKey = keyof typeof LETTER_VALUES;
 
 void init();
-

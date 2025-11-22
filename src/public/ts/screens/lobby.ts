@@ -115,7 +115,9 @@ function initLobbyChat() {
 
   // Listen for new messages - remove any existing listeners first to avoid duplicates
   socket.removeAllListeners("new-message");
-  socket.on("new-message", (message: LobbyChatMessage) => {
+  socket.on("new-message", (data: any) => {
+    const message = data as LobbyChatMessage;
+
     console.log("Received new-message event:", message);
     console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
 
@@ -247,5 +249,3 @@ if (document.readyState === "loading") {
 setInterval(() => {
   void loadGames();
 }, 5000);
-
-
