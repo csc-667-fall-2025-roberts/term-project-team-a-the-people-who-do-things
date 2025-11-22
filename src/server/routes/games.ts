@@ -2,6 +2,7 @@ import express from 'express';
 import pool from '../config/database.ts';
 import { requireAuth } from '../middleware/auth.ts';
 import ScrabbleGame from '../services/scrabbleEngine.ts';
+import type { IScrabbleGame as ScrabbleGameType } from '../../types/ScrabbleGame.ts';
 
 const router = express.Router();
 

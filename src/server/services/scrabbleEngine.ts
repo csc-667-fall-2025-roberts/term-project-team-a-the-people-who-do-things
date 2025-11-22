@@ -5,12 +5,21 @@ import {
   PREMIUM_SQUARES,
 } from "./scrabbleConstants.ts";
 
+import type {
+	IScrabbleGame,
+	PlacedTile,
+	MoveResult,
+	ApplyMoveResult,
+	ExchangeResult,
+	ScrabbleGameState
+} from '../../types/ScrabbleGame.ts';
+
 export class ScrabbleGame {
-  gameId: string;
-  board: (string | null)[][];
-  tileBag: string[];
+  gameId: Pick<IScrabbleGame, 'gameId'>;
+  board: Pick<PlacedTile, 'letter' | 'row' | 'col'>[][];
+  tileBag: Pick<ScrabbleGameState, 'tilesRemaining'>[];
   players: string[];
-  currentPlayerIndex: number;
+  currentPlayerIndex: Pick<ScrabbleGameState, 'currentPlayer'>;
   playerHands: { [playerId: string]: string[] };
   scores: { [playerId: string]: number };
   consecutivePasses: number;

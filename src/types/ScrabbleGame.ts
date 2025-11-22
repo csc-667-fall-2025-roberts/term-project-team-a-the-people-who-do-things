@@ -1,3 +1,7 @@
+import { Scores } from './client/dom.ts';
+import type { Games } from './games.ts';
+import { Users } from './users.ts';
+
 export interface PlacedTile {
   letter: string;
   row: number;
@@ -25,15 +29,15 @@ export interface ExchangeResult {
 }
 
 export interface ScrabbleGameState {
-  board: (string | null)[][];
-  currentPlayer: string;
-  scores: { [playerId: string]: number };
+  board: Array<Pick<PlacedTile, 'letter' | 'row' | 'col'>>;
+  currentPlayer: Pick<Users, 'id'>;
+  scores: Pick<Scores, 'userID' | 'value' | 'recorded_at'>[];
   tilesRemaining: number;
 }
 
 export interface IScrabbleGame {
-  gameId: string;
-  board: (string | null)[][];
+  gameId: Pick<Games, 'id'>;
+  board: Pick<PlacedTile, 'letter' | 'row' | 'col'>[][];
   tileBag: string[];
   players: string[];
   currentPlayerIndex: number;

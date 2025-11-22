@@ -35,7 +35,7 @@ notes.txt
 node_modules/
 *dist/
 
-package-lock.json
+*package-lock.json
 .prettierrc
 *.idea/
 .vscode/
