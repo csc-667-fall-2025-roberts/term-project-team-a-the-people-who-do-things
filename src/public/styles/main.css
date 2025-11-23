@@ -621,6 +621,24 @@ body {
     transform: scale(1.05); /* Slight scale on hover */
 }
 
+/* Create game button - same styling as join button */
+.create-game-btn {
+    background: #2563eb; /* Dark blue matching active tab font color */
+    color: white;
+    border: none; /* No border */
+    padding: 0.75rem 1.5rem; /* Bigger padding for larger button */
+    border-radius: 9999px; /* Fully rounded (pill shape) */
+    font-weight: 600;
+    font-size: 0.875rem; /* Slightly larger text */
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.create-game-btn:hover {
+    background: #a677f7 !important; /* Purple on hover */
+    transform: scale(1.05); /* Slight scale on hover */
+}
+
 .lobby-container {
     max-width: 1400px;
     margin: 0 !important; /* Remove any centering */

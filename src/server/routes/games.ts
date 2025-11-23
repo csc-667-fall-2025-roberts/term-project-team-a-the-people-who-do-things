@@ -44,45 +44,25 @@ router.post('/create', requireAuth, async (req, res) => {
 			[maxPlayers, JSON.stringify(user_settings || {}), req.session.userId]
 		);
 
-<<<<<<< HEAD
-        const game = gameResult.rows[0];
-=======
-		const game: ScrabbleGame = gameResult.rows[0];
->>>>>>> 68204b39492cbba117b76f4fa05f89be618b5ee2
+		const game = gameResult.rows[0];
 
 		await client.query(
 			`INSERT INTO game_participants (game_id, user_id, is_host)
        VALUES ($1, $2, true)`,
-<<<<<<< HEAD
-            [game.id, req.session.userId]
-        );
-=======
-			[game.gameId, req.session.userId]
+			[game.id, req.session.userId]
 		);
->>>>>>> 68204b39492cbba117b76f4fa05f89be618b5ee2
 
 		await client.query('COMMIT');
 
-<<<<<<< HEAD
-        res.json({ game });
-    } catch (error) {
-        await client.query('ROLLBACK');
-        console.error('Create game error:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Server error';
-        res.status(500).json({ error: errorMessage });
-    } finally {
-        client.release();
-    }
-=======
 		res.json({ game });
 	} catch (error) {
 		await client.query('ROLLBACK');
 		console.error('Create game error:', error);
-		res.status(500).json({ error: 'Server error' });
+		const errorMessage = error instanceof Error ? error.message : 'Server error';
+		res.status(500).json({ error: errorMessage });
 	} finally {
 		client.release();
 	}
->>>>>>> 68204b39492cbba117b76f4fa05f89be618b5ee2
 });
 
 // Join game
