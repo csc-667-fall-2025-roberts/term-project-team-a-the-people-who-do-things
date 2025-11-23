@@ -68,7 +68,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     settings_json: {
       type: 'jsonb',
       notNull: true,
-      default: "'{}'::jsonb",
+      default: '{}',
     },
     created_by: {
       type: 'uuid',
@@ -330,7 +330,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     preferences: {
       type: 'jsonb',
       notNull: true,
-      default: "'{}'::jsonb",
+      default: '{}',
     },
     updated_at: {
       type: 'timestamptz',
