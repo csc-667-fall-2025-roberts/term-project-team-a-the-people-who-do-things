@@ -86,6 +86,13 @@ app.get("/lobby", requireAuth, (req, res) => {
   res.render("screens/lobby", { user: req.users });
 });
 
+app.get("/game/:gameId", requireAuth, (req, res) => {
+  res.render("screens/gameRoom", {
+    user: req.users,
+    gameId: req.params.gameId,
+  });
+});
+
 app.get("/games/:gameId", requireAuth, (req, res) => {
   res.render("screens/gameRoom", {
     user: req.users,
@@ -162,8 +169,8 @@ io.on("connection", (socket: Socket) => {
         [gameId],
       );
 
-      const game_participants: number[] = result.rows.map((r: any) => r.user_id);
-      games = gameManager.createGame(gameId, userId);
+      const game_participants: string[] = result.rows.map((r: any) => String(r.user_id));
+      games = gameManager.createGame(gameId, game_participants);
     }
 
     // Send game state

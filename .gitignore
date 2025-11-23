@@ -42,6 +42,3 @@ node_modules/
 
 *erd.md
 
-# Ignore TypeScript files in screens directory
-src/public/js/screens/*.ts
-

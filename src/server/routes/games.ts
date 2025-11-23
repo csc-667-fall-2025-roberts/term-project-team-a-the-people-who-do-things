@@ -31,7 +31,7 @@ router.get('/lobby', requireAuth, async (_req, res) => {
 
 // new game
 router.post('/create', requireAuth, async (req, res) => {
-	const { maxPlayers = 2, user_settings = {} } = req.body;
+	const { maxPlayers = 2, settings: user_settings = {} } = req.body;
 	const client = await pool.connect();
 
 	try {
@@ -44,12 +44,12 @@ router.post('/create', requireAuth, async (req, res) => {
 			[maxPlayers, JSON.stringify(user_settings || {}), req.session.userId]
 		);
 
-		const game: ScrabbleGame = gameResult.rows[0];
+		const game = gameResult.rows[0];
 
 		await client.query(
 			`INSERT INTO game_participants (game_id, user_id, is_host)
        VALUES ($1, $2, true)`,
-			[game.gameId, req.session.userId]
+			[game.id, req.session.userId]
 		);
 
 		await client.query('COMMIT');
@@ -58,7 +58,8 @@ router.post('/create', requireAuth, async (req, res) => {
 	} catch (error) {
 		await client.query('ROLLBACK');
 		console.error('Create game error:', error);
-		res.status(500).json({ error: 'Server error' });
+		const errorMessage = error instanceof Error ? error.message : 'Server error';
+		res.status(500).json({ error: errorMessage });
 	} finally {
 		client.release();
 	}

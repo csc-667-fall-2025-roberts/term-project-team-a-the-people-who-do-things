@@ -32,11 +32,6 @@ type MoveMadePayload = {
   gameState: GameStatePayload;
 };
 
-type ChatMessage = {
-  display_name: string;
-  message: string;
-};
-
 type GameSummaryResponse = {
   game_participants: GameParticipant[];
   scores: ScoreEntry[];
@@ -136,38 +131,6 @@ document.getElementById("shuffle-btn")?.addEventListener("click", () => {
   const hand = board.getHand();
   board.setHand(shuffleArray(hand));
 });
-
-// Chat
-const chatForm = document.getElementById("chat-form") as HTMLFormElement | null;
-const chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
-const chatMessages = document.getElementById("chat-messages");
-
-chatForm?.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  if (!chatInput) return;
-  const message = chatInput.value.trim();
-  if (!message) return;
-
-  socket.emit("send-message", { gameId, message });
-  chatInput.value = "";
-});
-
-socket.on("new-message", (message: ChatMessage) => {
-  addChatMessage(message);
-});
-
-function addChatMessage(message: ChatMessage) {
-  if (!chatMessages) return;
-  const messageEl = document.createElement("div");
-  messageEl.className = "chat-message";
-  messageEl.innerHTML = `
-    <strong>${escapeHtml(message.display_name)}:</strong>
-    <span>${escapeHtml(message.message)}</span>
-  `;
-  chatMessages.appendChild(messageEl);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
 
 function renderPlayers(participants: GameParticipant[]) {
   const playersList = document.getElementById("players-list");

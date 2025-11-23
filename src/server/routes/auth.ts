@@ -35,18 +35,18 @@ router.post('/signup', async (req, res) => {
 		const user = result.rows[0];
 		req.session.userId = user.id;
 
-		console.log('Session saved, sending response');
-		res.json({ success: true, user });
-	} catch (error: any) {
-		console.error('Error code:', error.code);
-		console.error('Error message:', error.message);
-		console.error('Full error:', error);
+	console.log('Session saved, sending response');
+	res.json({ success: true, user });
+} catch (error: any) {
+	console.error('Error code:', error.code);
+	console.error('Error message:', error.message);
+	console.error('Full error:', error);
 
-		if (error.code === '23505') {
-			return res.status(400).json({ error: 'Email already exists' });
-		}
-		res.status(500).json({ error: 'Server error: ' + error.message });
+	if (error.code === '23505') {
+		return res.status(400).json({ error: 'Email already exists' });
 	}
+	res.status(500).json({ error: 'Server error: ' + error.message });
+}
 });
 
 router.post('/login', async (req, res) => {
@@ -58,7 +58,7 @@ router.post('/login', async (req, res) => {
 			[email]
 		);
 
-		if (result.rows.length == 0) {
+		if (result.rows.length === 0) {
 			return res.status(401).json({ error: 'Invalid credentials' });
 		}
 
@@ -105,7 +105,7 @@ router.get('/me', async (req, res) => {
 			[req.session.userId]
 		);
 
-		if (result.rows.length == 0) {
+		if (result.rows.length === 0) {
 			return res.status(404).json({ error: 'User not found' });
 		}
 
