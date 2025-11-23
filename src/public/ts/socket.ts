@@ -1,25 +1,22 @@
+import io from "socket.io-client";
+
 type Listener = (...args: unknown[]) => void;
 
-export class SocketManager {
-  private readonly socket: any;
+class SocketManager {
+  private readonly socket: ReturnType<typeof io>;
   private readonly listeners = new Map<string, Listener[]>();
 
   constructor() {
-    if (typeof io === "undefined") {
-      throw new Error(
-        'Socket.IO client library not loaded. Include <script src="/socket.io/socket.io.js"></script> before this script.',
-      );
-    }
     this.socket = io();
   }
 
   on(event: string, callback: Listener) {
-    this.socket.on(event, callback);
-
     if (!this.listeners.has(event)) {
       this.listeners.set(event, []);
     }
-    this.listeners.get(event)?.push(callback);
+    this.listeners.get(event)!.push(callback);
+
+    this.socket.on(event, callback);
   }
 
   emit(event: string, data?: unknown) {
@@ -27,15 +24,15 @@ export class SocketManager {
   }
 
   off(event: string, callback: Listener) {
-    this.socket.off(event, callback);
-
     const callbacks = this.listeners.get(event);
-    if (!callbacks) return;
-
-    const index = callbacks.indexOf(callback);
-    if (index > -1) {
-      callbacks.splice(index, 1);
+    if (callbacks) {
+      const index = callbacks.indexOf(callback);
+      if (index > -1) {
+        callbacks.splice(index, 1);
+      }
     }
+
+    this.socket.off(event, callback);
   }
 
   removeAllListeners(event: string) {
@@ -47,8 +44,13 @@ export class SocketManager {
     });
     this.listeners.delete(event);
   }
+
+  disconnect() {
+    this.socket.disconnect();
+    this.listeners.clear();
+  }
 }
 
+export default SocketManager;
+
 export const socket = new SocketManager();
-
-
