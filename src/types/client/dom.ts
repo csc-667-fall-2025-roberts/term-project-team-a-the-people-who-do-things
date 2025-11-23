@@ -20,13 +20,14 @@ export interface GameParticipant {
 }
 
 // Score interface
-export interface Score {
-  user_id: string;
-  value: number;
+export type Scores = {
+    userID: keyof Users;
+    value: number;
+    recorded_at: Date;
 }
 
 // User interface
-export interface User {
+export interface Users {
   id: string;
   display_name: string;
   email: string;
