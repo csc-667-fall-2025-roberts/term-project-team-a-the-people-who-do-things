@@ -42,14 +42,10 @@
     </section>
 </main>
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-    window.io = io;
-</script>
 <% if (process.env.NODE_ENV === 'production') { %>
-<script type="module" src="/js/main.js"></script>
+<script type="module" src="/ts/screens/landing.ts"></script>
 <% } else { %>
-<script type="module" src="http://localhost:5173/ts/main.ts"></script>
+<script type="module" src="http://localhost:5173/ts/screens/landing.ts"></script>
 <% } %>
 </body>
 </html>

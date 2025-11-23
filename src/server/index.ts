@@ -111,6 +111,14 @@ app.get("/settings", requireAuth, (req, res) => {
   res.render("screens/settings", { user: req.users });
 });
 
+app.get("/error", (req, res) => {
+  res.render("screens/error");
+});
+
+app.use((req,res) => {
+  res.status(404).render("screens/error");
+})
+
 interface SocketSession extends Socket {
   request: Request & {
     response: Response;
