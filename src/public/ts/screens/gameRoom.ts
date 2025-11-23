@@ -2,6 +2,7 @@ import { api } from "../api.ts";
 import { socket } from "../socket.ts";
 import ScrabbleBoard from "../scrabbleBoard.ts";
 import type { NewTilesResponse } from "../../../types/client/socket-events.ts";
+import {ChatMessage} from "../../../types/client/dom.ts";
 
 type SelectedTile = {
   row: number;
