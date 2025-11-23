@@ -113,20 +113,20 @@ function initLobbyChat() {
     console.log("Sent message:", message);
   });
 
-  // Listen for new messages - remove any existing listeners first to avoid duplicates
   socket.removeAllListeners("new-message");
-  socket.on("new-message", (message: LobbyChatMessage) => {
-    console.log("Received new-message event:", message);
-    console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
+  socket.on("new-message", (message: unknown) => {
+    const typedMessage = message as LobbyChatMessage;
+    console.log("Received new-message event:", typedMessage);
+    console.log("Message game_id:", typedMessage.game_id, "Type:", typeof typedMessage.game_id);
 
     const isLobbyMessage =
-      message.game_id === null || message.game_id === undefined || message.game_id === LOBBY_ID;
+      typedMessage.game_id === null || typedMessage.game_id === undefined || typedMessage.game_id === LOBBY_ID;
 
     if (isLobbyMessage) {
       console.log("Adding lobby message to UI");
-      addChatMessage({ ...message, game_id: message.game_id ?? null });
+      addChatMessage({ ...typedMessage, game_id: typedMessage.game_id ?? null });
     } else {
-      console.log("Ignoring non-lobby message, game_id:", message.game_id);
+      console.log("Ignoring non-lobby message, game_id:", typedMessage.game_id);
     }
   });
 }

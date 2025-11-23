@@ -1,6 +1,7 @@
 import { api } from "../api.ts";
 import { socket } from "../socket.ts";
 import ScrabbleBoard from "../scrabbleBoard.ts";
+import type { NewTilesResponse } from "../../../types/client/socket-events.ts";
 
 type SelectedTile = {
   row: number;
@@ -70,38 +71,63 @@ async function init() {
 }
 
 // Socket events
-socket.on("game-state", (state: GameStatePayload) => {
-  gameState = state;
-  board.updateBoard(state.board);
-  board.setHand(state.hand);
-  updateGameInfo(state);
+socket.on("game-state", (state: unknown) => {
+  const typedState: GameStatePayload = state as GameStatePayload;
+  gameState = typedState;
+  board.updateBoard(typedState.board);
+  board.setHand(typedState.hand);
+  updateGameInfo(typedState);
 });
 
-socket.on("move-made", (data: MoveMadePayload) => {
-  board.updateBoard(data.gameState.board);
-  updateGameInfo(data.gameState);
-  updateScores(data.gameState.scores);
+socket.on("move-made", (data: unknown) => {
+    const typedData: MoveMadePayload = data as MoveMadePayload;
+  board.updateBoard(typedData.gameState.board);
+  updateGameInfo(typedData.gameState);
+  updateScores(typedData.gameState.scores);
 
-  if (currentUser && data.userId === currentUser.id) {
+  if (currentUser && typedData.userId === currentUser.id) {
     board.clearSelection();
   }
 });
 
-socket.on("new-tiles", (data: { tiles: string[] }) => {
-  board.setHand(data.tiles);
+socket.on("new-tiles", (data: unknown) => {
+    const typedData = data as NewTilesResponse;
+    board.setHand(typedData.tiles.map(tile => tile.letter));
 });
 
-socket.on("turn-passed", (data: { currentPlayer: string }) => {
-  updateCurrentTurn(data.currentPlayer);
+socket.on("turn-passed", (data: unknown) => {
+  const typedData = data as { currentPlayer: string };
+  updateCurrentTurn(typedData.currentPlayer);
 });
 
 socket.on("game-over", () => {
   window.location.href = `/game/${gameId}/results`;
 });
 
-socket.on("error", (data: { message: string }) => {
-  alert(data.message);
+socket.on("error", (data: unknown) => {
+  const typedData = data as { message: string };
+  const userMessage: string = mapErrorMessage(typedData.message);
+  showErrorNotification(userMessage);
 });
+
+function mapErrorMessage(serverMessage: string): string {
+  const errorMap: Record<string, string> = {
+    "invalid_move": "That move is not allowed",
+    "tiles_already_placed": "Tiles are already placed this turn",
+    "insufficient_tiles": "Not enough tiles available",
+  };
+
+  return errorMap[serverMessage] || "An error occurred. Please try again.";
+}
+
+function showErrorNotification(message: string) {
+  const notification = document.createElement("div");
+  notification.className = "error-notification";
+  notification.textContent = message;
+  document.body.appendChild(notification);
+
+  setTimeout(() => notification.remove(), 5000);
+}
 
 document.getElementById("submit-move-btn")?.addEventListener("click", () => {
   const tiles = board.getSelectedTiles() as SelectedTile[];
@@ -153,8 +179,9 @@ chatForm?.addEventListener("submit", (event) => {
   chatInput.value = "";
 });
 
-socket.on("new-message", (message: ChatMessage) => {
-  addChatMessage(message);
+socket.on("new-message", (message: unknown) => {
+  const typedMessage = message as ChatMessage;
+  addChatMessage(typedMessage);
 });
 
 function addChatMessage(message: ChatMessage) {
@@ -262,3 +289,54 @@ type LetterKey = keyof typeof LETTER_VALUES;
 
 void init();
 
+const handlers = {
+  gameState: (state: unknown) => {
+    const typedState: GameStatePayload = state as GameStatePayload;
+    gameState = typedState;
+    board.updateBoard(typedState.board);
+    board.setHand(typedState.hand);
+    updateGameInfo(typedState);
+  },
+  moveMade: (data: unknown) => {
+    const typedData: MoveMadePayload = data as MoveMadePayload;
+    board.updateBoard(typedData.gameState.board);
+    updateGameInfo(typedData.gameState);
+    updateScores(typedData.gameState.scores);
+    if (currentUser && typedData.userId === currentUser.id) {
+      board.clearSelection();
+    }
+  },
+  newTiles: (data: unknown) => {
+    const typedData = data as NewTilesResponse;
+    board.setHand(typedData.tiles.map(tile => tile.letter));
+  },
+  turnPassed: (data: unknown) => {
+    const typedData = data as { currentPlayer: string };
+    updateCurrentTurn(typedData.currentPlayer);
+  },
+  gameOver: () => {
+    window.location.href = `/game/${gameId}/results`;
+  },
+  error: (data: unknown) => {
+    const typedData = data as { message: string };
+    const userMessage: string = mapErrorMessage(typedData.message);
+    showErrorNotification(userMessage);
+  },
+  newMessage: (message: unknown) => {
+    const typedMessage = message as ChatMessage;
+    addChatMessage(typedMessage);
+  },
+};
+
+// Add at the end of the file
+window.addEventListener("beforeunload", cleanup);
+// Updated cleanup function
+function cleanup() {
+  socket.off("game-state", handlers.gameState);
+  socket.off("move-made", handlers.moveMade);
+  socket.off("new-tiles", handlers.newTiles);
+  socket.off("turn-passed", handlers.turnPassed);
+  socket.off("game-over", handlers.gameOver);
+  socket.off("error", handlers.error);
+  socket.off("new-message", handlers.newMessage);
+}
