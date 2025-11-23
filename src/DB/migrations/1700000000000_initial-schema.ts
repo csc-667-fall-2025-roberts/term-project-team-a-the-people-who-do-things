@@ -42,52 +42,52 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 		},
 	});
 
-	// Create games table
-	pgm.createTable('games', {
-		id: {
-			type: 'uuid',
-			primaryKey: true,
-			default: pgm.func('gen_random_uuid()'),
-		},
-		current_turn_user_id: {
-			type: 'uuid',
-			references: 'users(id)',
-		},
-		game_type: {
-			type: 'varchar(50)',
-			notNull: true,
-		},
-		status: {
-			type: 'varchar(20)',
-			notNull: true,
-		},
-		max_players: {
-			type: 'integer',
-			default: 2,
-		},
-		settings_json: {
-			type: 'jsonb',
-			notNull: true,
-			default: "'{}'::jsonb",
-		},
-		created_by: {
-			type: 'uuid',
-			notNull: true,
-			references: 'users(id)',
-			onDelete: 'CASCADE',
-		},
-		created_at: {
-			type: 'timestamptz',
-			notNull: true,
-			default: pgm.func('now()'),
-		},
-		started_at: {
-			type: 'timestamptz',
-		},
-		ended_at: {
-			type: 'timestamptz',
-		},
-	});
+  // Create games table
+  pgm.createTable('games', {
+    id: {
+      type: 'uuid',
+      primaryKey: true,
+      default: pgm.func('gen_random_uuid()'),
+    },
+    current_turn_user_id: {
+      type: 'uuid',
+      references: 'users(id)',
+    },
+    game_type: {
+      type: 'varchar(50)',
+      notNull: true,
+    },
+    status: {
+      type: 'varchar(20)',
+      notNull: true,
+    },
+    max_players: {
+      type: 'integer',
+      default: 2,
+    },
+    settings_json: {
+      type: 'jsonb',
+      notNull: true,
+      default: '{}',
+    },
+    created_by: {
+      type: 'uuid',
+      notNull: true,
+      references: 'users(id)',
+      onDelete: 'CASCADE',
+    },
+    created_at: {
+      type: 'timestamptz',
+      notNull: true,
+      default: pgm.func('now()'),
+    },
+    started_at: {
+      type: 'timestamptz',
+    },
+    ended_at: {
+      type: 'timestamptz',
+    },
+  });
 
 	// Create game_participants table
 	pgm.createTable('game_participants', {
@@ -319,25 +319,25 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 		unique: ['game_id', 'user_id'],
 	});
 
-	// Create user_settings table
-	pgm.createTable('user_settings', {
-		user_id: {
-			type: 'uuid',
-			primaryKey: true,
-			references: 'users(id)',
-			onDelete: 'CASCADE',
-		},
-		preferences: {
-			type: 'jsonb',
-			notNull: true,
-			default: "'{}'::jsonb",
-		},
-		updated_at: {
-			type: 'timestamptz',
-			notNull: true,
-			default: pgm.func('now()'),
-		},
-	});
+  // Create user_settings table
+  pgm.createTable('user_settings', {
+    user_id: {
+      type: 'uuid',
+      primaryKey: true,
+      references: 'users(id)',
+      onDelete: 'CASCADE',
+    },
+    preferences: {
+      type: 'jsonb',
+      notNull: true,
+      default: '{}',
+    },
+    updated_at: {
+      type: 'timestamptz',
+      notNull: true,
+      default: pgm.func('now()'),
+    },
+  });
 
 	// Create user_sessions table
 	pgm.createTable('user_sessions', {

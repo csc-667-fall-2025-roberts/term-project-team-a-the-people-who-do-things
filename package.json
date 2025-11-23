@@ -19,6 +19,7 @@
     "db:reset": "node-pg-migrate down --count 999 -m src/DB/migrations --tsx && node-pg-migrate up -m src/DB/migrations --tsx"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
     "@types/bcrypt": "^6.0.0",
     "@types/connect-pg-simple": "^7.0.3",
     "@types/ejs": "^3.1.5",
