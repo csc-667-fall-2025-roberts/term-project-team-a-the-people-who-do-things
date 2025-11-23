@@ -61,17 +61,22 @@ function initScrabbleLogo() {
     if (tile) {
       tile.style.opacity = '';
       tile.style.transform = '';
+      tile.setAttribute('draggable', 'false');
       
       // If it was a quick click and no movement, allow navigation
-      const pressDuration = Date.now() - pressStartTime;
-      if (pressDuration < PRESS_DURATION && !hasMoved && tile.getAttribute('draggable') !== 'true') {
+      const pressDuration = pressStartTime > 0 ? Date.now() - pressStartTime : 0;
+      if (pressDuration < PRESS_DURATION && !hasMoved && pressDuration >= 0) {
         // Quick click - navigation will happen in click handler
+        // Don't reset pressStartTime yet, let click handler use it
         return;
       }
     }
     
-    pressStartTime = 0;
-    hasMoved = false;
+    // Reset state after a delay to allow click handler to run
+    setTimeout(() => {
+      pressStartTime = 0;
+      hasMoved = false;
+    }, 100);
   });
 
   // Handle drag start
@@ -265,13 +270,15 @@ function initScrabbleLogo() {
 
     // Only navigate if it was a quick click (not dragging)
     if (tile.getAttribute('draggable') !== 'true' && !hasMoved) {
-      const clickDuration = Date.now() - pressStartTime;
-      if (clickDuration < PRESS_DURATION) {
+      const clickDuration = pressStartTime > 0 ? Date.now() - pressStartTime : 0;
+      if (clickDuration < PRESS_DURATION && clickDuration >= 0) {
         // Quick click - navigate home
+        e.preventDefault();
+        e.stopPropagation();
         window.location.href = '/';
       }
     }
-  });
+  }, true);
 
   // Prevent any drag on the wrapper
   logoWrapper.setAttribute('draggable', 'false');
