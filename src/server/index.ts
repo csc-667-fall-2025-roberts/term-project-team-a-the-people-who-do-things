@@ -14,7 +14,7 @@ import chatRoutes from "./routes/chat.ts";
 import gameRoutes from "./routes/games.ts";
 import usersRoutes from "./routes/users.ts";
 import gameManager from "./services/gameManager.ts";
-import { User } from "../types/client/dom.ts";
+import {Users } from "../types/client/dom.ts";
 
 dotenv.config();
 
@@ -115,7 +115,7 @@ interface SocketSession extends Socket {
   request: Request & {
     response: Response;
     session: {
-      userId: keyof User | null;
+      userId: keyof Users | null;
     };
   };
 }

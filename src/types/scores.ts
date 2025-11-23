@@ -1,5 +1,7 @@
+import type { Users } from "./users.ts";
+
 export type Scores = {
-    id: string;
+    userID: keyof Users;
     value: number;
     recorded_at: Date;
 }
