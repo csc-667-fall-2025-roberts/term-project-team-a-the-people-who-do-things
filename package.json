@@ -9,7 +9,7 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:vite\"",
     "build:client": "vite build",
     "build": "npm run build:client && tsc -p tsconfig.json && npm run copy:views",
-    "copy:views": "cpy src/views/**/* dist/views --parents",
+    "copy:views": "cpy 'src/views/**/*' dist/views",
     "copy:public": "cpy public/**/* dist/public --parents",
     "start": "node dist/server/index.js",
     "migrate:up": "node-pg-migrate up -m src/DB/migrations --tsx",
