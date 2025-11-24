@@ -1,4 +1,4 @@
-import {Users} from "./users.ts";
+import {Users} from "./users.js";
 
 export type UserSettings = {
     userID?: keyof Users;

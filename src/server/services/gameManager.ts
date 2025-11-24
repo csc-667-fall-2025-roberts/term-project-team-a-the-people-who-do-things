@@ -1,8 +1,7 @@
-import { ScrabbleGame } from './scrabbleEngine.ts';
+import { ScrabbleGame } from './scrabbleEngine.js';
 
 class GameManager {
   games: Map<string, ScrabbleGame>;
-
   constructor() {
     this.games = new Map();
   }
