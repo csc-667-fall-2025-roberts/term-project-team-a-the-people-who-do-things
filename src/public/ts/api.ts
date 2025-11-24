@@ -1,101 +1,95 @@
-type JsonRecord = Record<string, unknown>;
+import { UserSettings } from "../../types/user_settings.js";
 
-type RequestOptions = RequestInit & {
-  headers?: Record<string, string>;
-};
-
-async function request<TResponse = JsonRecord>(
-  url: string,
-  options: RequestOptions = {},
-): Promise<TResponse> {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers ?? {}),
-    },
-  });
-
-  const data = (await response.json()) as JsonRecord;
-
-  if (!response.ok) {
-    throw new Error((data?.error as string) || "Request failed");
-  }
-
-  return data as TResponse;
-}
+type NewType = string;
 
 export const api = {
-  request,
-  auth: {
-    signup(email: string, password: string, displayName: string) {
-      return request("/api/auth/signup", {
-        method: "POST",
-        body: JSON.stringify({ email, password, displayName }),
-      });
+    async request(url: string | URL | Request, options = {}) {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(options as any).headers
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Request failed');
+        }
+
+        return data;
     },
 
-    login(email: string, password: string) {
-      return request("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
+    auth: {
+        signup(email:string, password: any, displayName:string) {
+            return api.request('/api/auth/signup', {
+                method: 'POST',
+                body: JSON.stringify({ email, password, displayName })
+            });
+        },
+
+        login(email: any, password: string) {
+            return api.request('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+        },
+
+        logout() {
+            return api.request('/api/auth/logout', {
+                method: 'POST'
+            });
+        },
+
+        me() {
+            return api.request('/api/auth/me');
+        }
     },
 
-    logout() {
-      return request("/api/auth/logout", {
-        method: "POST",
-      });
+    games: {
+        getLobby() {
+            return api.request('/api/games/lobby');
+        },
+
+        create(maxPlayers: number, settings: UserSettings) {
+            return api.request('/api/games/create', {
+                method: 'POST',
+                body: JSON.stringify({ maxPlayers, settings })
+            });
+        },
+
+        join(gameId: string) {
+            return api.request(`/api/games/${gameId}/join`, {
+                method: 'POST'
+            });
+        },
+
+        get(gameId: string) {
+            return api.request(`/api/games/${gameId}`);
+        },
+
+        start(gameId: string) {
+            return api.request(`/api/games/${gameId}/start`, {
+                method: 'POST'
+            });
+        }
     },
 
-    me() {
-      return request("/api/auth/me");
-    },
-  },
+    chat: {
+        getMessages(gameId: string, before = null) {
+            const params = new URLSearchParams();
+            if (before) params.set('before', before);
+            return api.request(`/api/chat/${gameId}?${params}`);
+        },
 
-  games: {
-    getLobby() {
-      return request("/api/games/lobby");
-    },
-
-    create(maxPlayers: number, settings: JsonRecord) {
-      return request("/api/games/create", {
-        method: "POST",
-        body: JSON.stringify({ maxPlayers, settings }),
-      });
-    },
-
-    join(gameId: string) {
-      return request(`/api/games/${gameId}/join`, {
-        method: "POST",
-      });
-    },
-
-    get(gameId: string) {
-      return request(`/api/games/${gameId}`);
-    },
-
-    start(gameId: string) {
-      return request(`/api/games/${gameId}/start`, {
-        method: "POST",
-      });
-    },
-  },
-
-  chat: {
-    getMessages(gameId: string, before: string | null = null) {
-      const params = new URLSearchParams();
-      if (before) params.set("before", before);
-      return request(`/api/chat/${gameId}?${params}`);
-    },
-
-    sendMessage(gameId: string, message: string) {
-      return request(`/api/chat/${gameId}`, {
-        method: "POST",
-        body: JSON.stringify({ message }),
-      });
-    },
-  },
+        sendMessage(gameId: string, message: string) {
+            return api.request(`/api/chat/${gameId}`, {
+                method: 'POST',
+                body: JSON.stringify({ message })
+            });
+        }
+    }
 };
 
 
