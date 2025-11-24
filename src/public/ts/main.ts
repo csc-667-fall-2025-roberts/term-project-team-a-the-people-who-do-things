@@ -1,3 +1,10 @@
+// Import Tailwind CSS
+import '../styles/main.css';
+
+// Initialize Scrabble logo animation (available on all pages)
+import './scrabbleLogo.ts';
+
+// Main entry point - dynamically loads the appropriate screen based on the current route
 const path = window.location.pathname;
 import "../styles/main.css";
 
@@ -16,3 +23,4 @@ if (path === "/lobby" || path.startsWith("/lobby")) {
 } else {
   import("./screens/landing.ts");
 }
+

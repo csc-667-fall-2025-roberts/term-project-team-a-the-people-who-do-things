@@ -1,18 +1,16 @@
-import ScrabbleGame, * as scrabbleEngine from './scrabbleEngine.ts';
-import express from 'express';
-
-interface Game {
-  gameId: string;
-  players: number;
-}
+import { ScrabbleGame } from './scrabbleEngine.ts';
 
 class GameManager {
   games: Map<string, ScrabbleGame>;
+
   constructor() {
     this.games = new Map();
   }
 
-  createGame(gameId: string, players: string[]) {
+  createGame(gameId: string, players: string[]): ScrabbleGame {
+    if (this.games.has(gameId)) {
+      throw new Error(`Game ${gameId} already exists`);
+    }
     const game = new ScrabbleGame(gameId, players);
     this.games.set(gameId, game);
     return game;
@@ -22,7 +20,7 @@ class GameManager {
     return this.games.get(gameId);
   }
 
-  removeGame({ gameId }: Game): boolean {
+  gameOver(gameId: string): boolean {
     return this.games.delete(gameId);
   }
 }

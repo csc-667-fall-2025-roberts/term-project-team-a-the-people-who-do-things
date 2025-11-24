@@ -14,7 +14,7 @@ import chatRoutes from "./routes/chat.ts";
 import gameRoutes from "./routes/games.ts";
 import usersRoutes from "./routes/users.ts";
 import gameManager from "./services/gameManager.ts";
-import { User } from "../types/client/dom.ts";
+import {Users } from "../types/client/dom.ts";
 
 dotenv.config();
 
@@ -86,6 +86,13 @@ app.get("/lobby", requireAuth, (req, res) => {
   res.render("screens/lobby", { user: req.users });
 });
 
+app.get("/game/:gameId", requireAuth, (req, res) => {
+  res.render("screens/gameRoom", {
+    user: req.users,
+    gameId: req.params.gameId,
+  });
+});
+
 app.get("/games/:gameId", requireAuth, (req, res) => {
   res.render("screens/gameRoom", {
     user: req.users,
@@ -104,11 +111,19 @@ app.get("/settings", requireAuth, (req, res) => {
   res.render("screens/settings", { user: req.users });
 });
 
+app.get("/error", (req, res) => {
+  res.render("screens/error");
+});
+
+app.use((req,res) => {
+  res.status(404).render("screens/error");
+})
+
 interface SocketSession extends Socket {
   request: Request & {
     response: Response;
     session: {
-      userId: keyof User | null;
+      userId: keyof Users | null;
     };
   };
 }
@@ -162,8 +177,8 @@ io.on("connection", (socket: Socket) => {
         [gameId],
       );
 
-      const game_participants: number[] = result.rows.map((r: any) => r.user_id);
-      games = gameManager.createGame(gameId, userId);
+      const game_participants: string[] = result.rows.map((r: any) => String(r.user_id));
+      games = gameManager.createGame(gameId, game_participants);
     }
 
     // Send game state

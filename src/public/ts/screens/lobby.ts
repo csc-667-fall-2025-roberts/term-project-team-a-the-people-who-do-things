@@ -20,7 +20,7 @@ const createGameBtn = document.getElementById("create-game-btn");
 const createGameModal = document.getElementById("create-game-modal");
 const createGameForm = document.getElementById("create-game-form") as HTMLFormElement | null;
 
-// Chat setup
+
 const chatForm = document.getElementById("chat-form") as HTMLFormElement | null;
 const chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
 const chatMessages = document.getElementById("chat-messages");
@@ -33,7 +33,6 @@ function escapeHtml(text: string) {
   return div.innerHTML;
 }
 
-// Add chat message to the UI
 function addChatMessage(message: LobbyChatMessage) {
   if (!chatMessages) {
     console.error("chatMessages element not found in addChatMessage");
@@ -77,9 +76,8 @@ async function loadLobbyMessages() {
   }
 }
 
-// Initialize lobby chat
 function initLobbyChat() {
-  // Check if chat elements exist
+
   if (!chatForm || !chatInput || !chatMessages) {
     console.error("Chat elements not found:", {
       chatForm: !!chatForm,
@@ -105,17 +103,12 @@ function initLobbyChat() {
     const message = chatInput.value.trim();
     if (!message) return;
 
-    // Clear input immediately for better UX
     chatInput.value = "";
-
-    // Send message via socket
     socket.emit("send-message", { gameId: LOBBY_ID, message });
-    console.log("Sent message:", message);
   });
 
-  // Listen for new messages - remove any existing listeners first to avoid duplicates
   socket.removeAllListeners("new-message");
-  socket.on("new-message", (data: any) => {
+  socket.on("new-message", (data: unknown) => {
     const message = data as LobbyChatMessage;
 
     console.log("Received new-message event:", message);
@@ -133,17 +126,16 @@ function initLobbyChat() {
   });
 }
 
-// Cleanup when leaving the page
-window.addEventListener("beforeunload", () => {
-  socket.emit("leave-lobby");
-});
-
+// Load games
 async function loadGames() {
   try {
     const { games } = (await api.games.getLobby()) as { games: GameSummary[] };
     renderGames(games);
   } catch (error) {
     console.error("Failed to load games:", error);
+    if (gamesContainer) {
+      gamesContainer.innerHTML = '<p class="text-red-500 text-center py-8">Failed to load games. Please refresh.</p>';
+    }
   }
 }
 
@@ -151,7 +143,12 @@ function renderGames(games: GameSummary[]) {
   if (!gamesContainer) return;
 
   if (games.length === 0) {
-    gamesContainer.innerHTML = '<p class="no-games">No games available. Create one!</p>';
+    gamesContainer.innerHTML = `
+      <div class="text-center py-12">
+        <p class="text-gray-600 text-lg mb-4">No games available</p>
+        <p class="text-gray-500">Create a new game to get started!</p>
+      </div>
+    `;
     return;
   }
 

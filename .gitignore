@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+*/Database Consoles
+
+
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -35,13 +38,10 @@ notes.txt
 node_modules/
 *dist/
 
-package-lock.json
+*package-lock.json
 .prettierrc
 *.idea/
 .vscode/
 
 *erd.md
-
-# Ignore TypeScript files in screens directory
-src/public/js/screens/*.ts
 
