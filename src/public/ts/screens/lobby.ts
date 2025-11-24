@@ -1,5 +1,5 @@
-import { api } from "../api.ts";
-import { socket } from "../socket.ts";
+import { api } from "../api.js";
+import { socket } from "../socket.js";
 
 type GameSummary = {
   id: string;
@@ -108,19 +108,20 @@ function initLobbyChat() {
   });
 
   socket.removeAllListeners("new-message");
-  socket.on("new-message", (message: unknown) => {
-    const typedMessage = message as LobbyChatMessage;
-    console.log("Received new-message event:", typedMessage);
-    console.log("Message game_id:", typedMessage.game_id, "Type:", typeof typedMessage.game_id);
+  socket.on("new-message", (data: unknown) => {
+    const message = data as LobbyChatMessage;
+
+    console.log("Received new-message event:", message);
+    console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
 
     const isLobbyMessage =
-      typedMessage.game_id === null || typedMessage.game_id === undefined || typedMessage.game_id === LOBBY_ID;
+      message.game_id === null || message.game_id === undefined || message.game_id === LOBBY_ID;
 
     if (isLobbyMessage) {
       console.log("Adding lobby message to UI");
-      addChatMessage({ ...typedMessage, game_id: typedMessage.game_id ?? null });
+      addChatMessage({ ...message, game_id: message.game_id ?? null });
     } else {
-      console.log("Ignoring non-lobby message, game_id:", typedMessage.game_id);
+      console.log("Ignoring non-lobby message, game_id:", message.game_id);
     }
   });
 }
@@ -154,16 +155,12 @@ function renderGames(games: GameSummary[]) {
   gamesContainer.innerHTML = games
     .map(
       (game) => `
-    <div class="game-card-item hover:shadow-md transition-shadow">
-      <div class="flex justify-between items-center">
-        <div>
-          <h3 class="font-semibold text-lg text-gray-800">${escapeHtml(game.creator_name)}'s Game</h3>
-          <p class="text-gray-600 text-sm mt-1">Players: ${game.current_players}/${game.max_players}</p>
-        </div>
-        <button class="join-game-btn" data-game-id="${game.id}">
-          JOIN
-        </button>
-      </div>
+    <div class="game-card" data-game-id="${game.id}">
+      <h3>${game.creator_name}'s Game</h3>
+      <p>Players: ${game.current_players}/${game.max_players}</p>
+      <button class="btn btn-primary join-game-btn" data-game-id="${game.id}">
+        Join Game
+      </button>
     </div>
   `,
     )
@@ -249,5 +246,3 @@ if (document.readyState === "loading") {
 setInterval(() => {
   void loadGames();
 }, 5000);
-
-

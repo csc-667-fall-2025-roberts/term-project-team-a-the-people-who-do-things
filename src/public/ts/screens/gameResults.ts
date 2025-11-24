@@ -1,4 +1,4 @@
-import { api } from "../api.ts";
+import { api } from "../api.js";
 
 type ScoreEntry = {
   user_id: string;
