@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="scrabble_jm8x.sql" type="DatabaseScript" editBeforeRun="true" focusToolWindowBeforeRun="true" nameIsGenerated="true">
+    <script-file value="$PROJECT_DIR$/src/DB/scrabble_jm8x.sql" />
+    <script-mode>FILE</script-mode>
+    <method v="2" />
+  </configuration>
+</component>

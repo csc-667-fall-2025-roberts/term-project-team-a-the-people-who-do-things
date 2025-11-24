@@ -1,6 +1,6 @@
 import express from "express";
-import pool from "../config/database.ts";
-import { requireAuth } from "../middleware/auth.ts";
+import pool from "../config/database.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -10,45 +10,55 @@ router.get("/:gameId", requireAuth, async (req, res) => {
 
   try {
     const isLobby = gameId === "lobby";
+    const limitNum = Math.min(Number(limit) ?? 50, 100);
+    const beforeCursor = typeof before === 'string' ? before : undefined;
 
-    let query = `
-      SELECT cm.*, u.display_name
-      FROM chat_messages cm
-      JOIN users u ON cm.user_id = u.id
-      WHERE ${isLobby ? "cm.game_id IS NULL" : "cm.game_id = $1"}
-    `;
-    const params: any[] = [];
+    let query: string;
+    let params: (string | number)[];
 
-    if (!isLobby) {
-      params.push(gameId);
+    if (beforeCursor) {
+      query = isLobby
+        ? `SELECT cm.*, u.display_name FROM chat_messages cm
+           JOIN users u ON cm.user_id = u.id
+           WHERE cm.game_id IS NULL AND cm.created_at < $1
+           ORDER BY cm.created_at DESC LIMIT $2`
+        : `SELECT cm.*, u.display_name FROM chat_messages cm
+           JOIN users u ON cm.user_id = u.id
+           WHERE cm.game_id = $1 AND cm.created_at < $2
+           ORDER BY cm.created_at DESC LIMIT $3`;
+      params = isLobby ? [beforeCursor, limitNum] : [gameId, beforeCursor, limitNum];
+    } else {
+      query = isLobby
+        ? `SELECT cm.*, u.display_name FROM chat_messages cm
+           JOIN users u ON cm.user_id = u.id
+           WHERE cm.game_id IS NULL
+           ORDER BY cm.created_at DESC LIMIT $1`
+        : `SELECT cm.*, u.display_name FROM chat_messages cm
+           JOIN users u ON cm.user_id = u.id
+           WHERE cm.game_id = $1
+           ORDER BY cm.created_at DESC LIMIT $2`;
+      params = isLobby ? [limitNum] : [gameId, limitNum];
     }
-
-    if (before) {
-      query += ` AND cm.created_at < $${params.length + 1}`;
-      if (typeof before === "string") {
-        params.push(before);
-      }
-    }
-
-    query += ` ORDER BY cm.created_at DESC LIMIT $${params.length + 1}`;
-    params.push(String(limit));
 
     const result = await pool.query(query, params);
 
     res.json({ messages: result.rows.reverse() });
   } catch (error) {
     console.error("Get chat messages error:", error);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Failed to retrieve chat messages" });
   }
 });
 
-// Post chat message
 router.post("/:gameId", requireAuth, async (req, res) => {
   const { gameId } = req.params;
   const { message } = req.body;
 
   if (!message || message.trim().length === 0) {
     return res.status(400).json({ error: "Message cannot be empty" });
+  }
+
+  if (message.trim().length > 1000) {
+    return res.status(400).json({ error: "Message too long (max 1000 characters)" });
   }
 
   try {
@@ -58,23 +68,14 @@ router.post("/:gameId", requireAuth, async (req, res) => {
     const result = await pool.query(
       `INSERT INTO chat_messages (game_id, user_id, message)
        VALUES ($1, $2, $3)
-       RETURNING *`,
+       RETURNING *, (SELECT display_name FROM users WHERE id = $2) as display_name`,
       [dbGameId, req.session.userId, message.trim()],
     );
 
-    const userResult = await pool.query("SELECT display_name FROM users WHERE id = $1", [
-      req.session.userId,
-    ]);
-
-    const chatMessage = {
-      ...result.rows[0],
-      display_name: userResult.rows[0].display_name,
-    };
-
-    res.json({ message: chatMessage });
+    res.json({ message: result.rows[0] });
   } catch (error) {
     console.error("Post chat message error:", error);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Failed to post chat message" });
   }
 });
 

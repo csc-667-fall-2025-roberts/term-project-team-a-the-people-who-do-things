@@ -7,7 +7,7 @@ import type {Scores} from "./scores";
 import type {Moves} from "./moves";
 import type {GameState} from "./gameState";
 import {UserSettings} from "./user_settings.js";
-//import type {SocketEvents} from "./socket-events.ts";
+import type {SocketEvents} from "./socket-events.ts";
 
 declare global {
   namespace Express {
@@ -20,6 +20,8 @@ declare global {
         scores?: Scores;
         users?: Users;
         user_settings?: UserSettings;
+        socketEvents?: SocketEvents;
+
     }
   }
 }
