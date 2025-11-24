@@ -1,6 +1,6 @@
-import { Games } from "./games.ts";
-import { Participants } from "./participants.ts";
-import {Users} from "./users.ts";
+import { Games } from "./games.js";
+import { Participants } from "./participants.js";
+import {Users} from "./users.js";
 
 export type GameState = {
     gameID?: keyof Games

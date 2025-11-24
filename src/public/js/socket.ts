@@ -1,4 +1,4 @@
-import type { SocketEvents } from "../../types/client/socket-events.ts";
+import type { SocketEvents } from "../../types/client/socket-events.js";
 
 export class SocketManager {
   socket: any;

@@ -1,5 +1,5 @@
-import type { PremiumType, SelectedTile, Tile } from "../../types/client/dom.ts";
-import { LETTER_DISTRIBUTION, LETTER_VALUES, BOARD_SIZE, PREMIUM_SQUARES } from "../../server/services/scrabbleConstants.ts";
+import type { PremiumType, SelectedTile, Tile } from "../../types/client/dom.js";
+import { LETTER_DISTRIBUTION, LETTER_VALUES, BOARD_SIZE, PREMIUM_SQUARES } from "../../server/services/scrabbleConstants.js";
 import { BaseOptions } from "node:vm";
 
 class ScrabbleBoard {

@@ -2,17 +2,17 @@ const path = window.location.pathname;
 import "../styles/main.css";
 
 if (path === "/lobby" || path.startsWith("/lobby")) {
-  import("./screens/lobby.ts");
+  import("./screens/lobby.js");
 } else if (path === "/login" || path.startsWith("/login")) {
-  import("./screens/login.ts");
+  import("./screens/login.js");
 } else if (path === "/signup" || path.startsWith("/signup")) {
-  import("./screens/signup.ts");
+  import("./screens/signup.js");
 } else if (path.startsWith("/game/") && path.endsWith("/results")) {
-  import("./screens/gameResults.ts");
+  import("./screens/gameResults.js");
 } else if (path.startsWith("/game/")) {
-  import("./screens/gameRoom.ts");
+  import("./screens/gameRoom.js");
 } else if (path === "/settings" || path.startsWith("/settings")) {
-  import("./screens/settings.ts");
+  import("./screens/settings.js");
 } else {
-  import("./screens/landing.ts");
+  import("./screens/landing.js");
 }

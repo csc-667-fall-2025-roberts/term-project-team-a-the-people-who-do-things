@@ -1,6 +1,6 @@
-import { api } from "../api.ts";
-import ScrabbleBoard from "../scrabbleBoard.ts";
-import { socket } from "../socket.ts";
+import { api } from "../api.js";
+import ScrabbleBoard from "../scrabbleBoard.js";
+import { socket } from "../socket.js";
 
 type SelectedTile = {
   row: number;

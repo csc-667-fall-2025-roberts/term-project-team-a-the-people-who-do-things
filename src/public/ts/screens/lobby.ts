@@ -1,5 +1,5 @@
-import { api } from "../api.ts";
-import { socket } from "../socket.ts";
+import { api } from "../api.js";
+import { socket } from "../socket.js";
 
 type GameSummary = {
   id: string;

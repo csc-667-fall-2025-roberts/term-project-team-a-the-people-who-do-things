@@ -3,7 +3,7 @@ import {
   LETTER_DISTRIBUTION,
   LETTER_VALUES,
   PREMIUM_SQUARES,
-} from "./scrabbleConstants.ts";
+} from "./scrabbleConstants.js";
 
 export class ScrabbleGame {
   gameId: string;

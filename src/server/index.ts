@@ -7,14 +7,14 @@ import { createServer } from "http";
 import path from "path";
 import { Server, Socket } from "socket.io";
 import { fileURLToPath } from "url";
-import pool from "./config/database.ts";
-import { attachUser, requireAuth } from "./middleware/auth.ts";
-import authRoutes from "./routes/auth.ts";
-import chatRoutes from "./routes/chat.ts";
-import gameRoutes from "./routes/games.ts";
-import usersRoutes from "./routes/users.ts";
-import gameManager from "./services/gameManager.ts";
-import { User } from "../types/client/dom.ts";
+import pool from "./config/database.js";
+import { attachUser, requireAuth } from "./middleware/auth.js";
+import authRoutes from "./routes/auth.js";
+import chatRoutes from "./routes/chat.js";
+import gameRoutes from "./routes/games.js";
+import usersRoutes from "./routes/users.js";
+import gameManager from "./services/gameManager.js";
+import { User } from "../types/client/dom.js";
 
 dotenv.config();
 

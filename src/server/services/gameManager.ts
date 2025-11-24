@@ -1,4 +1,4 @@
-import ScrabbleGame, * as scrabbleEngine from './scrabbleEngine.ts';
+import ScrabbleGame, * as scrabbleEngine from './scrabbleEngine.js';
 import express from 'express';
 
 interface Game {

@@ -1,4 +1,4 @@
-import { UserSettings } from "../../types/user_settings.ts";
+import { UserSettings } from "../../types/user_settings.js";
 
 type NewType = string;
 

@@ -1,7 +1,7 @@
 import express from 'express';
-import pool from '../config/database.ts';
-import { requireAuth } from '../middleware/auth.ts';
-import ScrabbleGame from '../services/scrabbleEngine.ts';
+import pool from '../config/database.js';
+import { requireAuth } from '../middleware/auth.js';
+import ScrabbleGame from '../services/scrabbleEngine.js';
 
 const router = express.Router();
 

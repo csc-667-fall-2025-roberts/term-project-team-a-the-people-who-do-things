@@ -1,6 +1,6 @@
 import express from "express";
-import pool from "../config/database.ts";
-import { requireAuth } from "../middleware/auth.ts";
+import pool from "../config/database.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
