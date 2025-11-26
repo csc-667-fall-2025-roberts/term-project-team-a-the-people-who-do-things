@@ -9,9 +9,9 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:vite\"",
     "build:client": "vite build",
     "build": "npm run build:client && tsc -p tsconfig.json && npm run copy:views",
-    "copy:views": "cpy src/views/**/* dist/views --parents",
+    "copy:views": "cpy \"src/views/**/*\" dist/views",
     "copy:public": "cpy public/**/* dist/public --parents",
-    "start": "node dist/server/index.ts",
+    "start": "node dist/server/index.js",
     "migrate:up": "node-pg-migrate up -m src/DB/migrations --tsx",
     "migrate:down": "node-pg-migrate down -m src/DB/migrations --tsx",
     "migrate:create": "node-pg-migrate create -m src/DB/migrations -j ts",
@@ -19,6 +19,7 @@
     "db:reset": "node-pg-migrate down --count 999 -m src/DB/migrations --tsx && node-pg-migrate up -m src/DB/migrations --tsx"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
     "@types/bcrypt": "^6.0.0",
     "@types/connect-pg-simple": "^7.0.3",
     "@types/ejs": "^3.1.5",
@@ -28,6 +29,7 @@
     "@types/pg": "^8.15.6",
     "@types/socket.io": "^3.0.1",
     "@types/socket.io-client": "^1.4.36",
+    "autoprefixer": "^10.4.22",
     "concurrently": "^9.1.0",
     "cpy-cli": "^6.0.0",
     "cross-env": "^10.1.0",
@@ -49,6 +51,8 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
     "socket.io": "^4.8.1",
-    "vite": "^7.2.4"
+    "socket.io-client": "^4.8.1",
+    "vite": "^7.2.4",
+    "zod": "^4.1.13"
   }
 }
