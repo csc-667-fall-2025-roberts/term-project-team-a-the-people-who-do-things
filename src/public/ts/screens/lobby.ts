@@ -57,14 +57,14 @@ function addChatMessage(message: LobbyChatMessage) {
 async function loadLobbyMessages() {
   try {
     const { messages } = (await api.chat.getMessages(LOBBY_ID)) as { messages: LobbyChatMessage[] };
-    console.log("Loaded lobby messages:", messages);
+    // console.log("Loaded lobby messages:", messages);
     if (!chatMessages) {
       console.error("chatMessages element not found");
       return;
     }
     chatMessages.innerHTML = "";
     messages.forEach((message) => {
-      console.log("Adding message:", message);
+      // console.log("Adding message:", message);
       addChatMessage({
         ...message,
         game_id: message.game_id ?? null,
@@ -207,18 +207,21 @@ createGameForm?.addEventListener("submit", async (event) => {
   const maxPlayers = parseInt(maxPlayersInput.value, 10);
   const timeLimit = parseInt(timeLimitInput.value, 10);
 
-  try {
-    const { game } = (await api.games.create(maxPlayers, { timeLimit })) as {
-      game: { id: string };
-    };
-    window.location.href = `/game/${game.id}`;
-  } catch (error) {
-    if (error instanceof Error) {
-      alert(error.message);
-    } else {
-      alert("Failed to create game. Please try again.");
-    }
-  }
+  // Disable button to prevent double-clicks
+  const submitBtn = createGameForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+  if (submitBtn) submitBtn.disabled = true;
+
+ try {
+   const { game } = (await api.games.create(maxPlayers, { timeLimit })) as {
+     game: { id: string };
+   };
+
+   window.location.href = `/game/${game.id}`;
+ } catch (error) {
+   console.error('Failed to create game:', error);
+   alert(error instanceof Error ? error.message : 'Failed to create game');
+ }
+
 });
 
 // Socket events
