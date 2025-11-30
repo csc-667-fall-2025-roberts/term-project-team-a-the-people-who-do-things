@@ -34,7 +34,7 @@ dist/public/assets/
 notes.txt
 
 /.husky/
-
+package-lock.json
 node_modules/
 *dist/
 

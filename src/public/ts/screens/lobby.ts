@@ -58,14 +58,14 @@ function addChatMessage(message: LobbyChatMessage) {
 async function loadLobbyMessages() {
   try {
     const { messages } = (await api.chat.getMessages(LOBBY_ID)) as { messages: LobbyChatMessage[] };
-    console.log("Loaded lobby messages:", messages);
+    // console.log("Loaded lobby messages:", messages);
     if (!chatMessages) {
       console.error("chatMessages element not found");
       return;
     }
     chatMessages.innerHTML = "";
     messages.forEach((message) => {
-      console.log("Adding message:", message);
+      // console.log("Adding message:", message);
       addChatMessage({
         ...message,
         game_id: message.game_id ?? null,
