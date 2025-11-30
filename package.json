@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "overrides": {
+    "node-pg-migrate": {
+      "glob": "^11.0.4"
+    }
+  },
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx watch src/server/index.ts",
     "dev:vite": "vite",
@@ -27,14 +32,13 @@
     "@types/express-session": "^1.18.2",
     "@types/node": "^24.10.0",
     "@types/pg": "^8.15.6",
-    "@types/socket.io": "^3.0.1",
     "@types/socket.io-client": "^1.4.36",
     "autoprefixer": "^10.4.22",
     "concurrently": "^9.1.0",
     "cpy-cli": "^6.0.0",
     "cross-env": "^10.1.0",
     "express-session": "^1.18.2",
-    "node-pg-migrate": "^7.6.1",
+    "node-pg-migrate": "^8.0.3",
     "prettier": "^3.6.2",
     "prettier-plugin-ejs": "^1.0.3",
     "prettier-plugin-organize-imports": "^4.3.0",
@@ -42,7 +46,6 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "22": "^0.0.0",
     "bcrypt": "^6.0.0",
     "connect-pg-simple": "^10.0.0",
     "dotenv": "^17.2.3",
