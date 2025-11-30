@@ -1,57 +1,18 @@
 import * as ScrabbleConstants from "../../../server/services/scrabbleConstants.js";
 import { ChatMessage } from "../../../types/client/dom.js";
-import type { NewTilesResponse } from "../../../types/client/socket-events.js";
+import type { NewTilesResponse, SelectedTile,
+    GameStateResponse, GameParticipant,
+    ScoreEntry, GameSummaryResponse, MoveMadeResponse } from "../../../types/client/socket-events.js";
 import { api } from "../api.js";
 import ScrabbleBoard from "../scrabbleBoard.js";
 import { socket } from "../socket.js";
 
-type SelectedTile = {
-  row: number;
-  col: number;
-  letter: string;
-};
-
-type GameParticipant = {
-  id: string;
-  display_name: string;
-  is_host?: boolean;
-};
-
-type ScoreEntry = {
-  user_id: string;
-  value: number;
-};
-
-type GameStatePayload = {
-  board: string[][];
-  hand: string[];
-  scores: Record<string, number>;
-  currentPlayer: string;
-  tilesRemaining: number;
-};
-
-type MoveMadePayload = {
-  userId: string;
-  gameState: GameStatePayload;
-};
-
-type GameSummaryResponse = {
-  game_participants: GameParticipant[];
-  scores: ScoreEntry[];
-};
-
-declare global {
-  interface Window {
-    GAME_ID: string;
-  }
-}
 
 const gameId = window.GAME_ID;
 const board = new ScrabbleBoard("scrabble-board");
 let currentUser: { id: string; display_name: string } | null = null;
 
 async function init(): Promise<void> {
-  try {
     const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
     currentUser = user;
 
@@ -60,14 +21,13 @@ async function init(): Promise<void> {
     renderScores(gameData.scores);
 
     socket.emit("join-game", gameId);
-  } catch (error) {
+  } init().catch((error) => {
     console.error("Failed to initialize:", error);
-  }
-}
+});
 
 // Socket events
 socket.on("game-state", (data: unknown) => {
-  const gameState = data as GameStatePayload;
+  const gameState = data as GameStateResponse;
   board.updateBoard(gameState.board);
   board.setHand(gameState.hand);
   updateGameInfo(gameState);
@@ -75,7 +35,7 @@ socket.on("game-state", (data: unknown) => {
 });
 
 socket.on("move-made", (data: unknown) => {
-  const move = data as MoveMadePayload;
+  const move = data as MoveMadeResponse;
   board.updateBoard(move.gameState.board);
   updateGameInfo(move.gameState);
   updateScores(move.gameState.scores);
@@ -158,6 +118,7 @@ document.getElementById("exchange-btn")?.addEventListener("click", () => {
 
 document.getElementById("shuffle-btn")?.addEventListener("click", () => {
   const hand = board.getHand();
+  if (hand.length === 0) return;
   board.setHand(shuffleArray(hand));
 });
 
@@ -222,7 +183,7 @@ function updateScores(scores: Record<string, number>) {
   console.log("Scores:", scores);
 }
 
-function updateGameInfo(state: GameStatePayload) {
+function updateGameInfo(state: GameStateResponse) {
   const tilesRemainingEl = document.getElementById("tiles-remaining");
   if (tilesRemainingEl) {
     tilesRemainingEl.textContent = state.tilesRemaining.toString();
@@ -238,7 +199,7 @@ function updateCurrentTurn(playerId: string) {
   const isCurrentUser = playerId === currentUser.id;
   currentTurnEl.textContent = isCurrentUser ? "Your turn" : "Opponent's turn";
 }
-
+//IGNORE THE DUPLICATE WARNING
 function shuffleArray<T>(array: T[]) {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -253,16 +214,15 @@ function escapeHtml(text: string) {
   div.textContent = text;
   return div.innerHTML;
 }
-
 const handlers = {
   gameState: (state: unknown) => {
-    const typedState: GameStatePayload = state as GameStatePayload;
+    const typedState = state as GameStateResponse;
     board.updateBoard(typedState.board);
     board.setHand(typedState.hand);
     updateGameInfo(typedState);
   },
   moveMade: (data: unknown) => {
-    const typedData: MoveMadePayload = data as MoveMadePayload;
+    const typedData = data as MoveMadeResponse;
     board.updateBoard(typedData.gameState.board);
     updateGameInfo(typedData.gameState);
     updateScores(typedData.gameState.scores);

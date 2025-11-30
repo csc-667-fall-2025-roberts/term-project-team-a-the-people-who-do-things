@@ -1,9 +1,5 @@
-import { UserSettings } from "../../types/user_settings.js";
-
-type NewType = string;
-
 export const api = {
-    async request(url: string | URL | Request, options = {}) {
+    async request(url: string | URL | RequestInfo, options = {}) {
         const response = await fetch(url, {
             ...options,
             headers: {
@@ -22,14 +18,14 @@ export const api = {
     },
 
     auth: {
-        signup(email:string, password: any, displayName:string) {
+        signup(email: string, password: string, displayName: string) {
             return api.request('/api/auth/signup', {
                 method: 'POST',
                 body: JSON.stringify({ email, password, displayName })
             });
         },
 
-        login(email: any, password: string) {
+        login(email: string, password: string) {
             return api.request('/api/auth/login', {
                 method: 'POST',
                 body: JSON.stringify({ email, password })
@@ -52,10 +48,10 @@ export const api = {
             return api.request('/api/games/lobby');
         },
 
-        create(maxPlayers: number, settings: UserSettings) {
+        create(maxPlayers: number, user_settings: unknown) {
             return api.request('/api/games/create', {
                 method: 'POST',
-                body: JSON.stringify({ maxPlayers, settings })
+                body: JSON.stringify({ maxPlayers, user_settings })
             });
         },
 
@@ -77,16 +73,16 @@ export const api = {
     },
 
     chat: {
-        getMessages(gameId: string, before = null) {
+        getMessages(gameId: string, before: string | null = null) {
             const params = new URLSearchParams();
             if (before) params.set('before', before);
             return api.request(`/api/chat/${gameId}?${params}`);
         },
 
-        sendMessage(gameId: string, message: string) {
+        sendMessage(gameId: string) {
             return api.request(`/api/chat/${gameId}`, {
                 method: 'POST',
-                body: JSON.stringify({ message })
+                body: JSON.stringify({ message: gameId })
             });
         }
     }

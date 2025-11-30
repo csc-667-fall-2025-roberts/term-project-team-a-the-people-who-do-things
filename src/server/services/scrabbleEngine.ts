@@ -47,7 +47,7 @@ export class ScrabbleGame {
     }
     return this.shuffle(tiles);
   }
-
+//IGNORE THE DUPLICATE WARNING
   shuffle<T>(array: T[]): T[] {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {

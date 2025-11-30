@@ -1,5 +1,8 @@
-import type { PremiumType, SelectedTile, Tile } from "../../types/client/dom.js";
+import type { SelectedTile, Tile} from "../../types/client/socket-events.js";
 import { LETTER_VALUES, BOARD_SIZE, PREMIUM_SQUARES } from "../../server/services/scrabbleConstants.js";
+
+type PremiumSquare = 'triple-word' | 'double-word' | 'triple-letter' | 'double-letter';
+
 
 class ScrabbleBoard {
     container: HTMLElement | null;
@@ -7,6 +10,7 @@ class ScrabbleBoard {
     board: (Tile | null)[][];
     selectedTiles: SelectedTile[];
     hand: Tile[];
+
 
 
     constructor(containerId: string) {
@@ -58,16 +62,20 @@ class ScrabbleBoard {
         }
     }
 
-    getPremiumTile(row: number, col: number): PremiumType | null {
-        for (const [type, positions] of Object.entries(PREMIUM_SQUARES)) {
-            if (positions.some(([r, c]: [number, number]) => r === row && c === col)) {
-                return type as PremiumType;
-            }
+
+getPremiumTile(row: number, col: number): PremiumSquare | null {
+    for (const [type, positions] of Object.entries(PREMIUM_SQUARES)) {
+        if (positions.some(([r, c]: [number, number]) => r === row && c === col)) {
+            return type as PremiumSquare;
         }
-        return null;
     }
+    return null;
+}
 
     handleCellClick(row: number, col: number): void {
+        if (this.board[row][col]) {
+            this.removeTile(row, col);
+        }
     }
 
     handleDrop(e: DragEvent, row: number, col: number): void {
@@ -98,14 +106,31 @@ class ScrabbleBoard {
         this.render();
     }
 
-    updateBoard(boardState: (Tile | null)[][]): void {
-        this.board = boardState;
+    setHand(tiles: string[] | Tile[]): void {
+        this.hand = typeof tiles[0] === 'string'
+            ? (tiles as string[]).map(letter => ({
+                letter,
+                value: LETTER_VALUES[letter] || 0
+              }))
+            : tiles as Tile[];
+        this.renderHand();
+    }
+
+    updateBoard(boardState: (string | Tile | null)[][] | (Tile | null)[][]): void {
+        this.board = boardState.map(row =>
+            row.map(cell => {
+                if (!cell) return null;
+                if (typeof cell === 'string') {
+                    return { letter: cell, value: LETTER_VALUES[cell] || 0 };
+                }
+                return cell;
+            })
+        );
         this.render();
     }
 
-    setHand(tiles: Tile[]): void {
-        this.hand = tiles;
-        this.renderHand();
+    getHand(): Tile[] {
+        return this.hand;
     }
 
     renderHand(): void {

@@ -1,4 +1,8 @@
 // DOM type helpers
+//CLIENT SIDE DOM AND DATA TYPES
+import type { Tile } from "./socket-events.js"
+
+
 export type ElementById<T extends HTMLElement = HTMLElement> = T | null;
 
 // Chat message interface
@@ -11,16 +15,9 @@ export interface ChatMessage {
   display_name: string;
 }
 
-// Game participant interface
-export interface GameParticipant {
-  id: string;
-  display_name: string;
-  is_host: boolean;
-  user_id: string;
-}
 
 // Score interface
-export type Scores = {
+export interface Scores {
     userID: keyof Users;
     value: number;
     recorded_at: Date;
@@ -32,22 +29,6 @@ export interface Users {
   display_name: string;
   email: string;
 }
-
-// Tile interface
-export interface Tile {
-  letter: string;
-  value: number;
-  x?: number;
-  y?: number;
-  isPlaced?: boolean;
-}
-
-export interface SelectedTile {
-  row: number;
-  col: number;
-  letter: string;
-}
-
 
 
 // Game state interface
@@ -68,38 +49,5 @@ export interface ApiResponse<T = any> {
   error?: string;
   message?: string;
 }
-
-// Letter values constant type
-export type LetterValues = {
-  [K in
-    | "A"
-    | "B"
-    | "C"
-    | "D"
-    | "E"
-    | "F"
-    | "G"
-    | "H"
-    | "I"
-    | "J"
-    | "K"
-    | "L"
-    | "M"
-    | "N"
-    | "O"
-    | "P"
-    | "Q"
-    | "R"
-    | "S"
-    | "T"
-    | "U"
-    | "V"
-    | "W"
-    | "X"
-    | "Y"
-    | "Z"]: number;
-}
-
-export type PremiumType = "TW" | "DW" | "TL" | "DL";
 
 export {};
