@@ -27,20 +27,9 @@
 </header>
 
 <% if (locals.user) { %>
-<script type="module">
   <% if (process.env.NODE_ENV === 'production') { %>
-  import { api } from '/js/api.js';
+    <script type="module" src="/js/header.js"></script>
   <% } else { %>
-  import api from 'http://localhost:5173/ts/api.ts';
+    <script type="module" src="http://localhost:5173/ts/header.ts"></script>
   <% } %>
-
-  document.getElementById('logout-btn')?.addEventListener('click', async () => {
-      try {
-          await api.auth.logout();
-          window.location.href = '/';
-      } catch (error) {
-          console.error('Logout failed:', error);
-      }
-  });
-</script>
 <% } %>

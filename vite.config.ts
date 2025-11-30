@@ -18,6 +18,7 @@ export default defineConfig({
         gameRoom: resolve(__dirname, "src/public/ts/screens/gameRoom.ts"),
         gameResults: resolve(__dirname, "src/public/ts/screens/gameResults.ts"),
         settings: resolve(__dirname, "src/public/ts/screens/settings.ts"),
+        header: resolve(__dirname, "src/public/ts/header.ts"),
       },
       output: {
         entryFileNames: "js/[name].js",
