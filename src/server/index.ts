@@ -20,6 +20,10 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1); // trust first proxy
+}
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -45,6 +49,7 @@ const sessionMiddleware = session({
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
   },
 });
 
