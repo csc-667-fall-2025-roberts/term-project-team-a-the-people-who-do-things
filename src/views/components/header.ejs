@@ -1,17 +1,50 @@
-<header class="main-header">
-  <div class="header-content">
-    <div class="logo" id="scrabble-logo-wrapper">
-      <div class="scrabble-logo-container" id="scrabble-logo">
-        <span class="scrabble-tile" data-letter="S" data-points="1"></span>
-        <span class="scrabble-tile" data-letter="C" data-points="3"></span>
-        <span class="scrabble-tile" data-letter="R" data-points="1"></span>
-        <span class="scrabble-tile" data-letter="A" data-points="1"></span>
-        <span class="scrabble-tile" data-letter="B" data-points="3"></span>
-        <span class="scrabble-tile" data-letter="B" data-points="3"></span>
-        <span class="scrabble-tile" data-letter="L" data-points="1"></span>
-        <span class="scrabble-tile" data-letter="E" data-points="1"></span>
-      </div>
-      <a href="/" class="logo-link" id="scrabble-logo-link">Scrabble</a>
+<header class="bg-blue-600 shadow-md sticky top-0 z-50">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 items-center justify-between">
+            
+            <a href="/" class="flex gap-1 items-center no-underline select-none" aria-label="Scrabble Home">
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">
+                    S
+                </span>
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">
+                    C
+                </span>
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">
+                    R
+                </span>
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">
+                    A
+                </span>
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">
+                    B
+                </span>
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">
+                    B
+                </span>
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">
+                    L
+                </span>
+                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">
+                    E
+                </span>
+            </a>
+
+            <nav class="flex items-center gap-6">
+                <% if (locals.user) { %>
+                    <a href="/lobby" class="text-white hover:text-blue-200 font-medium transition">Lobby</a>
+                    <a href="/settings" class="text-white hover:text-blue-200 font-medium transition">Settings</a>
+                    
+                    <button id="logout-btn" class="bg-white text-blue-600 px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-50 transition shadow-sm">
+                        Logout
+                    </button>
+                <% } else { %>
+                    <a href="/login" class="text-white hover:text-blue-200 font-medium transition">Login</a>
+                    <a href="/signup" class="bg-white text-blue-600 px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-50 transition shadow-sm">
+                        Sign Up
+                    </a>
+                <% } %>
+            </nav>
+        </div>
     </div>
 
     <nav class="main-nav">
