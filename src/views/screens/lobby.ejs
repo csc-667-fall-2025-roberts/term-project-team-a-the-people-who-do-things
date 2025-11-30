@@ -1,79 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Game Lobby - Scrabble</title>
-    <link rel="stylesheet" href="/styles/main.css">
-</head>
-<body>
-<%- include('../components/header') %>
+    <link rel="stylesheet" href="/styles/main.css" />
+  </head>
+  <body>
+    <%- include('../components/header') %>
 
-<main class="lobby-main-content">
-    <div class="lobby-container">
+    <main class="lobby-main-content">
+      <div class="lobby-container">
         <!-- Tabs -->
         <div class="lobby-tabs">
-            <button id="join-tab" class="lobby-tab lobby-tab-active">Join Game</button>
-            <button id="create-tab" class="lobby-tab">Create Game</button>
+          <button id="join-tab" class="lobby-tab lobby-tab-active">Join Game</button>
+          <button id="create-tab" class="lobby-tab">Create Game</button>
         </div>
 
         <!-- Main Content: Tab Content and Chat -->
         <div class="lobby-layout-container">
-            <!-- Tab Content Section - Left Side (2 columns) -->
-            <div class="lobby-games-section">
-                <!-- Join Game Tab Content -->
-                <div id="join-tab-content" class="lobby-tab-content lobby-tab-content-active">
-                    <div id="games-container" class="space-y-4">
-                        <!-- Games will be loaded here -->
-                        <p class="text-gray-500 text-center py-8">Loading games...</p>
-                    </div>
-                </div>
-
-                <!-- Create Game Tab Content -->
-                <div id="create-tab-content" class="lobby-tab-content">
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <h2 class="text-xl font-semibold mb-4 text-gray-800">Create New Game</h2>
-                        <form id="create-game-form" class="space-y-4">
-                            <div>
-                                <label for="max-players" class="block text-sm font-medium text-gray-700 mb-2">Max Players</label>
-                                <select id="max-players" name="maxPlayers" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="2">2 Players</option>
-                                    <option value="3">3 Players</option>
-                                    <option value="4">4 Players</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="time-limit" class="block text-sm font-medium text-gray-700 mb-2">Turn Time Limit (seconds)</label>
-                                <input type="number" id="time-limit" name="timeLimit" value="60" min="30" max="300" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-
-                            <button type="submit" class="create-game-btn w-full text-white font-semibold">
-                                Create Game
-                            </button>
-                        </form>
-                    </div>
-                </div>
+          <!-- Tab Content Section - Left Side (2 columns) -->
+          <div class="lobby-games-section">
+            <!-- Join Game Tab Content -->
+            <div id="join-tab-content" class="lobby-tab-content lobby-tab-content-active">
+              <div id="games-container" class="space-y-4">
+                <!-- Games will be loaded here -->
+                <p class="py-8 text-center text-gray-500">Loading games...</p>
+              </div>
             </div>
 
-            <!-- Chat Section - Right Side (1 column) -->
-            <div class="lobby-chat-section">
-                <%- include('../components/chat', { gameId: 'lobby' }) %>
+            <!-- Create Game Tab Content -->
+            <div id="create-tab-content" class="lobby-tab-content">
+              <div class="p-6 bg-white rounded-lg shadow-md">
+                <h2 class="mb-4 text-xl font-semibold text-gray-800">Create New Game</h2>
+                <form id="create-game-form" class="space-y-4">
+                  <div>
+                    <label for="max-players" class="block mb-2 text-sm font-medium text-gray-700"
+                      >Max Players</label
+                    >
+                    <select
+                      id="max-players"
+                      name="maxPlayers"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="2">2 Players</option>
+                      <option value="3">3 Players</option>
+                      <option value="4">4 Players</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label for="time-limit" class="block mb-2 text-sm font-medium text-gray-700"
+                      >Turn Time Limit (seconds)</label
+                    >
+                    <input
+                      type="number"
+                      id="time-limit"
+                      name="timeLimit"
+                      value="60"
+                      min="30"
+                      max="300"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <button type="submit" class="w-full font-semibold text-white create-game-btn">
+                    Create Game
+                  </button>
+                </form>
+              </div>
             </div>
+          </div>
+
+          <!-- Chat Section - Right Side (1 column) -->
+          <div class="lobby-chat-section">
+            <%- include('../components/chat', { gameId: 'lobby' }) %>
+          </div>
         </div>
-    </div>
+      </div>
+    </main>
 
-</main>
-
-<script src="/socket.io/socket.io.js"></script>
-<script>
-    // Make io available globally for socket.js
-    window.io = io;
-</script>
-<% if (process.env.NODE_ENV === 'production') { %>
-<script type="module" src="/ts/main.ts"></script>
-<% } else { %>
-<script type="module" src="http://localhost:5173/ts/main.ts"></script>
-<% } %>
-</body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      // Make io available globally for socket.js
+      window.io = io;
+    </script>
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/main.js"></script>
+    <% } else { %>
+    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <% } %>
+  </body>
 </html>

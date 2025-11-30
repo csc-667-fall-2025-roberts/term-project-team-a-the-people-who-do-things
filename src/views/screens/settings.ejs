@@ -1,88 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Settings - Scrabble</title>
-    <link rel="stylesheet" href="/styles/main.css">
-</head>
-<body>
-<%- include('../components/header') %>
+    <link rel="stylesheet" href="/styles/main.css" />
+  </head>
+  <body>
+    <%- include('../components/header') %>
 
-<main class="settings-page">
-    <div class="settings-container">
+    <main class="settings-page">
+      <div class="settings-container">
         <h1>Settings</h1>
 
         <section class="settings-section">
-            <h2>Account</h2>
-            <form id="account-form">
-                <div class="form-group">
-                    <label for="display-name">Display Name</label>
-                    <input type="text" id="display-name" name="displayName" value="<%= user.display_name %>">
-                </div>
+          <h2>Account</h2>
+          <form id="account-form">
+            <div class="form-group">
+              <label for="display-name">Display Name</label>
+              <input
+                type="text"
+                id="display-name"
+                name="displayName"
+                value="<%= user.display_name %>"
+              />
+            </div>
 
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="<%= user.email %>">
-                </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" value="<%= user.email %>" />
+            </div>
 
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-            </form>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </form>
         </section>
 
         <section class="settings-section">
-            <h2>Preferences</h2>
-            <form id="preferences-form">
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="sound-effects" name="soundEffects">
-                    <label for="sound-effects">Sound Effects</label>
-                </div>
+          <h2>Preferences</h2>
+          <form id="preferences-form">
+            <div class="form-group checkbox">
+              <input type="checkbox" id="sound-effects" name="soundEffects" />
+              <label for="sound-effects">Sound Effects</label>
+            </div>
 
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="notifications" name="notifications">
-                    <label for="notifications">Desktop Notifications</label>
-                </div>
+            <div class="form-group checkbox">
+              <input type="checkbox" id="notifications" name="notifications" />
+              <label for="notifications">Desktop Notifications</label>
+            </div>
 
-                <div class="form-group">
-                    <label for="theme">Theme</label>
-                    <select id="theme" name="theme">
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                    </select>
-                </div>
+            <div class="form-group">
+              <label for="theme">Theme</label>
+              <select id="theme" name="theme">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
 
-                <button type="submit" class="btn btn-primary">Save Preferences</button>
-            </form>
+            <button type="submit" class="btn btn-primary">Save Preferences</button>
+          </form>
         </section>
 
         <section class="settings-section">
-            <h2>Password</h2>
-            <form id="password-form">
-                <div class="form-group">
-                    <label for="current-password">Current Password</label>
-                    <input type="password" id="current-password" name="currentPassword">
-                </div>
+          <h2>Password</h2>
+          <form id="password-form">
+            <div class="form-group">
+              <label for="current-password">Current Password</label>
+              <input type="password" id="current-password" name="currentPassword" />
+            </div>
 
-                <div class="form-group">
-                    <label for="new-password">New Password</label>
-                    <input type="password" id="new-password" name="newPassword">
-                </div>
+            <div class="form-group">
+              <label for="new-password">New Password</label>
+              <input type="password" id="new-password" name="newPassword" />
+            </div>
 
-                <div class="form-group">
-                    <label for="confirm-password">Confirm New Password</label>
-                    <input type="password" id="confirm-password" name="confirmPassword">
-                </div>
+            <div class="form-group">
+              <label for="confirm-password">Confirm New Password</label>
+              <input type="password" id="confirm-password" name="confirmPassword" />
+            </div>
 
-                <button type="submit" class="btn btn-primary">Change Password</button>
-            </form>
+            <button type="submit" class="btn btn-primary">Change Password</button>
+          </form>
         </section>
-    </div>
-</main>
+      </div>
+    </main>
 
-<% if (process.env.NODE_ENV === 'production') { %>
-<script type="module" src="/ts/main.ts"></script>
-<% } else { %>
-<script type="module" src="http://localhost:5173/ts/main.ts"></script>
-<% } %>
-</body>
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/main.js"></script>
+    <% } else { %>
+    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <% } %>
+  </body>
 </html>

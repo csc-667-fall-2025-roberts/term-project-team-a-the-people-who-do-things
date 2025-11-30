@@ -1,46 +1,46 @@
 <header class="main-header">
-    <div class="header-content">
-        <div class="logo" id="scrabble-logo-wrapper">
-            <div class="scrabble-logo-container" id="scrabble-logo">
-                <span class="scrabble-tile" data-letter="S" data-points="1"></span>
-                <span class="scrabble-tile" data-letter="C" data-points="3"></span>
-                <span class="scrabble-tile" data-letter="R" data-points="1"></span>
-                <span class="scrabble-tile" data-letter="A" data-points="1"></span>
-                <span class="scrabble-tile" data-letter="B" data-points="3"></span>
-                <span class="scrabble-tile" data-letter="B" data-points="3"></span>
-                <span class="scrabble-tile" data-letter="L" data-points="1"></span>
-                <span class="scrabble-tile" data-letter="E" data-points="1"></span>
-            </div>
-            <a href="/" class="logo-link" id="scrabble-logo-link">Scrabble</a>
-        </div>
-
-        <nav class="main-nav">
-            <% if (locals.user) { %>
-                <a href="/lobby">Lobby</a>
-                <button id="logout-btn" class="btn btn-small">Logout</button>
-            <% } else { %>
-                <a href="/login">Login</a>
-                <a href="/signup">Sign Up</a>
-            <% } %>
-        </nav>
+  <div class="header-content">
+    <div class="logo" id="scrabble-logo-wrapper">
+      <div class="scrabble-logo-container" id="scrabble-logo">
+        <span class="scrabble-tile" data-letter="S" data-points="1"></span>
+        <span class="scrabble-tile" data-letter="C" data-points="3"></span>
+        <span class="scrabble-tile" data-letter="R" data-points="1"></span>
+        <span class="scrabble-tile" data-letter="A" data-points="1"></span>
+        <span class="scrabble-tile" data-letter="B" data-points="3"></span>
+        <span class="scrabble-tile" data-letter="B" data-points="3"></span>
+        <span class="scrabble-tile" data-letter="L" data-points="1"></span>
+        <span class="scrabble-tile" data-letter="E" data-points="1"></span>
+      </div>
+      <a href="/" class="logo-link" id="scrabble-logo-link">Scrabble</a>
     </div>
+
+    <nav class="main-nav">
+      <% if (locals.user) { %>
+      <a href="/lobby">Lobby</a>
+      <button id="logout-btn" class="btn btn-small">Logout</button>
+      <% } else { %>
+      <a href="/login">Login</a>
+      <a href="/signup">Sign Up</a>
+      <% } %>
+    </nav>
+  </div>
 </header>
 
 <% if (locals.user) { %>
-    <script type="module">
-        <% if (process.env.NODE_ENV === 'production') { %>
-        import { api } from '/js/api.js';
-        <% } else { %>
-        import { api } from 'http://localhost:5173/ts/api.ts';
-        <% } %>
+<script type="module">
+  <% if (process.env.NODE_ENV === 'production') { %>
+  import { api } from '/js/api.js';
+  <% } else { %>
+  import api from 'http://localhost:5173/ts/api.ts';
+  <% } %>
 
-        document.getElementById('logout-btn')?.addEventListener('click', async () => {
-            try {
-                await api.auth.logout();
-                window.location.href = '/';
-            } catch (error) {
-                console.error('Logout failed:', error);
-            }
-        });
-    </script>
+  document.getElementById('logout-btn')?.addEventListener('click', async () => {
+      try {
+          await api.auth.logout();
+          window.location.href = '/';
+      } catch (error) {
+          console.error('Logout failed:', error);
+      }
+  });
+</script>
 <% } %>

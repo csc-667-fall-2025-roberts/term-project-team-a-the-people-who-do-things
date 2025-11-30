@@ -1,31 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Error - Scrabble</title>
-    <link rel="stylesheet" href="/styles/main.css">
-</head>
-<body>
-<%- include('../components/header') %>
+    <link rel="stylesheet" href="/styles/main.css" />
+  </head>
+  <body>
+    <%- include('../components/header') %>
 
-<main class="auth-page">
-    <div class="auth-container" style="text-align: center;">
-        <h1 style="color: #ef4444; font-size: 4rem; margin-bottom: 0.5rem;">404</h1>
-        <h2 style="margin-bottom: 1rem;">Page Not Found</h2>
-        
-        <p style="color: #64748b; margin-bottom: 2rem;">
-            The page you are looking for cannot be found.
+    <main class="auth-page">
+      <div class="auth-container" style="text-align: center">
+        <h1 style="color: #ef4444; font-size: 4rem; margin-bottom: 0.5rem">404</h1>
+        <h2 style="margin-bottom: 1rem">Page Not Found</h2>
+
+        <p style="color: #64748b; margin-bottom: 2rem">
+          The page you are looking for cannot be found.
         </p>
 
         <a href="/lobby" class="btn btn-primary">Return to Lobby</a>
-    </div>
-</main>
+      </div>
+    </main>
 
-<% if (process.env.NODE_ENV === 'production') { %>
-<script type="module" src="/ts/main.ts"></script>
-<% } else { %>
-<script type="module" src="http://localhost:5173/ts/main.ts"></script>
-<% } %>
-</body>
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/main.js"></script>
+    <% } else { %>
+    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <% } %>
+  </body>
 </html>

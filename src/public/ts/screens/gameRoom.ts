@@ -1,28 +1,34 @@
 import * as ScrabbleConstants from "../../../server/services/scrabbleConstants.js";
 import { ChatMessage } from "../../../types/client/dom.js";
-import type { NewTilesResponse, SelectedTile,
-    GameStateResponse, GameParticipant,
-    ScoreEntry, GameSummaryResponse, MoveMadeResponse } from "../../../types/client/socket-events.js";
+import type {
+  GameParticipant,
+  GameStateResponse,
+  GameSummaryResponse,
+  MoveMadeResponse,
+  NewTilesResponse,
+  ScoreEntry,
+  SelectedTile,
+} from "../../../types/client/socket-events.js";
 import { api } from "../api.js";
 import ScrabbleBoard from "../scrabbleBoard.js";
 import { socket } from "../socket.js";
-
 
 const gameId = window.GAME_ID;
 const board = new ScrabbleBoard("scrabble-board");
 let currentUser: { id: string; display_name: string } | null = null;
 
 async function init(): Promise<void> {
-    const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
-    currentUser = user;
+  const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
+  currentUser = user;
 
-    const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
-    renderPlayers(gameData.game_participants);
-    renderScores(gameData.scores);
+  const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
+  renderPlayers(gameData.game_participants);
+  renderScores(gameData.scores);
 
-    socket.emit("join-game", gameId);
-  } init().catch((error) => {
-    console.error("Failed to initialize:", error);
+  socket.emit("join-game", gameId);
+}
+init().catch((error) => {
+  console.error("Failed to initialize:", error);
 });
 
 // Socket events
@@ -181,9 +187,9 @@ function renderScores(scores: ScoreEntry[]) {
 
 let participants: GameParticipant[] = [];
 const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
-    participants = gameData.game_participants; // Store participants
-    renderPlayers(gameData.game_participants);
-    renderScores(gameData.scores);
+participants = gameData.game_participants; // Store participants
+renderPlayers(gameData.game_participants);
+renderScores(gameData.scores);
 
 function updateScores(scores: Record<string, number>) {
   const scoresContainer = document.getElementById("scores-list");
@@ -191,11 +197,11 @@ function updateScores(scores: Record<string, number>) {
 
   scoresContainer.innerHTML = Object.entries(scores)
     .map(([userId, score]) => {
-      const participant = participants.find(p => p.user_id === userId);
-      const displayName = participant?.display_name || 'Unknown';
+      const participant = participants.find((p) => p.user_id === userId);
+      const displayName = participant?.display_name || "Unknown";
 
       return `
-        <div class="score-item ${currentUser?.id === userId ? 'current-user' : ''}">
+        <div class="score-item ${currentUser?.id === userId ? "current-user" : ""}">
           <span class="player-name">${displayName}</span>
           <span class="score-value">${score}</span>
         </div>

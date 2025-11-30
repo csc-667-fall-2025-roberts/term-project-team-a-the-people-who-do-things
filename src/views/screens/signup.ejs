@@ -1,54 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign Up - Scrabble</title>
-    <link rel="stylesheet" href="/styles/main.css">
-</head>
-<body>
-<%- include('../components/header') %>
+    <link rel="stylesheet" href="/styles/main.css" />
+  </head>
+  <body>
+    <%- include('../components/header') %>
 
-<main class="auth-page">
-    <div class="auth-container">
+    <main class="auth-page">
+      <div class="auth-container">
         <h1>Create Account</h1>
 
         <form id="signup-form">
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
-            </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required />
+          </div>
 
-            <div class="form-group">
-                <label for="display-name">Display Name</label>
-                <input type="text" id="display-name" name="displayName" required>
-            </div>
+          <div class="form-group">
+            <label for="display-name">Display Name</label>
+            <input type="text" id="display-name" name="displayName" required />
+          </div>
 
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required minlength="6">
-            </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required minlength="6" />
+          </div>
 
-            <div class="form-group">
-                <label for="confirm-password">Confirm Password</label>
-                <input type="password" id="confirm-password" name="confirmPassword" required>
-            </div>
+          <div class="form-group">
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" name="confirmPassword" required />
+          </div>
 
-            <div id="error-message" class="error-message"></div>
+          <div id="error-message" class="error-message"></div>
 
-            <button type="submit" class="btn btn-primary">Sign Up</button>
+          <button type="submit" class="btn btn-primary">Sign Up</button>
         </form>
 
-        <p class="auth-link">
-            Already have an account? <a href="/login">Log in</a>
-        </p>
-    </div>
-</main>
+        <p class="auth-link">Already have an account? <a href="/login">Log in</a></p>
+      </div>
+    </main>
 
-<% if (process.env.NODE_ENV === 'production') { %>
-<script type="module" src="/ts/main.ts"></script>
-<% } else { %>
-<script type="module" src="http://localhost:5173/ts/main.ts"></script>
-<% } %>
-</body>
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/main.js"></script>
+    <% } else { %>
+    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <% } %>
+  </body>
 </html>

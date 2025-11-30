@@ -20,7 +20,6 @@ const createGameBtn = document.getElementById("create-game-btn");
 const createGameModal = document.getElementById("create-game-modal");
 const createGameForm = document.getElementById("create-game-form") as HTMLFormElement | null;
 
-
 const chatForm = document.getElementById("chat-form") as HTMLFormElement | null;
 const chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
 const chatMessages = document.getElementById("chat-messages");
@@ -77,7 +76,6 @@ async function loadLobbyMessages() {
 }
 
 function initLobbyChat() {
-
   if (!chatForm || !chatInput || !chatMessages) {
     console.error("Chat elements not found:", {
       chatForm: !!chatForm,
@@ -87,12 +85,10 @@ function initLobbyChat() {
     return;
   }
 
-
-
   console.log("Initializing lobby chat...");
 
   // Join lobby room
-  socket.emit("join-lobby");
+  socket.emit("join-lobby", {});
   console.log("Joined lobby room");
 
   // Load existing messages
@@ -136,7 +132,8 @@ async function loadGames() {
   } catch (error) {
     console.error("Failed to load games:", error);
     if (gamesContainer) {
-      gamesContainer.innerHTML = '<p class="text-red-500 text-center py-8">Failed to load games. Please refresh.</p>';
+      gamesContainer.innerHTML =
+        '<p class="text-red-500 text-center py-8">Failed to load games. Please refresh.</p>';
     }
   }
 }

@@ -1,51 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Scrabble - Multiplayer Word Game</title>
-    <link rel="stylesheet" href="/styles/main.css">
-</head>
-<body>
-<%- include('../components/header') %>
+    <link rel="stylesheet" href="/styles/main.css" />
+  </head>
+  <body>
+    <%- include('../components/header') %>
 
-<main class="landing-page">
-    <section class="hero">
+    <main class="landing-page">
+      <section class="hero">
         <h1>Welcome to Multiplayer Scrabble</h1>
         <p>Challenge friends and players worldwide in the classic word game</p>
 
         <% if (locals.user) { %>
-            <div class="cta-buttons">
-                <a href="/lobby" class="btn btn-primary">Go to Lobby</a>
-            </div>
+        <div class="cta-buttons">
+          <a href="/lobby" class="btn btn-primary">Go to Lobby</a>
+        </div>
         <% } else { %>
-            <div class="cta-buttons">
-                <a href="/signup" class="btn btn-primary">Sign Up</a>
-                <a href="/login" class="btn btn-secondary">Log In</a>
-            </div>
+        <div class="cta-buttons">
+          <a href="/signup" class="btn btn-primary">Sign Up</a>
+          <a href="/login" class="btn btn-secondary">Log In</a>
+        </div>
         <% } %>
-    </section>
+      </section>
 
-    <section class="features">
+      <section class="features">
         <div class="feature">
-            <h3>Real-time Multiplayer</h3>
-            <p>Play with friends or match with players online</p>
+          <h3>Real-time Multiplayer</h3>
+          <p>Play with friends or match with players online</p>
         </div>
         <div class="feature">
-            <h3>Live Chat</h3>
-            <p>Chat with opponents during gameplay</p>
+          <h3>Live Chat</h3>
+          <p>Chat with opponents during gameplay</p>
         </div>
         <div class="feature">
-            <h3>Competitive Scoring</h3>
-            <p>Track your progress and compete for high scores</p>
+          <h3>Competitive Scoring</h3>
+          <p>Track your progress and compete for high scores</p>
         </div>
-    </section>
-</main>
+      </section>
+    </main>
 
-<% if (process.env.NODE_ENV === 'production') { %>
-<script type="module" src="/js/landing.ts"></script>
-<% } else { %>
-<script type="module" src="http://localhost:5173/ts/screens/landing.ts"></script>
-<% } %>
-</body>
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/landing.js"></script>
+    <% } else { %>
+    <script type="module" src="http://localhost:5173/ts/screens/landing.ts"></script>
+    <% } %>
+  </body>
 </html>
