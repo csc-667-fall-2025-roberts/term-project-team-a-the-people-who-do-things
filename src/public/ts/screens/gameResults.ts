@@ -1,6 +1,5 @@
+import { GameParticipant, ScoreEntry } from "../../../types/client/socket-events.js";
 import { api } from "../api.js";
-import { GameParticipant,
-    ScoreEntry } from "../../../types/client/socket-events.js";
 
 const gameId = window.GAME_ID;
 
@@ -28,9 +27,7 @@ function renderScores(scores: ScoreEntry[], participants: GameParticipant[]) {
   const scoresList = document.getElementById("scores-list");
   if (!scoresList) return;
 
-  const participantMap = new Map(
-    participants.map((p) => [p.user_id, p.display_name])
-  );
+  const participantMap = new Map(participants.map((p) => [p.user_id, p.display_name]));
 
   const sortedScores = [...scores].sort((a, b) => b.value - a.value);
 
@@ -43,7 +40,7 @@ function renderScores(scores: ScoreEntry[], participants: GameParticipant[]) {
       <span class="score-value">${score.value} points</span>
       ${index === 0 ? '<span class="badge gold">Winner!</span>' : ""}
     </div>
-  `
+  `,
     )
     .join("");
 }
@@ -75,10 +72,9 @@ function renderStats(game: GameResultData) {
 document.getElementById("rematch-btn")?.addEventListener("click", async () => {
   try {
     const currentGame = (await api.games.get(gameId)) as GameResultData;
-    const { game: newGame } = (await api.games.create(
-      currentGame.max_players || 2,
-      {}
-    )) as { game: { id: string } };
+    const { game: newGame } = (await api.games.create(currentGame.max_players || 2, {})) as {
+      game: { id: string };
+    };
     window.location.href = `/game/${newGame.id}`;
   } catch (error) {
     if (error instanceof Error) {
@@ -90,5 +86,3 @@ document.getElementById("rematch-btn")?.addEventListener("click", async () => {
 });
 
 void loadResults();
-
-

@@ -25,10 +25,14 @@ export class SocketManager {
         this.listeners.get(event)!.push(callback);
     }
 
-    emit<K extends keyof SocketEvents>(event: K, data: SocketEvents[K]): void;
-    emit(event: string, data: any): void;
-    emit(event: string, data: any): void {
-        this.socket.emit(event, data);
+    emit<K extends keyof SocketEvents>(event: K, data?: SocketEvents[K]): void;
+    emit(event: string, data?: any): void;
+    emit(event: string, data?: any): void {
+        if (typeof data !== "undefined") {
+            this.socket.emit(event, data);
+        } else {
+            this.socket.emit(event);
+        }
     }
 
     off(event: string, callback: Function): void {

@@ -1,51 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scrabble - Multiplayer Word Game</title>
-    <link rel="stylesheet" href="/styles/main.css">
+    <% if (process.env.NODE_ENV === 'production') { %>
+        <link rel="stylesheet" href="/styles/main.css">
+    <% } %>
 </head>
-<body>
+<body class="h-full flex flex-col font-sans text-slate-900">
+
 <%- include('../components/header') %>
 
-<main class="landing-page">
-    <section class="hero">
-        <h1>Welcome to Multiplayer Scrabble</h1>
-        <p>Challenge friends and players worldwide in the classic word game</p>
+<main class="mx-auto max-w-[1200px] px-4 py-8 w-full flex-1">
+    
+    <section class="text-center py-16">
+        <h1 class="text-5xl font-bold text-blue-600 mb-4">
+            Welcome to Multiplayer Scrabble
+        </h1>
+        <p class="text-xl text-slate-500 mb-8">
+            Challenge friends and players worldwide in the classic word game
+        </p>
 
-        <% if (locals.user) { %>
-            <div class="cta-buttons">
-                <a href="/lobby" class="btn btn-primary">Go to Lobby</a>
-            </div>
-        <% } else { %>
-            <div class="cta-buttons">
-                <a href="/signup" class="btn btn-primary">Sign Up</a>
-                <a href="/login" class="btn btn-secondary">Log In</a>
-            </div>
-        <% } %>
+        <div class="flex justify-center gap-4">
+            <% if (locals.user) { %>
+                <a href="/lobby" class="rounded-md bg-blue-600 px-6 py-3 font-medium text-white shadow-md transition hover:bg-blue-700">
+                    Go to Lobby
+                </a>
+            <% } else { %>
+                <a href="/signup" class="rounded-md bg-blue-600 px-6 py-3 font-medium text-white shadow-md transition hover:bg-blue-700">
+                    Sign Up
+                </a>
+                <a href="/login" class="rounded-md bg-slate-500 px-6 py-3 font-medium text-white shadow-md transition hover:bg-slate-600">
+                    Log In
+                </a>
+            <% } %>
+        </div>
     </section>
 
-    <section class="features">
-        <div class="feature">
-            <h3>Real-time Multiplayer</h3>
-            <p>Play with friends or match with players online</p>
+    <section class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
+        
+        <div class="bg-white p-8 rounded-lg shadow text-center hover:-translate-y-1 transition duration-300">
+            <h3 class="text-2xl font-bold mb-4 text-slate-800">Real-time Multiplayer</h3>
+            <p class="text-slate-600">Play with friends or match with players online</p>
         </div>
-        <div class="feature">
-            <h3>Live Chat</h3>
-            <p>Chat with opponents during gameplay</p>
+
+        <div class="bg-white p-8 rounded-lg shadow text-center hover:-translate-y-1 transition duration-300">
+            <h3 class="text-2xl font-bold mb-4 text-slate-800">Live Chat</h3>
+            <p class="text-slate-600">Chat with opponents during gameplay</p>
         </div>
-        <div class="feature">
-            <h3>Competitive Scoring</h3>
-            <p>Track your progress and compete for high scores</p>
+
+        <div class="bg-white p-8 rounded-lg shadow text-center hover:-translate-y-1 transition duration-300">
+            <h3 class="text-2xl font-bold mb-4 text-slate-800">Competitive Scoring</h3>
+            <p class="text-slate-600">Track your progress and compete for high scores</p>
         </div>
+
     </section>
 </main>
 
-<% if (process.env.NODE_ENV === 'production') { %>
-<script type="module" src="/js/landing.ts"></script>
-<% } else { %>
-<script type="module" src="http://localhost:5173/ts/screens/landing.ts"></script>
-<% } %>
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/landing.js"></script>
+    <% } else { %>
+    <script type="module" src="http://localhost:5173/ts/screens/landing.ts"></script>
+    <% } %>
+
 </body>
 </html>

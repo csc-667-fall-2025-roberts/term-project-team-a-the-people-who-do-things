@@ -24,5 +24,3 @@ if (form && emailInput && passwordInput && errorMessage) {
     }
   });
 }
-
-

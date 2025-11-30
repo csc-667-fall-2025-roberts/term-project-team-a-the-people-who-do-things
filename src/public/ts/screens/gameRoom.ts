@@ -1,12 +1,17 @@
 import * as ScrabbleConstants from "../../../server/services/scrabbleConstants.js";
 import { ChatMessage } from "../../../types/client/dom.js";
-import type { NewTilesResponse, SelectedTile,
-    GameStateResponse, GameParticipant,
-    ScoreEntry, GameSummaryResponse, MoveMadeResponse } from "../../../types/client/socket-events.js";
+import type {
+  GameParticipant,
+  GameStateResponse,
+  GameSummaryResponse,
+  MoveMadeResponse,
+  NewTilesResponse,
+  ScoreEntry,
+  SelectedTile,
+} from "../../../types/client/socket-events.js";
 import { api } from "../api.js";
 import ScrabbleBoard from "../scrabbleBoard.js";
 import { socket } from "../socket.js";
-
 
 const gameId = window.GAME_ID;
 const board = new ScrabbleBoard("scrabble-board");
@@ -14,8 +19,8 @@ let currentUser: { id: string; display_name: string } | null = null;
 let participants: GameParticipant[] = [];
 
 async function init(): Promise<void> {
-    const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
-    currentUser = user;
+  const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
+  currentUser = user;
 
     const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
     participants = gameData.game_participants;

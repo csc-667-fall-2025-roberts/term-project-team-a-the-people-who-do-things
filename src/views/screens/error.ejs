@@ -1,31 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error - Scrabble</title>
-    <link rel="stylesheet" href="/styles/main.css">
-</head>
-<body>
+    <% if (process.env.NODE_ENV === 'production') { %>
+        <link rel="stylesheet" href="/styles/main.css">
+    <% } %>
+    </head>
+<body class="h-full"> 
 <%- include('../components/header') %>
 
-<main class="auth-page">
-    <div class="auth-container" style="text-align: center;">
-        <h1 style="color: #ef4444; font-size: 4rem; margin-bottom: 0.5rem;">404</h1>
-        <h2 style="margin-bottom: 1rem;">Page Not Found</h2>
-        
-        <p style="color: #64748b; margin-bottom: 2rem;">
-            The page you are looking for cannot be found.
+<main class="flex min-h-[calc(100vh-80px)] flex-col justify-center items-center px-6 py-12">
+    
+    <div class="w-full max-w-[400px] bg-white p-8 shadow-lg rounded-lg text-center">
+        <h1 class="text-6xl font-bold text-red-500 mb-2">
+            404
+        </h1>
+        <h2 class="text-2xl font-semibold text-gray-900 mb-4">
+            Page Not Found
+        </h2>
+        <p class="text-slate-500 mb-8 text-lg">
+            Oops! The tile you are looking for is not in the bag.
         </p>
-
-        <a href="/lobby" class="btn btn-primary">Return to Lobby</a>
+        <a href="/lobby" class="inline-block w-full rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition">
+            Return to Lobby
+        </a>
     </div>
 </main>
 
-<% if (process.env.NODE_ENV === 'production') { %>
-<script type="module" src="/ts/main.ts"></script>
-<% } else { %>
-<script type="module" src="http://localhost:5173/ts/main.ts"></script>
-<% } %>
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/main.js"></script>
+    <% } else { %>
+    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <% } %>
+
 </body>
 </html>
