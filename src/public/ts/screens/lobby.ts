@@ -87,10 +87,12 @@ function initLobbyChat() {
     return;
   }
 
+
+
   console.log("Initializing lobby chat...");
 
   // Join lobby room
-  socket.emit("join-lobby");
+  socket.emit("join-lobby");  // ✓ Valid
   console.log("Joined lobby room");
 
   // Load existing messages

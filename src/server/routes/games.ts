@@ -85,13 +85,12 @@ router.post('/:gameId/join', requireAuth, async (req, res) => {
 
     // Check if game exists and has space with row lock
     const gameResult = await client.query(
-      `SELECT g.id, g.max_players, g.status, COUNT(gp.user_id) as current_players
-       FROM games g
-       LEFT JOIN game_participants gp ON g.id = gp.game_id
-       WHERE g.id = $1
-       GROUP BY g.id, g.max_players, g.status
-       FOR UPDATE OF g`,
-      [gameId]
+        `SELECT g.*, COUNT(gp.user_id) as player_count
+         FROM games g
+                  LEFT JOIN game_participants gp ON g.id = gp.game_id
+         WHERE g.id = $1
+         GROUP BY g.id`,
+        [gameId]
     );
 
     if (gameResult.rows.length === 0) {

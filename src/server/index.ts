@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import express from "express";
 import { Request, RequestHandler, Response } from "express";
 import session from "express-session";
+import type { Scores, GameParticipant} from "../types/client/socket-events.js";
 import { createServer } from "http";
 import path from "path";
 import { Server, Socket } from "socket.io";
@@ -14,7 +15,6 @@ import chatRoutes from "./routes/chat.js";
 import gameRoutes from "./routes/games.js";
 import usersRoutes from "./routes/users.js";
 import gameManager from "./services/gameManager.js";
-import { Users } from "../types/client/dom.js";
 
 dotenv.config();
 
@@ -86,14 +86,15 @@ app.get("/lobby", requireAuth, (req, res) => {
   res.render("screens/lobby", { user: req.users });
 });
 
-app.get("/games/:gameId", requireAuth, (req, res) => {
+app.get("/game/:gameId", requireAuth, (req, res) => {
+  console.log("Game route hit:", req.params.gameId, "User:", req.users?.id);
   res.render("screens/gameRoom", {
     user: req.users,
     gameId: req.params.gameId,
   });
 });
 
-app.get("/games/:gameId/results", requireAuth, (req, res) => {
+app.get("/game/:gameId/results", requireAuth, (req, res) => {
   res.render("screens/gameResults", {
     user: req.users,
     gameId: req.params.gameId,
@@ -105,21 +106,12 @@ app.get("/settings", requireAuth, (req, res) => {
 });
 
 app.get("/error", (req, res) => {
-  res.render("screens/error");
+  res.render("screens/error", { user: req.users });
 });
 
 app.use((req,res) => {
-  res.status(404).render("screens/error");
-})
-
-interface SocketSession extends Socket {
-  request: Request & {
-    response: Response;
-    session: {
-      userId: keyof Users | null;
-    };
-  };
-}
+  res.status(404).render("screens/error", { user: req.users, message: "Page Not Found" });
+});
   
 // Socket config
 function wrap(middleware: RequestHandler) {
@@ -133,18 +125,9 @@ io.use(wrap(sessionMiddleware));
 io.on("connection", (socket: Socket) => {
   const userId = (socket.request as any).session?.userId;
 
-  if (!userId) {
-    socket.disconnect();
-    return;
-  }
-
   console.log("User connected:", userId);
   
   socket.data.userId = userId;
-  
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', userId);
-  });
 
   // Join lobby room
   socket.on("join-lobby", () => {

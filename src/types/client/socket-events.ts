@@ -30,6 +30,13 @@ export type ScoreEntry = {
     value: number;
 };
 
+// Score interface
+export interface Scores {
+    userID: string;
+    value: number;
+    recorded_at: Date;
+}
+
 
 export interface SelectedTile {
     row: number;

@@ -179,8 +179,29 @@ function renderScores(scores: ScoreEntry[]) {
   updateScores(aggregated);
 }
 
+let participants: GameParticipant[] = [];
+const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
+    participants = gameData.game_participants; // Store participants
+    renderPlayers(gameData.game_participants);
+    renderScores(gameData.scores);
+
 function updateScores(scores: Record<string, number>) {
-  console.log("Scores:", scores);
+  const scoresContainer = document.getElementById("scores-list");
+  if (!scoresContainer) return;
+
+  scoresContainer.innerHTML = Object.entries(scores)
+    .map(([userId, score]) => {
+      const participant = participants.find(p => p.user_id === userId);
+      const displayName = participant?.display_name || 'Unknown';
+
+      return `
+        <div class="score-item ${currentUser?.id === userId ? 'current-user' : ''}">
+          <span class="player-name">${displayName}</span>
+          <span class="score-value">${score}</span>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function updateGameInfo(state: GameStateResponse) {

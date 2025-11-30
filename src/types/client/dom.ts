@@ -16,12 +16,7 @@ export interface ChatMessage {
 }
 
 
-// Score interface
-export interface Scores {
-    userID: keyof Users;
-    value: number;
-    recorded_at: Date;
-}
+
 
 // User interface
 export interface Users {
