@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import type { Pool } from "pg";
+import pool from "../config/database";
 
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   if (!req.session.userId) {
@@ -12,9 +12,9 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
 };
 
 export const attachUser = async (req: Request, res: Response, next: NextFunction) => {
-  if (req.session.userId) {
+  res.locals.NODE_ENV = process.env.NODE_ENV;
+    if (req.session.userId) {
     try {
-      const { default: pool }: { default: Pool } = await import("../config/database.js");
       const result = await pool.query(
         "SELECT id, email, display_name FROM users WHERE id = $1",
         [req.session.userId]

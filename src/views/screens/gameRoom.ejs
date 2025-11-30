@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Room - Scrabble</title>
-    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="../public/styles/main.css">
 </head>
 <body>
 <%- include('../components/header') %>
@@ -51,7 +51,7 @@
     window.io = io;
     window.GAME_ID = '<%= gameId %>';
 </script>
-<% if (process.env.NODE_ENV === 'production') { %>
+<% if (NODE_ENV === 'production') { %>
 <script type="module" src="/js/main.js"></script>
 <% } else { %>
 <script type="module" src="http://localhost:5173/ts/main.ts"></script>

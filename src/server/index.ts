@@ -147,16 +147,19 @@ io.on("connection", (socket: Socket) => {
 
     let games = gameManager.getGame(gameId);
     if (!games) {
-      // Fetch participants from db
-      const result = await pool.query(
-        "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
-        [gameId],
-      );
+        // Fetch participants from db
+        const result = await pool.query(
+            "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
+            [gameId],
+        );
 
-      const game_participants: string[] = result.rows.map((r: any) => String(r.user_id));
-      games = gameManager.createGame(gameId, game_participants);
+        const game_participants: string[] = result.rows.map((r: any) => String(r.user_id));
+
+        games = gameManager.getGame(gameId);
+        if (!games) {
+            games = gameManager.createGame(gameId, game_participants);
+        }
     }
-
     // Send game state
     const gameState = games.getGameState();
     const playerHand = games.getPlayerHand(userId);
