@@ -11,17 +11,24 @@ import { socket } from "../socket.js";
 const gameId = window.GAME_ID;
 const board = new ScrabbleBoard("scrabble-board");
 let currentUser: { id: string; display_name: string } | null = null;
+let participants: GameParticipant[] = [];
 
 async function init(): Promise<void> {
     const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
     currentUser = user;
 
     const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
+    participants = gameData.game_participants;
     renderPlayers(gameData.game_participants);
     renderScores(gameData.scores);
 
     socket.emit("join-game", gameId);
-  } init().catch((error) => {
+}
+
+init().catch((error) => {
+    console.error("Failed to initialize:", error);
+});
+   init().catch((error) => {
     console.error("Failed to initialize:", error);
 });
 
@@ -179,29 +186,23 @@ function renderScores(scores: ScoreEntry[]) {
   updateScores(aggregated);
 }
 
-let participants: GameParticipant[] = [];
-const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
-    participants = gameData.game_participants; // Store participants
-    renderPlayers(gameData.game_participants);
-    renderScores(gameData.scores);
-
 function updateScores(scores: Record<string, number>) {
   const scoresContainer = document.getElementById("scores-list");
   if (!scoresContainer) return;
 
-  scoresContainer.innerHTML = Object.entries(scores)
-    .map(([userId, score]) => {
-      const participant = participants.find(p => p.user_id === userId);
-      const displayName = participant?.display_name || 'Unknown';
+    scoresContainer.innerHTML = Object.entries(scores)
+        .map(([userId, score]) => {
+            const participant = participants.find((p: GameParticipant) => p.user_id === userId);
+            const displayName = participant?.display_name || 'Unknown';
 
-      return `
+            return `
         <div class="score-item ${currentUser?.id === userId ? 'current-user' : ''}">
           <span class="player-name">${displayName}</span>
           <span class="score-value">${score}</span>
         </div>
       `;
-    })
-    .join("");
+        })
+        .join("");
 }
 
 function updateGameInfo(state: GameStateResponse) {
