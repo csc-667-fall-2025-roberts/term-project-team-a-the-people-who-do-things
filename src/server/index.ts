@@ -1,22 +1,17 @@
 import pgSession from "connect-pg-simple";
-import dotenv from "dotenv";
-import express from "express";
-import { Request, RequestHandler, Response } from "express";
+import express, { Request, RequestHandler, Response } from "express";
 import session from "express-session";
 import { createServer } from "http";
 import path from "path";
 import { Server, Socket } from "socket.io";
 import { fileURLToPath } from "url";
-import pool from "./config/database.ts";
-import { attachUser, requireAuth } from "./middleware/auth.ts";
-import authRoutes from "./routes/auth.ts";
-import chatRoutes from "./routes/chat.ts";
-import gameRoutes from "./routes/games.ts";
-import usersRoutes from "./routes/users.ts";
-import gameManager from "./services/gameManager.ts";
-import {Users } from "../types/client/dom.ts";
-
-dotenv.config();
+import pool from "./config/database.js";
+import { attachUser, requireAuth } from "./middleware/auth.js";
+import authRoutes from "./routes/auth.js";
+import chatRoutes from "./routes/chat.js";
+import gameRoutes from "./routes/games.js";
+import usersRoutes from "./routes/users.js";
+import gameManager from "./services/gameManager.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,15 +20,18 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1); // trust first proxy
+}
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static 
+// Serve static
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../public")));
 } else {
-  
   app.use(express.static(path.join(__dirname, "../public")));
 }
 
@@ -51,6 +49,7 @@ const sessionMiddleware = session({
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
   },
 });
 
@@ -87,20 +86,14 @@ app.get("/lobby", requireAuth, (req, res) => {
 });
 
 app.get("/game/:gameId", requireAuth, (req, res) => {
+  console.log("Game route hit:", req.params.gameId, "User:", req.users?.id);
   res.render("screens/gameRoom", {
     user: req.users,
     gameId: req.params.gameId,
   });
 });
 
-app.get("/games/:gameId", requireAuth, (req, res) => {
-  res.render("screens/gameRoom", {
-    user: req.users,
-    gameId: req.params.gameId,
-  });
-});
-
-app.get("/games/:gameId/results", requireAuth, (req, res) => {
+app.get("/game/:gameId/results", requireAuth, (req, res) => {
   res.render("screens/gameResults", {
     user: req.users,
     gameId: req.params.gameId,
@@ -112,22 +105,13 @@ app.get("/settings", requireAuth, (req, res) => {
 });
 
 app.get("/error", (req, res) => {
-  res.render("screens/error");
+  res.render("screens/error", { user: req.users });
 });
 
-app.use((req,res) => {
-  res.status(404).render("screens/error");
-})
+app.use((req, res) => {
+  res.status(404).render("screens/error", { user: req.users, message: "Page Not Found" });
+});
 
-interface SocketSession extends Socket {
-  request: Request & {
-    response: Response;
-    session: {
-      userId: keyof Users | null;
-    };
-  };
-}
-  
 // Socket config
 function wrap(middleware: RequestHandler) {
   return (socket: Socket, next: (err?: Error) => void) => {
@@ -140,18 +124,9 @@ io.use(wrap(sessionMiddleware));
 io.on("connection", (socket: Socket) => {
   const userId = (socket.request as any).session?.userId;
 
-  if (!userId) {
-    socket.disconnect();
-    return;
-  }
-
   console.log("User connected:", userId);
-  
+
   socket.data.userId = userId;
-  
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', userId);
-  });
 
   // Join lobby room
   socket.on("join-lobby", () => {

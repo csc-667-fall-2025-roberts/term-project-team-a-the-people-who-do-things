@@ -3,23 +3,14 @@ import {
   LETTER_DISTRIBUTION,
   LETTER_VALUES,
   PREMIUM_SQUARES,
-} from "./scrabbleConstants.ts";
-
-import type {
-	IScrabbleGame,
-	PlacedTile,
-	MoveResult,
-	ApplyMoveResult,
-	ExchangeResult,
-	ScrabbleGameState
-} from '../../types/ScrabbleGame.ts';
+} from "./scrabbleConstants.js";
 
 export class ScrabbleGame {
-  gameId: Pick<IScrabbleGame, 'gameId'>;
-  board: Pick<PlacedTile, 'letter' | 'row' | 'col'>[][];
-  tileBag: Pick<ScrabbleGameState, 'tilesRemaining'>[];
+  gameId: string;
+  board: (string | null)[][];
+  tileBag: string[];
   players: string[];
-  currentPlayerIndex: Pick<ScrabbleGameState, 'currentPlayer'>;
+  currentPlayerIndex: number;
   playerHands: { [playerId: string]: string[] };
   scores: { [playerId: string]: number };
   consecutivePasses: number;
@@ -56,7 +47,7 @@ export class ScrabbleGame {
     }
     return this.shuffle(tiles);
   }
-
+//IGNORE THE DUPLICATE WARNING
   shuffle<T>(array: T[]): T[] {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {

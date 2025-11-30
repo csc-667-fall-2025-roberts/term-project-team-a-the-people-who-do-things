@@ -1,4 +1,4 @@
-import { api } from "../api.ts";
+import { api } from "../api.js";
 
 const form = document.getElementById("login-form") as HTMLFormElement | null;
 const errorMessage = document.getElementById("error-message");
@@ -24,5 +24,3 @@ if (form && emailInput && passwordInput && errorMessage) {
     }
   });
 }
-
-

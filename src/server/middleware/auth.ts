@@ -21,10 +21,10 @@ export const attachUser = async (req: Request, res: Response, next: NextFunction
       );
       if (result.rows.length > 0) {
         req.users = result.rows[0];
-        res.locals.user = req.users;
+        res.locals.users = req.users;
       }
     } catch (err) {
-      console.error("Error attaching user:", err);
+      console.error("Error attaching users:", err);
     }
   }
   next();

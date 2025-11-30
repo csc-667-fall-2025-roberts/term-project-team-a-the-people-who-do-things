@@ -1,54 +1,62 @@
-type Listener = (...args: unknown[]) => void;
+import type { SocketEvents } from "../../types/client/socket-events.js";
 
 export class SocketManager {
-  private readonly socket: any;
-  private readonly listeners = new Map<string, Listener[]>();
+    socket: any;
+    listeners: Map<string, Function[]>;
 
-  constructor() {
-    if (typeof io === "undefined") {
-      throw new Error(
-        'Socket.IO client library not loaded. Include <script src="/socket.io/socket.io.js"></script> before this script.',
-      );
+    constructor() {
+        if (typeof io === "undefined") {
+            throw new Error(
+                'Socket'
+            );
+        }
+        this.socket = io();
+        this.listeners = new Map();
     }
-    this.socket = io();
-  }
 
-  on(event: string, callback: Listener) {
-    this.socket.on(event, callback);
+    on<K extends keyof SocketEvents>(event: K, callback: (data: SocketEvents[K]) => void): void;
+    on(event: string, callback: (data: any) => void): void;
+    on(event: string, callback: (data: any) => void): void {
+        this.socket.on(event, callback);
 
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, []);
+        if (!this.listeners.has(event)) {
+            this.listeners.set(event, []);
+        }
+        this.listeners.get(event)!.push(callback);
     }
-    this.listeners.get(event)?.push(callback);
-  }
 
-  emit(event: string, data?: unknown) {
-    this.socket.emit(event, data);
-  }
-
-  off(event: string, callback: Listener) {
-    this.socket.off(event, callback);
-
-    const callbacks = this.listeners.get(event);
-    if (!callbacks) return;
-
-    const index = callbacks.indexOf(callback);
-    if (index > -1) {
-      callbacks.splice(index, 1);
+    emit<K extends keyof SocketEvents>(event: K, data?: SocketEvents[K]): void;
+    emit(event: string, data?: any): void;
+    emit(event: string, data?: any): void {
+        if (typeof data !== "undefined") {
+            this.socket.emit(event, data);
+        } else {
+            this.socket.emit(event);
+        }
     }
-  }
 
-  removeAllListeners(event: string) {
-    const callbacks = this.listeners.get(event);
-    if (!callbacks) return;
+    off(event: string, callback: Function): void {
+        this.socket.off(event, callback);
 
-    callbacks.forEach((callback) => {
-      this.socket.off(event, callback);
-    });
-    this.listeners.delete(event);
-  }
+        if (this.listeners.has(event)) {
+            const callbacks = this.listeners.get(event)!;
+            const index = callbacks.indexOf(callback);
+            if (index > -1) {
+                callbacks.splice(index, 1);
+            }
+        }
+    }
+
+    removeAllListeners(event: string): void {
+        if (this.listeners.has(event)) {
+            const callbacks = this.listeners.get(event)!;
+            callbacks.forEach((callback: Function) => {
+                this.socket.off(event, callback);
+            });
+            this.listeners.delete(event);
+        }
+    }
 }
 
+// Export a singleton instance
 export const socket = new SocketManager();
-
-

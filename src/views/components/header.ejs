@@ -46,23 +46,23 @@
             </nav>
         </div>
     </div>
+
+    <nav class="main-nav">
+      <% if (locals.user) { %>
+      <a href="/lobby">Lobby</a>
+      <button id="logout-btn" class="btn btn-small">Logout</button>
+      <% } else { %>
+      <a href="/login">Login</a>
+      <a href="/signup">Sign Up</a>
+      <% } %>
+    </nav>
+  </div>
 </header>
 
 <% if (locals.user) { %>
-    <script type="module">
-        <% if (process.env.NODE_ENV === 'production') { %>
-        import { api } from '/ts/api.ts';
-        <% } else { %>
-        import { api } from 'http://localhost:5173/ts/api.ts';
-        <% } %>
-
-        document.getElementById('logout-btn')?.addEventListener('click', async () => {
-            try {
-                await api.auth.logout();
-                window.location.href = '/';
-            } catch (error) {
-                console.error('Logout failed:', error);
-            }
-        });
-    </script>
+  <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/header.js"></script>
+  <% } else { %>
+    <script type="module" src="http://localhost:5173/ts/header.ts"></script>
+  <% } %>
 <% } %>

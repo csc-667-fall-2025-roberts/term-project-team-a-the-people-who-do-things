@@ -1,4 +1,4 @@
-import { api } from "../api.ts";
+import { api } from "../api.js";
 
 const form = document.getElementById("signup-form") as HTMLFormElement | null;
 const errorMessage = document.getElementById("error-message");
@@ -40,5 +40,3 @@ if (
     }
   });
 }
-
-

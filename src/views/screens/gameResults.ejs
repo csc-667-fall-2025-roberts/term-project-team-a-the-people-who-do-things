@@ -43,16 +43,16 @@
                 Request Rematch
             </button>
         </div>
-    </div>
-</main>
+      </div>
+    </main>
 
-<script>
-    window.GAME_ID = '<%= gameId %>';
-</script>
-<% if (process.env.NODE_ENV === 'production') { %>
-<script type="module" src="/ts/main.ts"></script>
-<% } else { %>
-<script type="module" src="http://localhost:5173/ts/main.ts"></script>
-<% } %>
-</body>
+    <script>
+      window.GAME_ID = "<%= gameId %>";
+    </script>
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/main.js"></script>
+    <% } else { %>
+    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <% } %>
+  </body>
 </html>

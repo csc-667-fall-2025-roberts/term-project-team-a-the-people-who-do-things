@@ -79,6 +79,7 @@
                     </div>
                 </div>
             </div>
+          </div>
 
             <div class="w-full">
                 <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden h-[calc(100vh-180px)] sticky top-24">
@@ -89,11 +90,15 @@
     </div>
 </main>
 
-<% if (process.env.NODE_ENV === 'production') { %>
-    <script type="module" src="/ts/main.ts"></script>
-<% } else { %>
-    <script type="module" src="http://localhost:5173/@vite/client"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      // Make io available globally for socket.js
+      window.io = io;
+    </script>
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/main.js"></script>
+    <% } else { %>
     <script type="module" src="http://localhost:5173/ts/main.ts"></script>
-<% } %>
+    <% } %>
 </body>
 </html>

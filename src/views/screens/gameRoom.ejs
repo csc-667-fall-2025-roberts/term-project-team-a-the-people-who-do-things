@@ -1,60 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Game Room - Scrabble</title>
-    <link rel="stylesheet" href="/styles/main.css">
-</head>
-<body>
-<%- include('../components/header') %>
+    <link rel="stylesheet" href="/styles/main.css" />
+  </head>
+  <body>
+    <%- include('../components/header') %>
 
-<main class="game-room">
-    <div class="game-sidebar">
+    <main class="game-room">
+      <div class="game-sidebar">
         <section class="players-panel">
-            <h3>Players</h3>
-            <div id="players-list"></div>
+          <h3>Players</h3>
+          <div id="players-list"></div>
         </section>
 
         <section class="game-info">
-            <div class="info-item">
-                <span>Current Turn:</span>
-                <span id="current-turn">-</span>
-            </div>
-            <div class="info-item">
-                <span>Tiles Remaining:</span>
-                <span id="tiles-remaining">100</span>
-            </div>
+          <div class="info-item">
+            <span>Current Turn:</span>
+            <span id="current-turn">-</span>
+          </div>
+          <div class="info-item">
+            <span>Tiles Remaining:</span>
+            <span id="tiles-remaining">100</span>
+          </div>
         </section>
 
         <section class="game-actions">
-            <button id="pass-btn" class="btn btn-secondary">Pass Turn</button>
-            <button id="exchange-btn" class="btn btn-secondary">Exchange Tiles</button>
-            <button id="shuffle-btn" class="btn btn-secondary">Shuffle Hand</button>
+          <button id="pass-btn" class="btn btn-secondary">Pass Turn</button>
+          <button id="exchange-btn" class="btn btn-secondary">Exchange Tiles</button>
+          <button id="shuffle-btn" class="btn btn-secondary">Shuffle Hand</button>
         </section>
-    </div>
+      </div>
 
-    <div class="game-main">
+      <div class="game-main">
         <%- include('../components/scrabbleBoard') %>
 
         <section class="player-hand-section">
-            <h3>Your Hand</h3>
-            <div id="player-hand" class="player-hand"></div>
-            <button id="submit-move-btn" class="btn btn-primary">Submit Move</button>
+          <h3>Your Hand</h3>
+          <div id="player-hand" class="player-hand"></div>
+          <button id="submit-move-btn" class="btn btn-primary">Submit Move</button>
         </section>
-    </div>
-</main>
+      </div>
+    </main>
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-    // Make io available globally for socket.js
-    window.io = io;
-    window.GAME_ID = '<%= gameId %>';
-</script>
-<% if (process.env.NODE_ENV === 'production') { %>
-<script type="module" src="/ts/main.js"></script>
-<% } else { %>
-<script type="module" src="http://localhost:5173/ts/main.ts"></script>
-<% } %>
-</body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      // Make io available globally for socket.js
+      window.io = io;
+      window.GAME_ID = "<%= gameId %>";
+    </script>
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/main.js"></script>
+    <% } else { %>
+    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <% } %>
+  </body>
 </html>
