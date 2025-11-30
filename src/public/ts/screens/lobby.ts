@@ -92,7 +92,7 @@ function initLobbyChat() {
   console.log("Initializing lobby chat...");
 
   // Join lobby room
-  socket.emit("join-lobby");  // ✓ Valid
+  socket.emit("join-lobby");
   console.log("Joined lobby room");
 
   // Load existing messages
