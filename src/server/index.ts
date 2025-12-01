@@ -111,19 +111,19 @@ app.get("/error", (req, res) => {
 // src/server/index.ts
 
 app.get("/settings", requireAuth, (req, res) => {
-  const safeUser = req.users || { 
-      display_name: "Ghost User", 
-      email: "error@example.com" 
+  const safeUser = req.users || {
+    display_name: "Ghost User",
+    email: "error@example.com",
   };
-  
-  res.render("screens/settings", { 
-      user: safeUser,
-      NODE_ENV: process.env.NODE_ENV 
+
+  res.render("screens/settings", {
+    user: safeUser,
+    NODE_ENV: process.env.NODE_ENV,
   });
 });
 
 app.get(/.*\.map$/, (req, res) => {
-  res.status(404).end(); 
+  res.status(404).end();
 });
 
 app.use((req, res) => {
@@ -164,19 +164,36 @@ io.on("connection", (socket: Socket) => {
 
     let games = gameManager.getGame(gameId);
     if (!games) {
-        // Fetch participants from db
-        const result = await pool.query(
-            "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
-            [gameId],
-        );
+      // Fetch participants from db
+      const result = await pool.query(
+        "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
+        [gameId],
+      );
 
-        const game_participants: string[] = result.rows.map((r: any) => String(r.user_id));
+      const game_participants: string[] = result.rows.map((r: any) => String(r.user_id));
 
-        games = gameManager.getGame(gameId);
-        if (!games) {
-            games = gameManager.createGame(gameId, game_participants);
-        }
+      games = gameManager.getGame(gameId);
+      if (!games) {
+        games = gameManager.createGame(gameId, game_participants);
+      }
     }
+
+    // Fetch tile data from DB
+    try {
+      const dbHandResult = await pool.query(
+        "SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
+        [gameId, userId],
+      );
+
+      // If DB has tiles, force the in-memory game to match the DB
+      if (dbHandResult.rows.length > 0) {
+        const hand = dbHandResult.rows.map((r: any) => r.letter);
+        games.playerHands[userId] = hand;
+      }
+    } catch (e) {
+      console.error("Error syncing hand from DB:", e);
+    }
+
     // Send game state
     const gameState = games.getGameState();
     const playerHand = games.getPlayerHand(userId);
@@ -211,7 +228,7 @@ io.on("connection", (socket: Socket) => {
       gameState: game.getGameState(),
     });
 
-    socket.emit("new-tiles", { tiles: result.newTiles });
+    socket.emit("new-tiles", { tiles: game.getPlayerHand(userId) });
 
     try {
       await pool.query(
@@ -231,6 +248,52 @@ io.on("connection", (socket: Socket) => {
          SET value = scores.value + $3`,
         [gameId, userId, calculatedScore],
       );
+      // Save tiles to board in DB
+      const boardInsert = tiles
+        .map((t: any) => `('${gameId}', ${t.row}, ${t.col}, '${t.letter}', '${userId}')`)
+        .join(",");
+
+      await pool.query(
+        `INSERT INTO board_tiles (game_id, row, col, letter, placed_by) 
+        VALUES ${boardInsert}
+        ON CONFLICT (game_id, row, col) DO NOTHING`,
+      );
+
+      // Remove used tiles from hand in DB
+      for (const t of tiles) {
+        await pool.query(
+          `DELETE FROM player_tiles 
+        WHERE id IN (
+        SELECT id FROM player_tiles 
+        WHERE game_id = $1 AND user_id = $2 AND letter = $3 
+        LIMIT 1
+        )`,
+          [gameId, userId, t.letter],
+        );
+      }
+
+      // Add new tiles to DB hand
+      if (result.newTiles.length > 0) {
+        const newHand = result.newTiles.map((l) => `('${gameId}', '${userId}', '${l}')`).join(",");
+
+        await pool.query(
+          `INSERT INTO player_tiles (game_id, user_id, letter) 
+        VALUES ${newHand}`,
+        );
+      }
+
+      // Remove drawn tiles from DB bag
+      if (result.newTiles.length > 0) {
+        await pool.query(
+          `DELETE FROM tile_bag 
+            WHERE id IN (
+            SELECT id FROM tile_bag 
+            WHERE game_id = $1 
+            LIMIT $2
+            )`,
+          [gameId, result.newTiles.length],
+        );
+      }
     } catch (error) {
       console.error("Error saving move:", error);
     }

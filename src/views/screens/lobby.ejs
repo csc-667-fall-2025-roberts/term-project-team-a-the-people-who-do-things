@@ -1,109 +1,136 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full bg-gray-50">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Game Lobby - Scrabble</title>
-    
+
     <% if (NODE_ENV === 'production') { %>
-        <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/main.css" />
     <% } %>
-    
+
     <style>
-        .lobby-tab-active {
-            background-color: #8ad4fb !important;
-            color: #1e40af !important;
-            font-weight: 600 !important;
-            border-bottom-color: #8ad4fb !important;
-        }
-        .lobby-tab-content-active {
-            display: block !important;
-            background-color: #8ad4fb !important;
-            border-radius: 0 0 0.5rem 0.5rem;
-        }
-        .lobby-tab-content-active .bg-white {
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(138, 212, 251, 0.5);
-        }
+      .lobby-tab-active {
+        background-color: #8ad4fb !important;
+        color: #1e40af !important;
+        font-weight: 600 !important;
+        border-bottom-color: #8ad4fb !important;
+      }
+      .lobby-tab-content-active {
+        display: block !important;
+        background-color: #8ad4fb !important;
+        border-radius: 0 0 0.5rem 0.5rem;
+      }
+      .lobby-tab-content-active .bg-white {
+        background-color: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(138, 212, 251, 0.5);
+      }
     </style>
-</head>
-<body class="h-full flex flex-col bg-gray-50">
+  </head>
+  <body class="flex flex-col h-full bg-gray-50">
+    <%- include('../components/header') %>
 
-<%- include('../components/header') %>
-
-<main class="flex-1 w-full max-w-[1400px] mx-auto px-4 py-8">
-    
-    <div class="w-full">
+    <main class="flex-1 w-full max-w-[1400px] mx-auto px-4 py-8">
+      <div class="w-full">
         <!-- Tab Headers -->
-        <div class="flex gap-2 border-b-2 border-gray-200 items-end">
-            <button id="join-tab" class="px-6 py-3 text-base font-medium text-slate-500 bg-sky-100 rounded-t-lg hover:bg-sky-200 hover:text-blue-600 transition-colors border-b-2 border-transparent focus:outline-none lobby-tab lobby-tab-active">
-                Join Game
-            </button>
-            <button id="create-tab" class="px-6 py-3 text-base font-medium text-slate-500 bg-sky-100 rounded-t-lg hover:bg-sky-200 hover:text-blue-600 transition-colors border-b-2 border-transparent focus:outline-none lobby-tab">
-                Create Game
-            </button>
+        <div class="flex items-end gap-2 border-b-2 border-gray-200">
+          <button
+            id="join-tab"
+            class="px-6 py-3 text-base font-medium transition-colors border-b-2 border-transparent rounded-t-lg text-slate-500 bg-sky-100 hover:bg-sky-200 hover:text-blue-600 focus:outline-none lobby-tab lobby-tab-active"
+          >
+            Join Game
+          </button>
+          <button
+            id="create-tab"
+            class="px-6 py-3 text-base font-medium transition-colors border-b-2 border-transparent rounded-t-lg text-slate-500 bg-sky-100 hover:bg-sky-200 hover:text-blue-600 focus:outline-none lobby-tab"
+          >
+            Create Game
+          </button>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-[3.5fr_1fr] gap-6">
-            
-            <!-- Left Column: Tabs Content -->
-            <div class="flex flex-col min-h-[calc(100vh-220px)]">
-                
-                <!-- Join Game Content -->
-                <div id="join-tab-content" class="lobby-tab-content lobby-tab-content-active hidden p-6 h-full">
-                    <div id="games-container" class="space-y-4">
-                        <div class="bg-white/80 p-8 rounded-lg text-center text-slate-500 italic border border-sky-100 shadow-sm">
-                            Loading active games...
-                        </div>
-                    </div>
+          <!-- Left Column: Tabs Content -->
+          <div class="flex flex-col min-h-[calc(100vh-220px)]">
+            <!-- Join Game Content -->
+            <div
+              id="join-tab-content"
+              class="hidden h-full p-6 lobby-tab-content lobby-tab-content-active"
+            >
+              <div id="games-container" class="space-y-4">
+                <div
+                  class="p-8 italic text-center border rounded-lg shadow-sm bg-white/80 text-slate-500 border-sky-100"
+                >
+                  Loading active games...
                 </div>
-
-                <!-- Create Game Content -->
-                <div id="create-tab-content" class="lobby-tab-content hidden p-6 h-full">
-                    <div class="bg-white rounded-xl shadow-sm p-8 max-w-lg mx-auto border border-sky-100">
-                        <h2 class="text-2xl font-bold mb-6 text-slate-800 text-center">Create New Game</h2>
-                        <form id="create-game-form" class="space-y-6">
-                            <div>
-                                <label for="max-players" class="block text-sm font-semibold text-slate-700 mb-2">Max Players</label>
-                                <select id="max-players" name="maxPlayers" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm">
-                                    <option value="2">2 Players</option>
-                                    <option value="3">3 Players</option>
-                                    <option value="4">4 Players</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="time-limit" class="block text-sm font-semibold text-slate-700 mb-2">Turn Time Limit (seconds)</label>
-                                <input type="number" id="time-limit" name="timeLimit" value="60" min="30" max="300" class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm">
-                            </div>
-                            <button type="submit" class="w-full bg-blue-600 text-white py-3 px-6 rounded-full font-bold shadow-md hover:bg-blue-700 transition transform hover:-translate-y-0.5 flex justify-center items-center gap-2">
-                                <span>Create Game</span>
-                            </button>
-                        </form>
-                    </div>
-                </div>
+              </div>
             </div>
 
-            <!-- Right Column: Chat -->
-            <div class="w-full">
-                <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden h-[calc(100vh-180px)] sticky top-24">
-                    <%- include('../components/chat', { gameId: 'lobby' }) %>
-                </div>
+            <!-- Create Game Content -->
+            <div id="create-tab-content" class="hidden h-full p-6 lobby-tab-content">
+              <div class="max-w-lg p-8 mx-auto bg-white border shadow-sm rounded-xl border-sky-100">
+                <h2 class="mb-6 text-2xl font-bold text-center text-slate-800">Create New Game</h2>
+                <form id="create-game-form" class="space-y-6">
+                  <div>
+                    <label for="max-players" class="block mb-2 text-sm font-semibold text-slate-700"
+                      >Max Players</label
+                    >
+                    <select
+                      id="max-players"
+                      name="maxPlayers"
+                      class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
+                    >
+                      <option value="2">2 Players</option>
+                      <option value="3">3 Players</option>
+                      <option value="4">4 Players</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="time-limit" class="block mb-2 text-sm font-semibold text-slate-700"
+                      >Turn Time Limit (seconds)</label
+                    >
+                    <input
+                      type="number"
+                      id="time-limit"
+                      name="timeLimit"
+                      value="60"
+                      min="30"
+                      max="300"
+                      class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    class="w-full bg-blue-600 text-white py-3 px-6 rounded-full font-bold shadow-md hover:bg-blue-700 transition transform hover:-translate-y-0.5 flex justify-center items-center gap-2"
+                  >
+                    <span>Create Game</span>
+                  </button>
+                </form>
+              </div>
             </div>
+          </div>
+
+          <!-- Right Column: Chat -->
+          <div class="w-full">
+            <div
+              class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden h-[calc(100vh-180px)] sticky top-24"
+            >
+              <%- include('../components/chat', { gameId: 'lobby' }) %>
+            </div>
+          </div>
         </div>
-    </div>
-</main>
+      </div>
+    </main>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
       // Make io available globally for socket.js
       window.io = io;
     </script>
-    
+
     <% if (NODE_ENV === 'production') { %>
-        <script type="module" src="/js/main.js"></script>
+    <script type="module" src="/js/main.js"></script>
     <% } else { %>
-        <!-- If you have a specific lobby.ts, use that here. Otherwise, main.ts is fine -->
-        <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
     <% } %>
-</body>
+  </body>
 </html>

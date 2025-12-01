@@ -16,14 +16,17 @@ type LobbyChatMessage = {
 };
 
 const gamesContainer = document.getElementById("games-container");
-const createGameBtn = document.getElementById("create-game-btn");
-const createGameModal = document.getElementById("create-game-modal");
 const createGameForm = document.getElementById("create-game-form") as HTMLFormElement | null;
 
 const chatForm = document.getElementById("chat-form") as HTMLFormElement | null;
 const chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
 const chatMessages = document.getElementById("chat-messages");
 const LOBBY_ID = "lobby";
+
+const joinTab = document.getElementById("join-tab");
+const createTab = document.getElementById("create-tab");
+const joinContent = document.getElementById("join-tab-content");
+const createContent = document.getElementById("create-tab-content");
 
 // Escape HTML to prevent XSS
 function escapeHtml(text: string) {
@@ -74,6 +77,29 @@ async function loadLobbyMessages() {
     console.error("Failed to load lobby messages:", error);
   }
 }
+
+function switchTab(tab: 'join' | 'create') {
+  if (!joinTab || !createTab || !joinContent || !createContent) return;
+
+  if (tab === 'join') {
+    joinTab.classList.add('lobby-tab-active');
+    createTab.classList.remove('lobby-tab-active');
+    joinContent.classList.remove('hidden');
+    joinContent.classList.add('lobby-tab-content-active');
+    createContent.classList.add('hidden');
+    createContent.classList.remove('lobby-tab-content-active');
+  } else {
+    createTab.classList.add('lobby-tab-active');
+    joinTab.classList.remove('lobby-tab-active');
+    createContent.classList.remove('hidden');
+    createContent.classList.add('lobby-tab-content-active');
+    joinContent.classList.add('hidden');
+    joinContent.classList.remove('lobby-tab-content-active');
+  }
+}
+
+joinTab?.addEventListener('click', () => switchTab('join'));
+createTab?.addEventListener('click', () => switchTab('create'));
 
 function initLobbyChat() {
   if (!chatForm || !chatInput || !chatMessages) {
@@ -186,16 +212,6 @@ async function joinGame(event: Event) {
     }
   }
 }
-
-createGameBtn?.addEventListener("click", () => {
-  if (createGameModal) {
-    createGameModal.setAttribute("style", "display: block;");
-  }
-});
-
-createGameModal
-  ?.querySelector<HTMLButtonElement>(".close")
-  ?.addEventListener("click", () => createGameModal.setAttribute("style", "display: none;"));
 
 createGameForm?.addEventListener("submit", async (event) => {
   event.preventDefault();

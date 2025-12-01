@@ -3,9 +3,7 @@ import { ChatMessage } from "../../../types/client/dom.js";
 import type {
   GameParticipant,
   GameStateResponse,
-  GameSummaryResponse,
   MoveMadeResponse,
-  NewTilesResponse,
   ScoreEntry,
   SelectedTile,
 } from "../../../types/client/socket-events.js";
@@ -22,58 +20,18 @@ async function init(): Promise<void> {
   const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
   currentUser = user;
 
-    // const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
-    // renderPlayers(gameData.game_participants);
-    // renderScores(gameData.scores);
+  // const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
+  // renderPlayers(gameData.game_participants);
+  // renderScores(gameData.scores);
 
-    socket.emit("join-game", gameId);
+  socket.emit("join-game", gameId);
 }
 
 init().catch((error) => {
-    console.error("Failed to initialize:", error);
+  console.error("Failed to initialize:", error);
 });
-   init().catch((error) => {
-    console.error("Failed to initialize:", error);
-});
-
-// Socket events
-socket.on("game-state", (data: unknown) => {
-  const gameState = data as GameStateResponse;
-  board.updateBoard(gameState.board);
-  board.setHand(gameState.hand);
-  updateGameInfo(gameState);
-  updateScores(gameState.scores);
-});
-
-socket.on("move-made", (data: unknown) => {
-  const move = data as MoveMadeResponse;
-  board.updateBoard(move.gameState.board);
-  updateGameInfo(move.gameState);
-  updateScores(move.gameState.scores);
-
-  if (currentUser && move.userId === currentUser.id) {
-    board.clearSelection();
-  }
-});
-
-socket.on("new-tiles", (data: unknown) => {
-  const hand: { tiles: string[] } = data as { tiles: string[] };
-  board.setHand(hand.tiles);
-});
-
-socket.on("turn-passed", (data: unknown) => {
-  const turn: { currentPlayer: string } = data as { currentPlayer: string };
-  updateCurrentTurn(turn.currentPlayer);
-});
-
-socket.on("game-over", () => {
-  window.location.href = `/game/${gameId}/results`;
-});
-
-socket.on("error", (data: unknown) => {
-  const error = data as { message: string };
-  const userMessage: string = mapErrorMessage(error.message);
-  alert(userMessage);
+init().catch((error) => {
+  console.error("Failed to initialize:", error);
 });
 
 function mapErrorMessage(serverMessage: string): string {
@@ -99,16 +57,16 @@ document.getElementById("submit-move-btn")?.addEventListener("click", () => {
   const tiles = board.getSelectedTiles() as SelectedTile[];
 
   tiles.sort((a, b) => {
-      if (a.row === b.row) return a.col - b.col; 
-      return a.row - b.row; 
-    });
+    if (a.row === b.row) return a.col - b.col;
+    return a.row - b.row;
+  });
 
   const words = [tiles.map((tile) => tile.letter).join("")];
   const score = tiles.reduce(
     (sum, tile) => sum + (ScrabbleConstants.LETTER_VALUES[tile.letter] || 0),
     0,
   );
-  
+
   console.log("Submitting Move:", { gameId, tiles, words, score });
 
   socket.emit("make-move", {
@@ -196,19 +154,19 @@ function updateScores(scores: Record<string, number>) {
   const scoresContainer = document.getElementById("scores-list");
   if (!scoresContainer) return;
 
-    scoresContainer.innerHTML = Object.entries(scores)
-        .map(([userId, score]) => {
-            const participant = participants.find((p: GameParticipant) => p.user_id === userId);
-            const displayName = participant?.display_name || 'Unknown';
+  scoresContainer.innerHTML = Object.entries(scores)
+    .map(([userId, score]) => {
+      const participant = participants.find((p: GameParticipant) => p.user_id === userId);
+      const displayName = participant?.display_name || "Unknown";
 
-            return `
-        <div class="score-item ${currentUser?.id === userId ? 'current-user' : ''}">
+      return `
+        <div class="score-item ${currentUser?.id === userId ? "current-user" : ""}">
           <span class="player-name">${displayName}</span>
           <span class="score-value">${score}</span>
         </div>
       `;
-        })
-        .join("");
+    })
+    .join("");
 }
 
 function updateGameInfo(state: GameStateResponse) {
@@ -254,13 +212,17 @@ const handlers = {
     board.updateBoard(typedData.gameState.board);
     updateGameInfo(typedData.gameState);
     updateScores(typedData.gameState.scores);
+    
     if (currentUser && typedData.userId === currentUser.id) {
       board.clearSelection();
     }
   },
   newTiles: (data: unknown) => {
-    const typedData = data as NewTilesResponse;
-    board.setHand(typedData.tiles.map((tile) => tile.letter));
+    console.log("Received new tiles:", data);
+    const typedData = data as { tiles: string[] };
+    if (typedData && Array.isArray(typedData.tiles)) {
+      board.setHand(typedData.tiles);
+    }
   },
   turnPassed: (data: unknown) => {
     const typedData = data as { currentPlayer: string };

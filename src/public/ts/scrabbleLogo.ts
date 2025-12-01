@@ -113,7 +113,7 @@ function initScrabbleLogo() {
   // Handle drag over - MUST prevent default for drop to work
   // This needs to be on both container AND document to catch all events
   const handleDragOver = (e: DragEvent) => {
-    e.preventDefault(); // CRITICAL - without this, drop won't fire
+    e.preventDefault();
     e.stopPropagation();
     e.dataTransfer!.dropEffect = 'move';
     

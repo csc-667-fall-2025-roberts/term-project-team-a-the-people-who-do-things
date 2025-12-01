@@ -19,36 +19,34 @@ export interface PassTurnData {
 
 // Game participant interface
 export interface GameParticipant {
-    id: string;
-    is_host: boolean;
-    user_id: string;
-    display_name: string;
+  id: string;
+  is_host: boolean;
+  user_id: string;
+  display_name: string;
 }
 
 export type ScoreEntry = {
-    user_id: string;
-    value: number;
+  user_id: string;
+  value: number;
 };
 
 // Score interface
 export interface Scores {
-    userID: string;
-    value: number;
-    recorded_at: Date;
+  userID: string;
+  value: number;
+  recorded_at: Date;
 }
 
-
 export interface SelectedTile {
-    row: number;
-    col: number;
-    letter: string;
+  row: number;
+  col: number;
+  letter: string;
 }
 
 export interface PlacedTile {
-    letter: string;
-    row: number;
-    col: number;
-    isBlank?: boolean;
+  letter: string;
+  row: number;
+  col: number;
 }
 
 //tilesRemaining
@@ -73,7 +71,6 @@ export interface GameStateResponse {
   winner?: string;
 }
 
-
 export interface MoveMadeResponse {
   gameState: GameStateResponse;
   userId: string;
@@ -83,13 +80,13 @@ export interface MoveMadeResponse {
 }
 
 export interface Tile {
-     letter: string;
-     value: number;
-     x?: number;
-     y?: number;
-     isPlaced?: boolean;
+  letter: string;
+  value: number;
+  x?: number;
+  y?: number;
+  isPlaced?: boolean;
+  locked?: boolean;
 }
-
 
 export interface NewTilesResponse {
   tiles: Tile[];
