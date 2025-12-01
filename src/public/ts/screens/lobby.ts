@@ -78,28 +78,28 @@ async function loadLobbyMessages() {
   }
 }
 
-function switchTab(tab: 'join' | 'create') {
+function switchTab(tab: "join" | "create") {
   if (!joinTab || !createTab || !joinContent || !createContent) return;
 
-  if (tab === 'join') {
-    joinTab.classList.add('lobby-tab-active');
-    createTab.classList.remove('lobby-tab-active');
-    joinContent.classList.remove('hidden');
-    joinContent.classList.add('lobby-tab-content-active');
-    createContent.classList.add('hidden');
-    createContent.classList.remove('lobby-tab-content-active');
+  if (tab === "join") {
+    joinTab.classList.add("lobby-tab-active");
+    createTab.classList.remove("lobby-tab-active");
+    joinContent.classList.remove("hidden");
+    joinContent.classList.add("lobby-tab-content-active");
+    createContent.classList.add("hidden");
+    createContent.classList.remove("lobby-tab-content-active");
   } else {
-    createTab.classList.add('lobby-tab-active');
-    joinTab.classList.remove('lobby-tab-active');
-    createContent.classList.remove('hidden');
-    createContent.classList.add('lobby-tab-content-active');
-    joinContent.classList.add('hidden');
-    joinContent.classList.remove('lobby-tab-content-active');
+    createTab.classList.add("lobby-tab-active");
+    joinTab.classList.remove("lobby-tab-active");
+    createContent.classList.remove("hidden");
+    createContent.classList.add("lobby-tab-content-active");
+    joinContent.classList.add("hidden");
+    joinContent.classList.remove("lobby-tab-content-active");
   }
 }
 
-joinTab?.addEventListener('click', () => switchTab('join'));
-createTab?.addEventListener('click', () => switchTab('create'));
+joinTab?.addEventListener("click", () => switchTab("join"));
+createTab?.addEventListener("click", () => switchTab("create"));
 
 function initLobbyChat() {
   if (!chatForm || !chatInput || !chatMessages) {
@@ -135,8 +135,8 @@ function initLobbyChat() {
   socket.on("new-message", (data: unknown) => {
     const message = data as LobbyChatMessage;
 
-    console.log("Received new-message event:", message);
-    console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
+    // console.log("Received new-message event:", message);
+    // console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
 
     const isLobbyMessage =
       message.game_id === null || message.game_id === undefined || message.game_id === LOBBY_ID;
@@ -227,17 +227,16 @@ createGameForm?.addEventListener("submit", async (event) => {
   const submitBtn = createGameForm.querySelector('button[type="submit"]') as HTMLButtonElement;
   if (submitBtn) submitBtn.disabled = true;
 
- try {
-   const { game } = (await api.games.create(maxPlayers, { timeLimit })) as {
-     game: { id: string };
-   };
+  try {
+    const { game } = (await api.games.create(maxPlayers, { timeLimit })) as {
+      game: { id: string };
+    };
 
-   window.location.href = `/game/${game.id}`;
- } catch (error) {
-   console.error('Failed to create game:', error);
-   alert(error instanceof Error ? error.message : 'Failed to create game');
- }
-
+    window.location.href = `/game/${game.id}`;
+  } catch (error) {
+    console.error("Failed to create game:", error);
+    alert(error instanceof Error ? error.message : "Failed to create game");
+  }
 });
 
 // Socket events

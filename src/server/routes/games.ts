@@ -158,7 +158,7 @@ router.post("/:gameId/join", requireAuth, async (req, res) => {
 });
 
 // Get game details
-router.get("/game/:gameId", requireAuth, async (req, res) => {
+router.get("/:gameId", requireAuth, async (req, res) => {
   const { gameId } = req.params;
 
   try {

@@ -294,6 +294,12 @@ io.on("connection", (socket: Socket) => {
           [gameId, result.newTiles.length],
         );
       }
+
+      // Update turn
+      await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
+        result.currentPlayer,
+        gameId,
+      ]);
     } catch (error) {
       console.error("Error saving move:", error);
     }
@@ -320,6 +326,12 @@ io.on("connection", (socket: Socket) => {
         scores: game.scores,
       });
     } else {
+      // Go to next player's turn
+      await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
+        result.currentPlayer,
+        gameId,
+      ]);
+
       io.to(gameId).emit("turn-passed", {
         userId,
         currentPlayer: result.currentPlayer,

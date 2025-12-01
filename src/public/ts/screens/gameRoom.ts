@@ -3,6 +3,7 @@ import { ChatMessage } from "../../../types/client/dom.js";
 import type {
   GameParticipant,
   GameStateResponse,
+  GameSummaryResponse,
   MoveMadeResponse,
   ScoreEntry,
   SelectedTile,
@@ -20,9 +21,10 @@ async function init(): Promise<void> {
   const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
   currentUser = user;
 
-  // const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
-  // renderPlayers(gameData.game_participants);
-  // renderScores(gameData.scores);
+  const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
+  renderPlayers(gameData.game_participants);
+  renderScores(gameData.scores);
+  await loadChatHistory();
 
   socket.emit("join-game", gameId);
 }
@@ -109,11 +111,6 @@ chatForm?.addEventListener("submit", (event) => {
   chatInput.value = "";
 });
 
-socket.on("new-message", (data: unknown) => {
-  const message = data as ChatMessage;
-  addChatMessage(message);
-});
-
 function addChatMessage(message: ChatMessage) {
   if (!chatMessages) return;
   const messageEl = document.createElement("div");
@@ -177,6 +174,19 @@ function updateGameInfo(state: GameStateResponse) {
   updateCurrentTurn(state.currentPlayer);
 }
 
+async function loadChatHistory() {
+  try {
+    const { messages } = (await api.chat.getMessages(gameId)) as { messages: ChatMessage[] };
+
+    const chatMessages = document.getElementById("chat-messages");
+    if (chatMessages) chatMessages.innerHTML = "";
+
+    messages.forEach(addChatMessage);
+  } catch (error) {
+    console.error("Failed to load chat history:", error);
+  }
+}
+
 function updateCurrentTurn(playerId: string) {
   if (!currentUser) return;
   const currentTurnEl = document.getElementById("current-turn");
@@ -212,7 +222,7 @@ const handlers = {
     board.updateBoard(typedData.gameState.board);
     updateGameInfo(typedData.gameState);
     updateScores(typedData.gameState.scores);
-    
+
     if (currentUser && typedData.userId === currentUser.id) {
       board.clearSelection();
     }

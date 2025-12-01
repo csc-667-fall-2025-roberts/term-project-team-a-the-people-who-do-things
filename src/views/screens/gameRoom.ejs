@@ -1,15 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-gray-50">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Game Room - Scrabble</title>
-    </head>
-  <body>
+  </head>
+  <body class="flex flex-col h-full overflow-hidden bg-gray-50">
     <%- include('../components/header') %>
 
-    <main class="game-room">
-      <div class="game-sidebar">
+    <main
+      class="flex-1 w-full max-w-[1400px] mx-auto flex overflow-hidden bg-white shadow-sm border-x border-gray-200"
+    >
+      <div
+        class="z-10 flex flex-col hidden gap-6 p-6 overflow-y-auto bg-white border-r border-gray-200 shadow-sm w-72 lg:flex"
+      >
         <section class="players-panel">
           <h3>Players</h3>
           <div id="players-list"></div>
@@ -33,14 +37,19 @@
         </section>
       </div>
 
-      <div class="game-main">
+      <!-- Main game area -->
+      <div class="relative flex flex-col items-center flex-1 p-4 overflow-y-auto bg-slate-100">
         <%- include('../components/scrabbleBoard') %>
 
-        <section class="player-hand-section">
+        <!-- Player hand -->
+        <section class="flex flex-col items-center w-full max-w-2xl gap-6 pb-8 mt-8">
           <h3>Your Hand</h3>
-          <div id="player-hand" class="player-hand"></div>
+          <div id="player-hand" class="transition-all"></div>
           <button id="submit-move-btn" class="btn btn-primary">Submit Move</button>
         </section>
+      </div>
+      <div class="flex flex-col h-64 border-t border-gray-200 bg-gray-50">
+        <%- include('../components/chat', { gameId: gameId }) %>
       </div>
     </main>
 
@@ -48,13 +57,13 @@
     <script>
       // Make io available globally for socket.js
       window.io = io;
-      window.GAME_ID = '<%= gameId %>';
+      window.GAME_ID = "<%= gameId %>";
     </script>
-    
+
     <% if (NODE_ENV === 'production') { %>
-      <script type="module" src="/js/main.js"></script>
+    <script type="module" src="/js/main.js"></script>
     <% } else { %>
-      <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
     <% } %>
   </body>
 </html>
