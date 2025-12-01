@@ -188,13 +188,24 @@ function switchTab(tab: "join" | "create") {
   if (tab === "join") {
     joinTab?.classList.add("lobby-tab-active");
     createTab?.classList.remove("lobby-tab-active");
+    
     joinTabContent?.classList.add("lobby-tab-content-active");
+    joinTabContent?.classList.remove("hidden");
+
     createTabContent?.classList.remove("lobby-tab-content-active");
+    createTabContent?.classList.add("hidden");
+
   } else {
     createTab?.classList.add("lobby-tab-active");
     joinTab?.classList.remove("lobby-tab-active");
+
+
     createTabContent?.classList.add("lobby-tab-content-active");
+    createTabContent?.classList.remove("hidden");
+
     joinTabContent?.classList.remove("lobby-tab-content-active");
+    joinTabContent?.classList.add("hidden");
+
   }
 }
 

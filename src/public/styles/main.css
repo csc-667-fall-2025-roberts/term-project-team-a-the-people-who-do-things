@@ -555,7 +555,7 @@ body {
 }
 
 .lobby-tab-content {
-    display: none !important;
+    /*display: none !important; */
     background: rgba(159, 224, 255, 0.3); /* #9fe0ff with 30% opacity */
     border-radius: 0 0 0.5rem 0.5rem; /* Rounded bottom corners only, not top */
     padding: 1.5rem 1.5rem 2rem 1.5rem; /* More bottom padding for white space */
@@ -565,7 +565,7 @@ body {
 }
 
 .lobby-tab-content-active {
-    display: block !important;
+    /*display: block !important; */ 
     background: #8ad4fb !important; /* Fully opaque - no transparency */
     padding: 1.5rem 1.5rem 2rem 1.5rem !important; /* More bottom padding for white space */
 }
