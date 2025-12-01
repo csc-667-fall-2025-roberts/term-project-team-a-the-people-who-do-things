@@ -22,10 +22,9 @@ async function init(): Promise<void> {
   const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
   currentUser = user;
 
-    const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
-    participants = gameData.game_participants;
-    renderPlayers(gameData.game_participants);
-    renderScores(gameData.scores);
+    // const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
+    // renderPlayers(gameData.game_participants);
+    // renderScores(gameData.scores);
 
     socket.emit("join-game", gameId);
 }
