@@ -98,16 +98,18 @@ function alert(message: string) {
 document.getElementById("submit-move-btn")?.addEventListener("click", () => {
   const tiles = board.getSelectedTiles() as SelectedTile[];
 
-  if (tiles.length === 0) {
-    alert("Please place tiles on the board");
-    return;
-  }
+  tiles.sort((a, b) => {
+      if (a.row === b.row) return a.col - b.col; 
+      return a.row - b.row; 
+    });
 
   const words = [tiles.map((tile) => tile.letter).join("")];
   const score = tiles.reduce(
     (sum, tile) => sum + (ScrabbleConstants.LETTER_VALUES[tile.letter] || 0),
     0,
   );
+  
+  console.log("Submitting Move:", { gameId, tiles, words, score });
 
   socket.emit("make-move", {
     gameId,

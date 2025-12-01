@@ -1,13 +1,11 @@
-export default {
-  content: [
-    './src/views/**/*.ejs',
-    './src/public/**/*.ts',
-    './src/public/**/*.html'
-  ],
-  theme: {
+/** @type {import('tailwindcss').Config} */
+export const content = [
+    "./src/**/*.{html,js,ts,jsx,tsx}", 
+    "./src/views/**/*.ejs" 
+];
+export const theme = {
     extend: {},
-  },
-  plugins: [],
-}
+};
+export const plugins = [];
 
 

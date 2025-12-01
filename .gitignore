@@ -46,6 +46,8 @@ node_modules/
 
 *erd.md
 
+*output.css
+
 vite.config.d.ts
 vite.config.js
 vite.config.js.map

@@ -4,8 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Game Room - Scrabble</title>
-    <link rel="stylesheet" href="/styles/main.css" />
-  </head>
+    </head>
   <body>
     <%- include('../components/header') %>
 
@@ -45,16 +44,17 @@
       </div>
     </main>
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-    // Make io available globally for socket.js
-    window.io = io;
-    window.GAME_ID = '<%= gameId %>';
-</script>
-<% if (NODE_ENV === 'production') { %>
-<script type="module" src="/js/main.js"></script>
-<% } else { %>
-<script type="module" src="http://localhost:5173/ts/main.ts"></script>
-<% } %>
-</body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      // Make io available globally for socket.js
+      window.io = io;
+      window.GAME_ID = '<%= gameId %>';
+    </script>
+    
+    <% if (NODE_ENV === 'production') { %>
+      <script type="module" src="/js/main.js"></script>
+    <% } else { %>
+      <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <% } %>
+  </body>
 </html>

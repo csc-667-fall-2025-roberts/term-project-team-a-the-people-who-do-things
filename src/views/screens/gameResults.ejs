@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Results - Scrabble</title>
-    <% if (process.env.NODE_ENV === 'production') { %>
+    
+    <% if (NODE_ENV === 'production') { %>
         <link rel="stylesheet" href="/styles/main.css">
     <% } %>
 </head>
@@ -49,10 +50,11 @@
     <script>
       window.GAME_ID = "<%= gameId %>";
     </script>
-    <% if (process.env.NODE_ENV === 'production') { %>
-    <script type="module" src="/js/main.js"></script>
+    
+    <% if (NODE_ENV === 'production') { %>
+        <script type="module" src="/js/main.js"></script>
     <% } else { %>
-    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+        <script type="module" src="http://localhost:5173/ts/main.ts"></script>
     <% } %>
   </body>
 </html>

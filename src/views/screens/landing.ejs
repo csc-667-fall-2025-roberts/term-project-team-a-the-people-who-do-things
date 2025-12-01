@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scrabble - Multiplayer Word Game</title>
-    <% if (process.env.NODE_ENV === 'production') { %>
+    
+    <% if (NODE_ENV === 'production') { %>
         <link rel="stylesheet" href="/styles/main.css">
     <% } %>
 </head>
@@ -58,10 +59,10 @@
     </section>
 </main>
 
-    <% if (process.env.NODE_ENV === 'production') { %>
-    <script type="module" src="/js/landing.js"></script>
+    <% if (NODE_ENV === 'production') { %>
+        <script type="module" src="/js/landing.js"></script>
     <% } else { %>
-    <script type="module" src="http://localhost:5173/ts/screens/landing.ts"></script>
+        <script type="module" src="http://localhost:5173/ts/screens/landing.ts"></script>
     <% } %>
 
 </body>

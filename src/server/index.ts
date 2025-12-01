@@ -108,6 +108,24 @@ app.get("/error", (req, res) => {
   res.render("screens/error", { user: req.users });
 });
 
+// src/server/index.ts
+
+app.get("/settings", requireAuth, (req, res) => {
+  const safeUser = req.users || { 
+      display_name: "Ghost User", 
+      email: "error@example.com" 
+  };
+  
+  res.render("screens/settings", { 
+      user: safeUser,
+      NODE_ENV: process.env.NODE_ENV 
+  });
+});
+
+app.get(/.*\.map$/, (req, res) => {
+  res.status(404).end(); 
+});
+
 app.use((req, res) => {
   res.status(404).render("screens/error", { user: req.users, message: "Page Not Found" });
 });

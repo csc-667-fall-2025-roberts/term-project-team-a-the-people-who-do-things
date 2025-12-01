@@ -4,25 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Lobby - Scrabble</title>
-    <% if (process.env.NODE_ENV === 'production') { %>
+    
+    <% if (NODE_ENV === 'production') { %>
         <link rel="stylesheet" href="/styles/main.css">
     <% } %>
     
     <style>
-        /* EXACT MATCH from main.css logic */
         .lobby-tab-active {
-            background-color: #8ad4fb !important; /* Active Blue */
-            color: #1e40af !important; /* Dark Blue Text */
+            background-color: #8ad4fb !important;
+            color: #1e40af !important;
             font-weight: 600 !important;
             border-bottom-color: #8ad4fb !important;
         }
-        /* The content area needs to match the active tab color exactly */
         .lobby-tab-content-active {
             display: block !important;
-            background-color: #8ad4fb !important; /* Matches tab header */
-            border-radius: 0 0 0.5rem 0.5rem; /* Only bottom corners rounded */
+            background-color: #8ad4fb !important;
+            border-radius: 0 0 0.5rem 0.5rem;
         }
-        /* Fix the white cards inside to have the correct contrast */
         .lobby-tab-content-active .bg-white {
             background-color: rgba(255, 255, 255, 0.9);
             border: 1px solid rgba(138, 212, 251, 0.5);
@@ -30,11 +28,13 @@
     </style>
 </head>
 <body class="h-full flex flex-col bg-gray-50">
+
 <%- include('../components/header') %>
 
 <main class="flex-1 w-full max-w-[1400px] mx-auto px-4 py-8">
     
     <div class="w-full">
+        <!-- Tab Headers -->
         <div class="flex gap-2 border-b-2 border-gray-200 items-end">
             <button id="join-tab" class="px-6 py-3 text-base font-medium text-slate-500 bg-sky-100 rounded-t-lg hover:bg-sky-200 hover:text-blue-600 transition-colors border-b-2 border-transparent focus:outline-none lobby-tab lobby-tab-active">
                 Join Game
@@ -46,8 +46,10 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-[3.5fr_1fr] gap-6">
             
+            <!-- Left Column: Tabs Content -->
             <div class="flex flex-col min-h-[calc(100vh-220px)]">
                 
+                <!-- Join Game Content -->
                 <div id="join-tab-content" class="lobby-tab-content lobby-tab-content-active hidden p-6 h-full">
                     <div id="games-container" class="space-y-4">
                         <div class="bg-white/80 p-8 rounded-lg text-center text-slate-500 italic border border-sky-100 shadow-sm">
@@ -56,6 +58,7 @@
                     </div>
                 </div>
 
+                <!-- Create Game Content -->
                 <div id="create-tab-content" class="lobby-tab-content hidden p-6 h-full">
                     <div class="bg-white rounded-xl shadow-sm p-8 max-w-lg mx-auto border border-sky-100">
                         <h2 class="text-2xl font-bold mb-6 text-slate-800 text-center">Create New Game</h2>
@@ -79,8 +82,8 @@
                     </div>
                 </div>
             </div>
-          </div>
 
+            <!-- Right Column: Chat -->
             <div class="w-full">
                 <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden h-[calc(100vh-180px)] sticky top-24">
                     <%- include('../components/chat', { gameId: 'lobby' }) %>
@@ -95,10 +98,12 @@
       // Make io available globally for socket.js
       window.io = io;
     </script>
-    <% if (process.env.NODE_ENV === 'production') { %>
-    <script type="module" src="/js/main.js"></script>
+    
+    <% if (NODE_ENV === 'production') { %>
+        <script type="module" src="/js/main.js"></script>
     <% } else { %>
-    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+        <!-- If you have a specific lobby.ts, use that here. Otherwise, main.ts is fine -->
+        <script type="module" src="http://localhost:5173/ts/main.ts"></script>
     <% } %>
 </body>
 </html>
