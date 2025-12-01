@@ -98,9 +98,13 @@ function applyTheme(theme: string) {
 passwordForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const currentPasswordInput = document.getElementById("current-password") as HTMLInputElement | null;
+  const currentPasswordInput = document.getElementById(
+    "current-password",
+  ) as HTMLInputElement | null;
   const newPasswordInput = document.getElementById("new-password") as HTMLInputElement | null;
-  const confirmPasswordInput = document.getElementById("confirm-password") as HTMLInputElement | null;
+  const confirmPasswordInput = document.getElementById(
+    "confirm-password",
+  ) as HTMLInputElement | null;
 
   if (!currentPasswordInput || !newPasswordInput || !confirmPasswordInput) return;
 
@@ -136,5 +140,3 @@ passwordForm?.addEventListener("submit", async (event) => {
 });
 
 void loadPreferences();
-
-

@@ -1,9 +1,6 @@
 import pgSession from "connect-pg-simple";
-import dotenv from "dotenv";
-import express from "express";
-import { Request, RequestHandler, Response } from "express";
+import express, { Request, RequestHandler, Response } from "express";
 import session from "express-session";
-import type { Scores, GameParticipant} from "../types/client/socket-events.js";
 import { createServer } from "http";
 import path from "path";
 import { Server, Socket } from "socket.io";
@@ -16,8 +13,6 @@ import gameRoutes from "./routes/games.js";
 import usersRoutes from "./routes/users.js";
 import gameManager from "./services/gameManager.js";
 
-dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -25,15 +20,18 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1); // trust first proxy
+}
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static 
+// Serve static
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../public")));
 } else {
-  
   app.use(express.static(path.join(__dirname, "../public")));
 }
 
@@ -51,6 +49,7 @@ const sessionMiddleware = session({
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
   },
 });
 
@@ -109,10 +108,10 @@ app.get("/error", (req, res) => {
   res.render("screens/error", { user: req.users });
 });
 
-app.use((req,res) => {
+app.use((req, res) => {
   res.status(404).render("screens/error", { user: req.users, message: "Page Not Found" });
 });
-  
+
 // Socket config
 function wrap(middleware: RequestHandler) {
   return (socket: Socket, next: (err?: Error) => void) => {
@@ -126,7 +125,7 @@ io.on("connection", (socket: Socket) => {
   const userId = (socket.request as any).session?.userId;
 
   console.log("User connected:", userId);
-  
+
   socket.data.userId = userId;
 
   // Join lobby room
@@ -147,16 +146,19 @@ io.on("connection", (socket: Socket) => {
 
     let games = gameManager.getGame(gameId);
     if (!games) {
-      // Fetch participants from db
-      const result = await pool.query(
-        "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
-        [gameId],
-      );
+        // Fetch participants from db
+        const result = await pool.query(
+            "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
+            [gameId],
+        );
 
-      const game_participants: string[] = result.rows.map((r: any) => String(r.user_id));
-      games = gameManager.createGame(gameId, game_participants);
+        const game_participants: string[] = result.rows.map((r: any) => String(r.user_id));
+
+        games = gameManager.getGame(gameId);
+        if (!games) {
+            games = gameManager.createGame(gameId, game_participants);
+        }
     }
-
     // Send game state
     const gameState = games.getGameState();
     const playerHand = games.getPlayerHand(userId);

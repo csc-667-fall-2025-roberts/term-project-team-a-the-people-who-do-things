@@ -5,6 +5,7 @@ import '../styles/main.css';
 import './scrabbleLogo.ts';
 
 // Main entry point - dynamically loads the appropriate screen based on the current route
+
 const path = window.location.pathname;
 import "../styles/main.css";
 
