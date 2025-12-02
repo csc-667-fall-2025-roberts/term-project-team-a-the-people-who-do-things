@@ -1,7 +1,9 @@
 # Scrabble Online
 
 A multiplayer Scrabble game built with Node.js, Express, Socket.IO, and PostgreSQL.
+
 No one has ever built anything like it! 
+
 Ever!
 
 ## Features
