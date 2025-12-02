@@ -2,7 +2,7 @@ import { resolve } from "path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  root: "src/public", // This tells Vite to serve files from here
+  root: "src/public", 
   publicDir: false,
   build: {
     minify: false,

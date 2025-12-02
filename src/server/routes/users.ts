@@ -20,7 +20,6 @@ router.put("/update", requireAuth, async (req, res) => {
     res.json({ user: result.rows[0] });
   } catch (error) {
     if ((error as any).code !== "23505") {
-      //FIXME: we could check for database like error
       console.error("Update user error:", error);
       res.status(500).json({ error: "Server error" });
     } else {
