@@ -1,20 +1,26 @@
 import "express";
-import type { User } from "./user";
-import {Participants} from "./participants";
-import {Games} from "./games.js";
-import {ChatMessages} from "./chat.js";
-import {Scores} from "./scores.js";
-import {Moves} from "./moves.js";
+import type { Users } from "./users";
+import type {Participants} from "./participants.js";
+import type {Games} from "./games";
+import type {ChatMessages} from "./chat";
+import type {Scores} from "./scores";
+import type {Moves} from "./moves";
+import type {GameState} from "./gameState";
+import type {UserSettings} from "./user_settings.js";
+import type {SocketEvents} from "./socket-events.js";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: User;
-      game_participants?: Participants;
-      games?: Games;
-      chat_messages?: ChatMessages;
-      scores?: Scores;
-      moves?: Moves;
+        chat_messages?: ChatMessages;
+        gameState?: GameState;
+        game_participants?: Participants;
+        games?: Games;
+        moves?: Moves;
+        scores?: Scores;
+        users?: Users;
+        user_settings?: UserSettings;
+        socketEvents?: SocketEvents;
     }
   }
 }

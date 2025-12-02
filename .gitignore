@@ -12,7 +12,9 @@ dist
 dist-ssr
 *.local
 
-# Editor directories and files
+*/Database Consoles
+
+
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -22,10 +24,32 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.env
 *.env
 
-/notes.txt
-/.husky/
 
+dist/public/js/
+dist/public/assets/
+
+notes.txt
+
+/.husky/
+package-lock.json
 node_modules/
-dist/
+*dist/
+.run
+
+*package-lock.json
+.prettierrc
+*.idea/
+.vscode/
+
+*erd.md
+
+*output.css
+
+vite.config.d.ts
+vite.config.js
+vite.config.js.map
+vite.config.d.ts.map
+

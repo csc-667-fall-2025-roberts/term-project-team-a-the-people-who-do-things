@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Error - Scrabble</title>
+
+    <% if (NODE_ENV === 'production') { %>
+    <link rel="stylesheet" href="/styles/main.css" />
+    <% } %>
+  </head>
+  <body class="h-full">
+    <%- include('../components/header') %>
+
+    <main class="flex min-h-[calc(100vh-80px)] flex-col justify-center items-center px-6 py-12">
+      <div class="w-full max-w-[400px] bg-white p-8 shadow-lg rounded-lg text-center">
+        <h1 class="mb-2 text-6xl font-bold text-red-500">404</h1>
+        <h2 class="mb-4 text-2xl font-semibold text-gray-900">Page Not Found</h2>
+        <p class="mb-8 text-lg text-slate-500">
+          Oops! The tile you are looking for is not in the bag.
+        </p>
+        <a
+          href="/lobby"
+          class="inline-block w-full rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition"
+        >
+          Return to Lobby
+        </a>
+      </div>
+    </main>
+
+    <% if (NODE_ENV === 'production') { %>
+    <script type="module" src="/js/main.js"></script>
+    <% } else { %>
+    <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <% } %>
+  </body>
+</html>

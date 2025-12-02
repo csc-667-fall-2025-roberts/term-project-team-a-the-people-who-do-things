@@ -1,34 +1,80 @@
-<header class="main-header">
-    <div class="header-content">
-        <a href="/" class="logo">
-            <h1>Scrabble</h1>
-        </a>
+<header class="sticky top-0 z-50 bg-blue-600 shadow-md">
+  <div class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <a
+        href="/"
+        class="flex items-center gap-1 no-underline select-none"
+        aria-label="Scrabble Home"
+      >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >S</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >C</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >R</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >A</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >B</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >B</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >L</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >E</span
+        >
+      </a>
 
-        <nav class="main-nav">
-            <% if (locals.user) { %>
-                <a href="/lobby">Lobby</a>
-                <a href="/settings">Settings</a>
-                <span class="user-name"><%= user.display_name %></span>
-                <button id="logout-btn" class="btn btn-small">Logout</button>
-            <% } else { %>
-                <a href="/login">Login</a>
-                <a href="/signup">Sign Up</a>
-            <% } %>
-        </nav>
+      <nav class="flex items-center gap-6">
+        <% if (locals.user) { %>
+        <a href="/lobby" class="font-medium text-white transition hover:text-blue-200">Lobby</a>
+        <a href="/settings" class="font-medium text-white transition hover:text-blue-200"
+          >Settings</a
+        >
+
+        <button
+          id="logout-btn"
+          class="px-4 py-2 text-sm font-bold text-blue-600 transition bg-white rounded-md shadow-sm hover:bg-blue-50"
+        >
+          Logout
+        </button>
+        <% } else { %>
+        <a href="/login" class="font-medium text-white transition hover:text-blue-200">Login</a>
+        <a
+          href="/signup"
+          class="px-4 py-2 text-sm font-bold text-blue-600 transition bg-white rounded-md shadow-sm hover:bg-blue-50"
+        >
+          Sign Up
+        </a>
+        <% } %>
+      </nav>
     </div>
+  </div>
 </header>
 
-<% if (locals.user) { %>
-    <script type="module">
-        import { api } from '/js/api.js';
+<% if (typeof NODE_ENV === 'undefined' || NODE_ENV !== 'production') { %>
+<script type="module" src="http://localhost:5173/@vite/client"></script>
+<% } %>
 
-        document.getElementById('logout-btn')?.addEventListener('click', async () => {
-            try {
-                await api.auth.logout();
-                window.location.href = '/';
-            } catch (error) {
-                console.error('Logout failed:', error);
-            }
-        });
-    </script>
+<% if (locals.user) { %>
+<% if (NODE_ENV === 'production') { %>
+<script type="module" src="/js/header.js"></script>
+<% } else { %>
+<script type="module" src="http://localhost:5173/ts/header.ts"></script>
+<% } %>
 <% } %>

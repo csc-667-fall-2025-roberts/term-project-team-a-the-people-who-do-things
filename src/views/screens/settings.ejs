@@ -1,84 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - Scrabble</title>
-    <link rel="stylesheet" href="/styles/main.css">
+    <title>Game Results - Scrabble</title>
+    
+    <% if (NODE_ENV === 'production') { %>
+        <link rel="stylesheet" href="/styles/main.css">
+    <% } %>
 </head>
-<body>
+<body class="h-full flex flex-col bg-gray-50">
 <%- include('../components/header') %>
 
-<main class="settings-page">
-    <div class="settings-container">
-        <h1>Settings</h1>
+<main class="flex-1 overflow-y-auto w-full px-4 py-10">
+    
+    <div class="mx-auto max-w-[800px] bg-white p-8 rounded-lg shadow-lg text-center">
+        
+        <h1 class="text-4xl font-bold text-blue-600 mb-2">Game Over!</h1>
+        <p class="text-slate-500 mb-10">The match has ended. Here are the final standings.</p>
 
-        <section class="settings-section">
-            <h2>Account</h2>
-            <form id="account-form">
-                <div class="form-group">
-                    <label for="display-name">Display Name</label>
-                    <input type="text" id="display-name" name="displayName" value="<%= user.display_name %>">
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="<%= user.email %>">
-                </div>
-
-                <button type="submit" class="btn btn-primary">Save Changes</button>
-            </form>
+        <section class="mb-10 text-left">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">Final Scores</h2>
+            
+            <div id="scores-list" class="flex flex-col gap-3">
+                <div class="p-4 text-center text-slate-400 italic">Loading scores...</div>
+            </div>
         </section>
 
-        <section class="settings-section">
-            <h2>Preferences</h2>
-            <form id="preferences-form">
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="sound-effects" name="soundEffects">
-                    <label for="sound-effects">Sound Effects</label>
-                </div>
-
-                <div class="form-group checkbox">
-                    <input type="checkbox" id="notifications" name="notifications">
-                    <label for="notifications">Desktop Notifications</label>
-                </div>
-
-                <div class="form-group">
-                    <label for="theme">Theme</label>
-                    <select id="theme" name="theme">
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Save Preferences</button>
-            </form>
+        <section class="mb-10 text-left">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">Game Statistics</h2>
+            
+            <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="col-span-full p-4 text-center text-slate-400 italic">Loading statistics...</div>
+            </div>
         </section>
 
-        <section class="settings-section">
-            <h2>Password</h2>
-            <form id="password-form">
-                <div class="form-group">
-                    <label for="current-password">Current Password</label>
-                    <input type="password" id="current-password" name="currentPassword">
-                </div>
-
-                <div class="form-group">
-                    <label for="new-password">New Password</label>
-                    <input type="password" id="new-password" name="newPassword">
-                </div>
-
-                <div class="form-group">
-                    <label for="confirm-password">Confirm New Password</label>
-                    <input type="password" id="confirm-password" name="confirmPassword">
-                </div>
-
-                <button type="submit" class="btn btn-primary">Change Password</button>
-            </form>
-        </section>
-    </div>
-</main>
-
-<script src="/js/screens/settings.js" type="module"></script>
-</body>
+        <div class="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+            <a href="/lobby" class="inline-flex justify-center items-center px-6 py-3 rounded-md bg-blue-600 font-semibold text-white shadow-sm hover:bg-blue-500 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Return to Lobby
+            </a>
+            
+            <button id="rematch-btn" class="inline-flex justify-center items-center px-6 py-3 rounded-md bg-white border border-gray-300 font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Request Rematch
+            </button>
+        </div>
+      </div>
+    </main>
+    
+    <% if (NODE_ENV === 'production') { %>
+        <script type="module" src="/js/main.js"></script>
+    <% } else { %>
+        <script type="module" src="http://localhost:5173/ts/main.ts"></script>
+    <% } %>
+  </body>
 </html>

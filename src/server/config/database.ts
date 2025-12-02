@@ -1,0 +1,44 @@
+// import { Pool } from 'pg';
+// import dotenv from 'dotenv';
+
+// dotenv.config();
+
+// const pool = new Pool({
+// 	connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/scrabble_game',
+// 	max: 20,
+// 	idleTimeoutMillis: 30000,
+// 	connectionTimeoutMillis: 2000,
+// });
+
+// pool.on('error', (err: Error) => {
+// 	console.error('Unexpected error on idle client', err);
+// 	process.exit(-1);
+// });
+
+// export default pool;
+
+import dotenv from "dotenv";
+import { Pool, PoolConfig } from "pg";
+
+dotenv.config();
+
+const poolConfig: PoolConfig = {
+  host: process.env.DB_HOST || "localhost",
+  port: Number(process.env.DB_PORT) || 5432,
+  database: process.env.DB_NAME || "scrabble_game",
+  user: process.env.DB_USER || "scrabble_admin",
+  password: process.env.DB_PASSWORD || "scrabble_dev_2025",
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+  ssl: process.env.DB_HOST !== "localhost" ? { rejectUnauthorized: false } : undefined,
+};
+
+const pool = new Pool(poolConfig);
+
+pool.on("error", (err: Error) => {
+  console.error("Unexpected error on idle client", err);
+  process.exit(-1);
+});
+
+export default pool;
