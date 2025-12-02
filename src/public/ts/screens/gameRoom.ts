@@ -127,16 +127,26 @@ function renderPlayers(participants: GameParticipant[]) {
 	const playersList = document.getElementById("players-list");
 	if (!playersList) return;
 
-	playersList.innerHTML = participants
-		.map(
-			(participant) => `
-    <div class="player-item ${participant.is_host ? "host" : ""}">
-      <span>${participant.display_name}</span>
-      ${participant.is_host ? '<span class="badge">Host</span>' : ""}
-    </div>
-  `,
-		)
-		.join("");
+  playersList.innerHTML = participants
+    .map((participant) => {
+      const isMe = currentUser && participant.user_id === currentUser.id;
+      const containerClass = isMe ? "bg-blue-50 border-blue-200" : "bg-white border-slate-200";
+
+      return `
+        <div class="flex items-center justify-between p-3 border rounded-lg shadow-sm ${containerClass}">
+            <span class="text-sm font-bold text-slate-700 truncate">
+              ${escapeHtml(participant.display_name)}
+            </span>
+          
+          ${
+            participant.is_host
+              ? '<span class="px-2 py-0.5 text-[10px] font-bold text-gray-100 bg-gray-800 rounded uppercase tracking-wider">HOST</span>'
+              : ""
+          }
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function renderScores(scores: ScoreEntry[]) {
@@ -223,53 +233,55 @@ const handlers = {
 		console.log("Current hand before update:", board.getHand());
 		console.log("Board state from server:", typedData.gameState.board);
 
-		board.updateBoard(typedData.gameState.board);
-		updateGameInfo(typedData.gameState);
-		updateScores(typedData.gameState.scores);
+    if (currentUser && typedData.userId === currentUser.id) {
+      board.clearSelection();
+    }
+  },
+  playerJoined: async () => {
+    console.log("Another player joined. Refreshing list...");
 
-		if (currentUser && typedData.userId === currentUser.id) {
-			board.clearSelection();
-			console.log("Hand after clearing selection:", board.getHand());
-		}
-	},
-	newTiles: (data: unknown) => {
-		console.log("Received new tiles event:", data);
-		const typedData = data as { tiles: string[] };
-		if (typedData && Array.isArray(typedData.tiles)) {
-			const currentHand = board.getHand();
-			console.log("Current hand before adding new tiles:", currentHand);
-			console.log("New tiles to add:", typedData.tiles);
+    try {
+      const gameData = (await api.games.get(gameId)) as {
+        game_participants: GameParticipant[];
+        scores: any[];
+      };
 
-			const newTileObjects = typedData.tiles.map((letter) => ({
-				letter,
-				value: ScrabbleConstants.LETTER_VALUES[letter] || 0,
-			}));
-			const updatedHand = [...currentHand, ...newTileObjects];
-			console.log("Updated hand after adding new tiles:", updatedHand);
-			board.setHand(updatedHand);
-		}
-	},
-	turnPassed: (data: unknown) => {
-		const typedData = data as { currentPlayer: string };
-		updateCurrentTurn(typedData.currentPlayer);
-	},
-	gameOver: () => {
-		window.location.href = `/game/${gameId}/results`;
-	},
-	error: (data: unknown) => {
-		const typedData = data as { message: string };
-		const userMessage: string = mapErrorMessage(typedData.message);
-		alert(userMessage);
-	},
-	newMessage: (message: unknown) => {
-		const typedMessage = message as ChatMessage;
-		addChatMessage(typedMessage);
-	},
+      participants = gameData.game_participants;
+      renderPlayers(participants);
+      renderScores(gameData.scores);
+    } catch (e) {
+      console.error("Failed to refresh player list:", e);
+    }
+  },
+  newTiles: (data: unknown) => {
+    console.log("Received new tiles:", data);
+    const typedData = data as { tiles: string[] };
+    if (typedData && Array.isArray(typedData.tiles)) {
+      board.setHand(typedData.tiles);
+    }
+  },
+  turnPassed: (data: unknown) => {
+    const typedData = data as { currentPlayer: string };
+    updateCurrentTurn(typedData.currentPlayer);
+  },
+  gameOver: () => {
+    window.location.href = `/game/${gameId}/results`;
+  },
+  error: (data: unknown) => {
+    const typedData = data as { message: string };
+    const userMessage: string = mapErrorMessage(typedData.message);
+    alert(userMessage);
+  },
+  newMessage: (message: unknown) => {
+    const typedMessage = message as ChatMessage;
+    addChatMessage(typedMessage);
+  },
 };
 
 socket.on("game-state", handlers.gameState);
 socket.on("move-made", handlers.moveMade);
 socket.on("new-tiles", handlers.newTiles);
+socket.on("player-joined", handlers.playerJoined);
 socket.on("turn-passed", handlers.turnPassed);
 socket.on("game-over", handlers.gameOver);
 socket.on("error", handlers.error);
@@ -277,11 +289,12 @@ socket.on("new-message", handlers.newMessage);
 
 window.addEventListener("beforeunload", cleanup);
 function cleanup() {
-	socket.off("game-state", handlers.gameState);
-	socket.off("move-made", handlers.moveMade);
-	socket.off("new-tiles", handlers.newTiles);
-	socket.off("turn-passed", handlers.turnPassed);
-	socket.off("game-over", handlers.gameOver);
-	socket.off("error", handlers.error);
-	socket.off("new-message", handlers.newMessage);
+  socket.off("game-state", handlers.gameState);
+  socket.off("move-made", handlers.moveMade);
+  socket.off("new-tiles", handlers.newTiles);
+  socket.off("player-joined", handlers.playerJoined);
+  socket.off("turn-passed", handlers.turnPassed);
+  socket.off("game-over", handlers.gameOver);
+  socket.off("error", handlers.error);
+  socket.off("new-message", handlers.newMessage);
 }

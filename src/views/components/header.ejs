@@ -1,45 +1,80 @@
-<header class="bg-blue-600 shadow-md sticky top-0 z-50">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 items-center justify-between">
-            
-            <a href="/" class="flex gap-1 items-center no-underline select-none" aria-label="Scrabble Home">
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">S</span>
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">C</span>
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">R</span>
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">A</span>
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">B</span>
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">B</span>
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">L</span>
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400">E</span>
-            </a>
+<header class="sticky top-0 z-50 bg-blue-600 shadow-md">
+  <div class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <a
+        href="/"
+        class="flex items-center gap-1 no-underline select-none"
+        aria-label="Scrabble Home"
+      >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >S</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >C</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >R</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >A</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >B</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >B</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >L</span
+        >
+        <span
+          class="inline-flex h-10 w-10 items-center justify-center rounded bg-white border-2 border-gray-300 shadow-sm text-xl font-bold text-gray-900 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-gray-400"
+          >E</span
+        >
+      </a>
 
-            <nav class="flex items-center gap-6">
-                <% if (locals.user) { %>
-                    <a href="/lobby" class="text-white hover:text-blue-200 font-medium transition">Lobby</a>
-                    <a href="/settings" class="text-white hover:text-blue-200 font-medium transition">Settings</a>
-                    
-                    <button id="logout-btn" class="bg-white text-blue-600 px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-50 transition shadow-sm">
-                        Logout
-                    </button>
-                <% } else { %>
-                    <a href="/login" class="text-white hover:text-blue-200 font-medium transition">Login</a>
-                    <a href="/signup" class="bg-white text-blue-600 px-4 py-2 rounded-md text-sm font-bold hover:bg-blue-50 transition shadow-sm">
-                        Sign Up
-                    </a>
-                <% } %>
-            </nav>
-        </div>
+      <nav class="flex items-center gap-6">
+        <% if (locals.user) { %>
+        <a href="/lobby" class="font-medium text-white transition hover:text-blue-200">Lobby</a>
+        <a href="/settings" class="font-medium text-white transition hover:text-blue-200"
+          >Settings</a
+        >
+
+        <button
+          id="logout-btn"
+          class="px-4 py-2 text-sm font-bold text-blue-600 transition bg-white rounded-md shadow-sm hover:bg-blue-50"
+        >
+          Logout
+        </button>
+        <% } else { %>
+        <a href="/login" class="font-medium text-white transition hover:text-blue-200">Login</a>
+        <a
+          href="/signup"
+          class="px-4 py-2 text-sm font-bold text-blue-600 transition bg-white rounded-md shadow-sm hover:bg-blue-50"
+        >
+          Sign Up
+        </a>
+        <% } %>
+      </nav>
     </div>
+  </div>
 </header>
 
 <% if (typeof NODE_ENV === 'undefined' || NODE_ENV !== 'production') { %>
-    <script type="module" src="http://localhost:5173/@vite/client"></script>
+<script type="module" src="http://localhost:5173/@vite/client"></script>
 <% } %>
 
 <% if (locals.user) { %>
-  <% if (NODE_ENV === 'production') { %>
-    <script type="module" src="/js/header.js"></script>
-  <% } else { %>
-    <script type="module" src="http://localhost:5173/ts/header.ts"></script>
-  <% } %>
+<% if (NODE_ENV === 'production') { %>
+<script type="module" src="/js/header.js"></script>
+<% } else { %>
+<script type="module" src="http://localhost:5173/ts/header.ts"></script>
+<% } %>
 <% } %>
