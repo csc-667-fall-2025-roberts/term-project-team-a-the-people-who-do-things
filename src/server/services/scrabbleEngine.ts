@@ -78,9 +78,9 @@ export class ScrabbleGame {
 
   validateMove(
     playerId: string,
-    tiles: Array<{ letter: string; row: number; col: number; isBlank?: boolean }>,
+    tiles: Array<{ letter: string; row: number; col: number }>,
   ): { valid: boolean; error?: string } {
-    // tiles: [{ letter, row, col, isBlank }]
+    // tiles: [{ letter, row, col }]
 
     if (this.players[this.currentPlayerIndex] !== playerId) {
       return { valid: false, error: "Not your turn" };
@@ -92,7 +92,7 @@ export class ScrabbleGame {
 
     // Check tiles in hand
     const hand = this.playerHands[playerId];
-    const usedLetters = tiles.map((t) => (t.isBlank ? "*" : t.letter));
+    const usedLetters = tiles.map((t) => (t.letter));
     const handCopy = [...hand];
 
     for (const letter of usedLetters) {
@@ -142,7 +142,7 @@ export class ScrabbleGame {
   }
 
   calculateScore(
-    tiles: Array<{ letter: string; row: number; col: number; isBlank?: boolean }>,
+    tiles: Array<{ letter: string; row: number; col: number }>,
   ): number {
     let score = 0;
     let wordMultiplier = 1;
@@ -173,7 +173,7 @@ export class ScrabbleGame {
   }
 
   getFormedWords(
-    tiles: Array<{ letter: string; row: number; col: number; isBlank?: boolean }>,
+    tiles: Array<{ letter: string; row: number; col: number }>,
   ): string[] {
     // need full word detection logic
     const words = [];
@@ -207,7 +207,7 @@ export class ScrabbleGame {
 
   applyMove(
     playerId: string,
-    tiles: Array<{ letter: string; row: number; col: number; isBlank?: boolean }>,
+    tiles: Array<{ letter: string; row: number; col: number }>,
     score: number,
   ): { newTiles: string[]; currentPlayer: string } {
     // place tiles on board
@@ -216,7 +216,7 @@ export class ScrabbleGame {
     }
 
     // remove tiles from hand
-    const usedLetters: string[] = tiles.map((t) => (t.isBlank ? "*" : t.letter));
+    const usedLetters: string[] = tiles.map((t) => ( t.letter));
     for (const letter of usedLetters) {
       const index = this.playerHands[playerId].indexOf(letter);
       this.playerHands[playerId].splice(index, 1);

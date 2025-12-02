@@ -16,14 +16,17 @@ type LobbyChatMessage = {
 };
 
 const gamesContainer = document.getElementById("games-container");
-const createGameBtn = document.getElementById("create-game-btn");
-const createGameModal = document.getElementById("create-game-modal");
 const createGameForm = document.getElementById("create-game-form") as HTMLFormElement | null;
 
 const chatForm = document.getElementById("chat-form") as HTMLFormElement | null;
 const chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
 const chatMessages = document.getElementById("chat-messages");
 const LOBBY_ID = "lobby";
+
+const joinTab = document.getElementById("join-tab");
+const createTab = document.getElementById("create-tab");
+const joinContent = document.getElementById("join-tab-content");
+const createContent = document.getElementById("create-tab-content");
 
 // Escape HTML to prevent XSS
 function escapeHtml(text: string) {
@@ -75,6 +78,37 @@ async function loadLobbyMessages() {
   }
 }
 
+function switchTab(tab: "join" | "create") {
+  if (!joinTab || !createTab || !joinContent || !createContent) return;
+  const activeClasses = ["text-blue-600", "border-blue-600", "bg-white", "font-bold"];
+  const inactiveClasses = [
+    "text-slate-500",
+    "border-transparent",
+    "font-medium",
+    "hover:text-slate-700",
+    "hover:bg-slate-50",
+  ];
+
+  if (tab === "join") {
+    joinTab.classList.remove(...inactiveClasses);
+    joinTab.classList.add(...activeClasses);
+    createTab.classList.remove(...activeClasses);
+    createTab.classList.add(...inactiveClasses);
+    joinContent.classList.remove("hidden");
+    createContent.classList.add("hidden");
+  } else {
+    createTab.classList.remove(...inactiveClasses);
+    createTab.classList.add(...activeClasses);
+    joinTab.classList.remove(...activeClasses);
+    joinTab.classList.add(...inactiveClasses);
+    createContent.classList.remove("hidden");
+    joinContent.classList.add("hidden");
+  }
+}
+
+joinTab?.addEventListener("click", () => switchTab("join"));
+createTab?.addEventListener("click", () => switchTab("create"));
+
 function initLobbyChat() {
   if (!chatForm || !chatInput || !chatMessages) {
     console.error("Chat elements not found:", {
@@ -109,8 +143,8 @@ function initLobbyChat() {
   socket.on("new-message", (data: unknown) => {
     const message = data as LobbyChatMessage;
 
-    console.log("Received new-message event:", message);
-    console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
+    // console.log("Received new-message event:", message);
+    // console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
 
     const isLobbyMessage =
       message.game_id === null || message.game_id === undefined || message.game_id === LOBBY_ID;
@@ -141,6 +175,7 @@ async function loadGames() {
 function renderGames(games: GameSummary[]) {
   if (!gamesContainer) return;
 
+  gamesContainer.className = "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3";
   if (games.length === 0) {
     gamesContainer.innerHTML = `
       <div class="text-center py-12">
@@ -154,26 +189,35 @@ function renderGames(games: GameSummary[]) {
   gamesContainer.innerHTML = games
     .map(
       (game) => `
-    <div class="game-card" data-game-id="${game.id}">
-      <h3>${game.creator_name}'s Game</h3>
-      <p>Players: ${game.current_players}/${game.max_players}</p>
-      <button class="btn btn-primary join-game-btn" data-game-id="${game.id}">
+    <div class="flex flex-col justify-between p-5 bg-white border border-slate-200 rounded-xl hover:border-blue-400 hover:shadow-md transition-all gap-4 h-full">
+      
+      <div>
+        <h3 class="font-bold text-slate-800 text-lg truncate">${escapeHtml(game.creator_name)}'s Game</h3>
+        <div class="flex items-center gap-2 mt-1">
+            <span class="w-2 h-2 rounded-full ${game.current_players < game.max_players ? "bg-green-500" : "bg-red-500"}"></span>
+            <span class="text-sm text-slate-500 font-medium">${game.current_players} / ${game.max_players} Players</span>
+        </div>
+      </div>
+
+      <button 
+        class="join-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-blue-600 border-none rounded-md cursor-pointer hover:bg-blue-700 hover:-translate-y-px hover:shadow-lg" 
+        data-game-id="${game.id}"
+      >
         Join Game
       </button>
     </div>
   `,
     )
     .join("");
-
-  document.querySelectorAll<HTMLButtonElement>(".join-game-btn").forEach((button) => {
-    button.addEventListener("click", joinGame);
-  });
 }
 
-async function joinGame(event: Event) {
-  const target = event.currentTarget as HTMLElement | null;
-  const gameId = target?.dataset.gameId;
-  if (!gameId) return;
+gamesContainer?.addEventListener("click", async (event) => {
+  const target = event.target as HTMLElement;
+  const button = target.closest(".join-game-btn") as HTMLElement | null;
+
+  if (!button || !button.dataset.gameId) return;
+
+  const gameId = button.dataset.gameId;
 
   try {
     await api.games.join(gameId);
@@ -182,20 +226,10 @@ async function joinGame(event: Event) {
     if (error instanceof Error) {
       alert(error.message);
     } else {
-      alert("Failed to join game. Please try again.");
+      alert("Failed to join game.");
     }
   }
-}
-
-createGameBtn?.addEventListener("click", () => {
-  if (createGameModal) {
-    createGameModal.setAttribute("style", "display: block;");
-  }
 });
-
-createGameModal
-  ?.querySelector<HTMLButtonElement>(".close")
-  ?.addEventListener("click", () => createGameModal.setAttribute("style", "display: none;"));
 
 createGameForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -211,17 +245,16 @@ createGameForm?.addEventListener("submit", async (event) => {
   const submitBtn = createGameForm.querySelector('button[type="submit"]') as HTMLButtonElement;
   if (submitBtn) submitBtn.disabled = true;
 
- try {
-   const { game } = (await api.games.create(maxPlayers, { timeLimit })) as {
-     game: { id: string };
-   };
+  try {
+    const { game } = (await api.games.create(maxPlayers, { timeLimit })) as {
+      game: { id: string };
+    };
 
-   window.location.href = `/game/${game.id}`;
- } catch (error) {
-   console.error('Failed to create game:', error);
-   alert(error instanceof Error ? error.message : 'Failed to create game');
- }
-
+    window.location.href = `/game/${game.id}`;
+  } catch (error) {
+    console.error("Failed to create game:", error);
+    alert(error instanceof Error ? error.message : "Failed to create game");
+  }
 });
 
 // Socket events
@@ -238,10 +271,12 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     void loadGames();
     initLobbyChat();
+    switchTab("join");
   });
 } else {
   void loadGames();
   initLobbyChat();
+  switchTab("join");
 }
 
 // Refresh every 5 seconds

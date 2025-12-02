@@ -27,7 +27,6 @@ export const LETTER_VALUES: { [key: string]: number } = {
   X: 8,
   Y: 4,
   Z: 10,
-  "*": 0, // Blank tile
 };
 
 export const LETTER_DISTRIBUTION: { [key: string]: number } = {
@@ -57,7 +56,6 @@ export const LETTER_DISTRIBUTION: { [key: string]: number } = {
   X: 1,
   Y: 2,
   Z: 1,
-  "*": 2, // Blank tiles
 };
 
 export const PREMIUM_SQUARES: { [key: string]: [number, number][] } = {

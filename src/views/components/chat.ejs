@@ -1,4 +1,4 @@
-<div class="flex flex-col h-full bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+<div id="chat-container" data-game-id="<%= (typeof gameId !== 'undefined') ? gameId : '' %>" class="flex flex-col h-full bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
     
     <div class="flex items-center justify-center p-3 border-b border-gray-200 bg-blue-50/50">
         <div class="flex gap-1 items-center select-none" id="chat-logo">
@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-white" style="scroll-behavior: smooth;">
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-white scroll-smooth">
         <div class="text-center text-xs text-gray-400 italic mt-4">
             Chat room initialized...
         </div>

@@ -5,7 +5,6 @@ import type {
   GameStateResponse,
   GameSummaryResponse,
   MoveMadeResponse,
-  NewTilesResponse,
   ScoreEntry,
   SelectedTile,
 } from "../../../types/client/socket-events.js";
@@ -22,58 +21,19 @@ async function init(): Promise<void> {
   const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
   currentUser = user;
 
-    // const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
-    // renderPlayers(gameData.game_participants);
-    // renderScores(gameData.scores);
+  const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
+  renderPlayers(gameData.game_participants);
+  renderScores(gameData.scores);
+  await loadChatHistory();
 
-    socket.emit("join-game", gameId);
+  socket.emit("join-game", gameId);
 }
 
 init().catch((error) => {
-    console.error("Failed to initialize:", error);
+  console.error("Failed to initialize:", error);
 });
-   init().catch((error) => {
-    console.error("Failed to initialize:", error);
-});
-
-// Socket events
-socket.on("game-state", (data: unknown) => {
-  const gameState = data as GameStateResponse;
-  board.updateBoard(gameState.board);
-  board.setHand(gameState.hand);
-  updateGameInfo(gameState);
-  updateScores(gameState.scores);
-});
-
-socket.on("move-made", (data: unknown) => {
-  const move = data as MoveMadeResponse;
-  board.updateBoard(move.gameState.board);
-  updateGameInfo(move.gameState);
-  updateScores(move.gameState.scores);
-
-  if (currentUser && move.userId === currentUser.id) {
-    board.clearSelection();
-  }
-});
-
-socket.on("new-tiles", (data: unknown) => {
-  const hand: { tiles: string[] } = data as { tiles: string[] };
-  board.setHand(hand.tiles);
-});
-
-socket.on("turn-passed", (data: unknown) => {
-  const turn: { currentPlayer: string } = data as { currentPlayer: string };
-  updateCurrentTurn(turn.currentPlayer);
-});
-
-socket.on("game-over", () => {
-  window.location.href = `/game/${gameId}/results`;
-});
-
-socket.on("error", (data: unknown) => {
-  const error = data as { message: string };
-  const userMessage: string = mapErrorMessage(error.message);
-  alert(userMessage);
+init().catch((error) => {
+  console.error("Failed to initialize:", error);
 });
 
 function mapErrorMessage(serverMessage: string): string {
@@ -98,16 +58,18 @@ function alert(message: string) {
 document.getElementById("submit-move-btn")?.addEventListener("click", () => {
   const tiles = board.getSelectedTiles() as SelectedTile[];
 
-  if (tiles.length === 0) {
-    alert("Please place tiles on the board");
-    return;
-  }
+  tiles.sort((a, b) => {
+    if (a.row === b.row) return a.col - b.col;
+    return a.row - b.row;
+  });
 
   const words = [tiles.map((tile) => tile.letter).join("")];
   const score = tiles.reduce(
     (sum, tile) => sum + (ScrabbleConstants.LETTER_VALUES[tile.letter] || 0),
     0,
   );
+
+  console.log("Submitting Move:", { gameId, tiles, words, score });
 
   socket.emit("make-move", {
     gameId,
@@ -149,11 +111,6 @@ chatForm?.addEventListener("submit", (event) => {
   chatInput.value = "";
 });
 
-socket.on("new-message", (data: unknown) => {
-  const message = data as ChatMessage;
-  addChatMessage(message);
-});
-
 function addChatMessage(message: ChatMessage) {
   if (!chatMessages) return;
   const messageEl = document.createElement("div");
@@ -171,14 +128,24 @@ function renderPlayers(participants: GameParticipant[]) {
   if (!playersList) return;
 
   playersList.innerHTML = participants
-    .map(
-      (participant) => `
-    <div class="player-item ${participant.is_host ? "host" : ""}">
-      <span>${participant.display_name}</span>
-      ${participant.is_host ? '<span class="badge">Host</span>' : ""}
-    </div>
-  `,
-    )
+    .map((participant) => {
+      const isMe = currentUser && participant.user_id === currentUser.id;
+      const containerClass = isMe ? "bg-blue-50 border-blue-200" : "bg-white border-slate-200";
+
+      return `
+        <div class="flex items-center justify-between p-3 border rounded-lg shadow-sm ${containerClass}">
+            <span class="text-sm font-bold text-slate-700 truncate">
+              ${escapeHtml(participant.display_name)}
+            </span>
+          
+          ${
+            participant.is_host
+              ? '<span class="px-2 py-0.5 text-[10px] font-bold text-gray-100 bg-gray-800 rounded uppercase tracking-wider">HOST</span>'
+              : ""
+          }
+        </div>
+      `;
+    })
     .join("");
 }
 
@@ -194,19 +161,19 @@ function updateScores(scores: Record<string, number>) {
   const scoresContainer = document.getElementById("scores-list");
   if (!scoresContainer) return;
 
-    scoresContainer.innerHTML = Object.entries(scores)
-        .map(([userId, score]) => {
-            const participant = participants.find((p: GameParticipant) => p.user_id === userId);
-            const displayName = participant?.display_name || 'Unknown';
+  scoresContainer.innerHTML = Object.entries(scores)
+    .map(([userId, score]) => {
+      const participant = participants.find((p: GameParticipant) => p.user_id === userId);
+      const displayName = participant?.display_name || "Unknown";
 
-            return `
-        <div class="score-item ${currentUser?.id === userId ? 'current-user' : ''}">
+      return `
+        <div class="score-item ${currentUser?.id === userId ? "current-user" : ""}">
           <span class="player-name">${displayName}</span>
           <span class="score-value">${score}</span>
         </div>
       `;
-        })
-        .join("");
+    })
+    .join("");
 }
 
 function updateGameInfo(state: GameStateResponse) {
@@ -215,6 +182,19 @@ function updateGameInfo(state: GameStateResponse) {
     tilesRemainingEl.textContent = state.tilesRemaining.toString();
   }
   updateCurrentTurn(state.currentPlayer);
+}
+
+async function loadChatHistory() {
+  try {
+    const { messages } = (await api.chat.getMessages(gameId)) as { messages: ChatMessage[] };
+
+    const chatMessages = document.getElementById("chat-messages");
+    if (chatMessages) chatMessages.innerHTML = "";
+
+    messages.forEach(addChatMessage);
+  } catch (error) {
+    console.error("Failed to load chat history:", error);
+  }
 }
 
 function updateCurrentTurn(playerId: string) {
@@ -252,13 +232,33 @@ const handlers = {
     board.updateBoard(typedData.gameState.board);
     updateGameInfo(typedData.gameState);
     updateScores(typedData.gameState.scores);
+
     if (currentUser && typedData.userId === currentUser.id) {
       board.clearSelection();
     }
   },
+  playerJoined: async () => {
+    console.log("Another player joined. Refreshing list...");
+
+    try {
+      const gameData = (await api.games.get(gameId)) as {
+        game_participants: GameParticipant[];
+        scores: any[];
+      };
+
+      participants = gameData.game_participants;
+      renderPlayers(participants);
+      renderScores(gameData.scores);
+    } catch (e) {
+      console.error("Failed to refresh player list:", e);
+    }
+  },
   newTiles: (data: unknown) => {
-    const typedData = data as NewTilesResponse;
-    board.setHand(typedData.tiles.map((tile) => tile.letter));
+    console.log("Received new tiles:", data);
+    const typedData = data as { tiles: string[] };
+    if (typedData && Array.isArray(typedData.tiles)) {
+      board.setHand(typedData.tiles);
+    }
   },
   turnPassed: (data: unknown) => {
     const typedData = data as { currentPlayer: string };
@@ -281,6 +281,7 @@ const handlers = {
 socket.on("game-state", handlers.gameState);
 socket.on("move-made", handlers.moveMade);
 socket.on("new-tiles", handlers.newTiles);
+socket.on("player-joined", handlers.playerJoined);
 socket.on("turn-passed", handlers.turnPassed);
 socket.on("game-over", handlers.gameOver);
 socket.on("error", handlers.error);
@@ -291,6 +292,7 @@ function cleanup() {
   socket.off("game-state", handlers.gameState);
   socket.off("move-made", handlers.moveMade);
   socket.off("new-tiles", handlers.newTiles);
+  socket.off("player-joined", handlers.playerJoined);
   socket.off("turn-passed", handlers.turnPassed);
   socket.off("game-over", handlers.gameOver);
   socket.off("error", handlers.error);
