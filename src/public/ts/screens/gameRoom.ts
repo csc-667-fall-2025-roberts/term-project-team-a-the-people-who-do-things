@@ -128,14 +128,24 @@ function renderPlayers(participants: GameParticipant[]) {
   if (!playersList) return;
 
   playersList.innerHTML = participants
-    .map(
-      (participant) => `
-    <div class="player-item ${participant.is_host ? "host" : ""}">
-      <span>${participant.display_name}</span>
-      ${participant.is_host ? '<span class="badge">Host</span>' : ""}
-    </div>
-  `,
-    )
+    .map((participant) => {
+      const isMe = currentUser && participant.user_id === currentUser.id;
+      const containerClass = isMe ? "bg-blue-50 border-blue-200" : "bg-white border-slate-200";
+
+      return `
+        <div class="flex items-center justify-between p-3 border rounded-lg shadow-sm ${containerClass}">
+            <span class="text-sm font-bold text-slate-700 truncate">
+              ${escapeHtml(participant.display_name)}
+            </span>
+          
+          ${
+            participant.is_host
+              ? '<span class="px-2 py-0.5 text-[10px] font-bold text-gray-100 bg-gray-800 rounded uppercase tracking-wider">HOST</span>'
+              : ""
+          }
+        </div>
+      `;
+    })
     .join("");
 }
 
@@ -227,6 +237,22 @@ const handlers = {
       board.clearSelection();
     }
   },
+  playerJoined: async () => {
+    console.log("Another player joined. Refreshing list...");
+
+    try {
+      const gameData = (await api.games.get(gameId)) as {
+        game_participants: GameParticipant[];
+        scores: any[];
+      };
+
+      participants = gameData.game_participants;
+      renderPlayers(participants);
+      renderScores(gameData.scores);
+    } catch (e) {
+      console.error("Failed to refresh player list:", e);
+    }
+  },
   newTiles: (data: unknown) => {
     console.log("Received new tiles:", data);
     const typedData = data as { tiles: string[] };
@@ -255,6 +281,7 @@ const handlers = {
 socket.on("game-state", handlers.gameState);
 socket.on("move-made", handlers.moveMade);
 socket.on("new-tiles", handlers.newTiles);
+socket.on("player-joined", handlers.playerJoined);
 socket.on("turn-passed", handlers.turnPassed);
 socket.on("game-over", handlers.gameOver);
 socket.on("error", handlers.error);
@@ -265,6 +292,7 @@ function cleanup() {
   socket.off("game-state", handlers.gameState);
   socket.off("move-made", handlers.moveMade);
   socket.off("new-tiles", handlers.newTiles);
+  socket.off("player-joined", handlers.playerJoined);
   socket.off("turn-passed", handlers.turnPassed);
   socket.off("game-over", handlers.gameOver);
   socket.off("error", handlers.error);

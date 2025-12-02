@@ -161,23 +161,29 @@ io.on("connection", (socket: Socket) => {
   // Join game room
   socket.on("join-game", async (gameId: string) => {
     socket.join(gameId);
+    const result = await pool.query(
+      "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
+      [gameId],
+    );
+
+    // Fetch participants from db
+
+    const game_participants: string[] = result.rows.map((r: any) => String(r.user_id));
 
     let games = gameManager.getGame(gameId);
     if (!games) {
-      // Fetch participants from db
-      const result = await pool.query(
-        "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
-        [gameId],
-      );
+      games = gameManager.createGame(gameId, game_participants);
+    } else {
+      if (games.players.length !== game_participants.length) {
+        console.log("Syncing players from DB to Memory...");
+        games.players = game_participants;
 
-      const game_participants: string[] = result.rows.map((r: any) => String(r.user_id));
-
-      games = gameManager.getGame(gameId);
-      if (!games) {
-        games = gameManager.createGame(gameId, game_participants);
+        games.players.forEach((id) => {
+          if (typeof games!.scores[id] === "undefined") games!.scores[id] = 0;
+          if (!games!.playerHands[id]) games!.playerHands[id] = [];
+        });
       }
     }
-
     // Fetch tile data from DB
     try {
       const dbHandResult = await pool.query(
