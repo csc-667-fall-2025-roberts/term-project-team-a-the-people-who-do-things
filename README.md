@@ -1,10 +1,12 @@
 # Scrabble Online
 
 A multiplayer Scrabble game built with Node.js, Express, Socket.IO, and PostgreSQL.
+No one has ever built anything like it! 
+Ever!
 
 ## Features
 
-- **Real-time Multiplayer**: Play Scrabble with strangers online
+- **Real-time Multiplayer**: Play Scrabble with strangers online! 
 - **User Authentication**: Secure login and registration system with session management
 - **Game Lobby**: Browse and join available games or create your own
 - **Interactive Game Board**: Drag-and-drop tile placement with visual feedback
