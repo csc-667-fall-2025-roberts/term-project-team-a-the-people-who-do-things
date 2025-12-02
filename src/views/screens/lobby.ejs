@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-50">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,24 +8,6 @@
     <% if (NODE_ENV === 'production') { %>
     <link rel="stylesheet" href="/styles/main.css" />
     <% } %>
-
-    <style>
-      .lobby-tab-active {
-        background-color: #8ad4fb !important;
-        color: #1e40af !important;
-        font-weight: 600 !important;
-        border-bottom-color: #8ad4fb !important;
-      }
-      .lobby-tab-content-active {
-        display: block !important;
-        background-color: #8ad4fb !important;
-        border-radius: 0 0 0.5rem 0.5rem;
-      }
-      .lobby-tab-content-active .bg-white {
-        background-color: rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(138, 212, 251, 0.5);
-      }
-    </style>
   </head>
   <body class="flex flex-col h-full bg-gray-50">
     <%- include('../components/header') %>
@@ -36,14 +18,11 @@
         <div class="flex items-end gap-2 border-b-2 border-gray-200">
           <button
             id="join-tab"
-            class="px-6 py-3 text-base font-medium transition-colors border-b-2 border-transparent rounded-t-lg text-slate-500 bg-sky-100 hover:bg-sky-200 hover:text-blue-600 focus:outline-none lobby-tab lobby-tab-active"
+            class="px-6 py-3 text-sm font-bold text-blue-600 transition-colors bg-white border-b-2 border-blue-600 rounded-t-lg focus:outline-none"
           >
             Join Game
           </button>
-          <button
-            id="create-tab"
-            class="px-6 py-3 text-base font-medium transition-colors border-b-2 border-transparent rounded-t-lg text-slate-500 bg-sky-100 hover:bg-sky-200 hover:text-blue-600 focus:outline-none lobby-tab"
-          >
+          <button id="create-tab" class="px-6 py-3 text-sm font-medium transition-colors border-b-2 border-transparent rounded-t-lg text-slate-500 hover:text-slate-700 hover:bg-slate-50 focus:outline-none">
             Create Game
           </button>
         </div>

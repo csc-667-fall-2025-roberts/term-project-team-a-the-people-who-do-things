@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Game Room - Scrabble</title>
+    <% if (NODE_ENV === 'production') { %>
+    <link rel="stylesheet" href="/styles/main.css">
+  <% } %>
   </head>
   <body class="flex flex-col w-screen h-screen p-2 overflow-hidden bg-gray-50 text-slate-900">
     <div class="flex-1 w-full max-w-[1600px] mx-auto flex flex-col bg-white border-x-[16px] border-b-[16px] border-t-0 border-blue-600 rounded-b-xl shadow-2xl overflow-hidden relative">
