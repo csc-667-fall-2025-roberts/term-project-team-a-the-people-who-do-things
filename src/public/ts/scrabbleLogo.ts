@@ -1,4 +1,3 @@
-// Simple Scrabble Logo - Clean start
 
 function initScrabbleLogo() {
   const logoWrapper = document.getElementById('scrabble-logo-wrapper');
@@ -12,7 +11,7 @@ function initScrabbleLogo() {
 
   let draggedTile: HTMLElement | null = null;
   let pressTimer: number | null = null;
-  const PRESS_DURATION = 300; // 300ms to enable drag
+  const PRESS_DURATION = 300; 
 
 
   let pressStartTime = 0;
@@ -20,7 +19,6 @@ function initScrabbleLogo() {
   let startX = 0;
   let startY = 0;
 
-  // Handle mousedown - track start time and position
   container.addEventListener('mousedown', (e: MouseEvent) => {
     const tile = (e.target as HTMLElement).closest('.scrabble-tile') as HTMLElement;
     if (!tile) return;
@@ -30,7 +28,6 @@ function initScrabbleLogo() {
     startX = e.clientX;
     startY = e.clientY;
 
-    // Start timer for long press
     pressTimer = window.setTimeout(() => {
       tile.setAttribute('draggable', 'true');
       tile.style.opacity = '0.7';
@@ -39,7 +36,6 @@ function initScrabbleLogo() {
     }, PRESS_DURATION);
   });
 
-  // Track mouse movement
   container.addEventListener('mousemove', (e: MouseEvent) => {
     if (pressStartTime > 0 && e.buttons === 1) {
       const moveX = Math.abs(e.clientX - startX);
@@ -50,7 +46,6 @@ function initScrabbleLogo() {
     }
   });
 
-  // Handle mouseup - cancel timer if quick click
   container.addEventListener('mouseup', (e: MouseEvent) => {
     if (pressTimer) {
       clearTimeout(pressTimer);
@@ -63,23 +58,19 @@ function initScrabbleLogo() {
       tile.style.transform = '';
       tile.setAttribute('draggable', 'false');
       
-      // If it was a quick click and no movement, allow navigation
       const pressDuration = pressStartTime > 0 ? Date.now() - pressStartTime : 0;
       if (pressDuration < PRESS_DURATION && !hasMoved && pressDuration >= 0) {
-        // Quick click - navigation will happen in click handler
-        // Don't reset pressStartTime yet, let click handler use it
+        
         return;
       }
     }
     
-    // Reset state after a delay to allow click handler to run
     setTimeout(() => {
       pressStartTime = 0;
       hasMoved = false;
     }, 100);
   });
 
-  // Handle drag start
   container.addEventListener('dragstart', (e: DragEvent) => {
     const tile = (e.target as HTMLElement).closest('.scrabble-tile') as HTMLElement;
     if (!tile || tile.getAttribute('draggable') !== 'true') {
@@ -90,9 +81,8 @@ function initScrabbleLogo() {
 
     draggedTile = tile;
     e.dataTransfer!.effectAllowed = 'move';
-    e.dataTransfer!.setData('text/plain', ''); // Required for some browsers
+    e.dataTransfer!.setData('text/plain', ''); 
     
-    // Create custom drag image (transparent)
     const dragImage = document.createElement('div');
     dragImage.style.position = 'absolute';
     dragImage.style.top = '-1000px';
@@ -110,18 +100,15 @@ function initScrabbleLogo() {
     return true;
   }, true);
 
-  // Handle drag over - MUST prevent default for drop to work
-  // This needs to be on both container AND document to catch all events
+  
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     e.dataTransfer!.dropEffect = 'move';
     
-    // Visual feedback - highlight target tile
     const target = e.target as HTMLElement;
     const targetTile = target?.closest('.scrabble-tile') as HTMLElement;
     
-    // Clear previous highlights
     container.querySelectorAll('.scrabble-tile').forEach((t) => {
       const tile = t as HTMLElement;
       if (tile !== draggedTile) {
@@ -130,7 +117,6 @@ function initScrabbleLogo() {
       }
     });
     
-    // Highlight target
     if (targetTile && targetTile !== draggedTile) {
       targetTile.style.borderColor = '#fbbf24';
       targetTile.style.borderWidth = '3px';
@@ -145,7 +131,6 @@ function initScrabbleLogo() {
     }
   });
 
-  // Handle drop - needs to be on multiple levels
   const handleDrop = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -163,33 +148,27 @@ function initScrabbleLogo() {
     console.log('Drop target:', { targetTile, target, draggedTile });
     
     if (targetTile && targetTile !== draggedTile) {
-      // Swap positions - simpler approach
       const parent = draggedTile.parentNode;
       if (!parent) {
         console.error('No parent node');
         return;
       }
       
-      // Get positions
       const draggedIndex = Array.from(parent.children).indexOf(draggedTile);
       const targetIndex = Array.from(parent.children).indexOf(targetTile);
       
       console.log('Swapping tiles:', { draggedIndex, targetIndex });
       
-      // Swap: remove both, then insert in swapped positions
       if (draggedIndex < targetIndex) {
-        // Dragged is before target
         parent.insertBefore(targetTile, draggedTile);
         parent.insertBefore(draggedTile, targetTile.nextSibling);
       } else {
-        // Dragged is after target
         parent.insertBefore(draggedTile, targetTile);
         parent.insertBefore(targetTile, draggedTile.nextSibling);
       }
       
       console.log('Tiles swapped successfully!');
     } else if (!targetTile) {
-      // Dropped on container, find the closest tile
       const tiles = Array.from(container.children) as HTMLElement[];
       const dropX = e.clientX;
       
@@ -254,7 +233,6 @@ function initScrabbleLogo() {
   
   // Handle drag leave
   container.addEventListener('dragleave', (e: DragEvent) => {
-    // Clear highlights when leaving
     const target = e.target as HTMLElement;
     const targetTile = target.closest('.scrabble-tile') as HTMLElement;
     if (targetTile) {
@@ -263,16 +241,13 @@ function initScrabbleLogo() {
     }
   });
 
-  // Handle click - navigate on quick click
   container.addEventListener('click', (e: MouseEvent) => {
     const tile = (e.target as HTMLElement).closest('.scrabble-tile') as HTMLElement;
     if (!tile) return;
 
-    // Only navigate if it was a quick click (not dragging)
     if (tile.getAttribute('draggable') !== 'true' && !hasMoved) {
       const clickDuration = pressStartTime > 0 ? Date.now() - pressStartTime : 0;
       if (clickDuration < PRESS_DURATION && clickDuration >= 0) {
-        // Quick click - navigate home
         e.preventDefault();
         e.stopPropagation();
         window.location.href = '/';
@@ -280,7 +255,6 @@ function initScrabbleLogo() {
     }
   }, true);
 
-  // Prevent any drag on the wrapper
   logoWrapper.setAttribute('draggable', 'false');
   logoWrapper.addEventListener('dragstart', (e: DragEvent) => {
     const target = e.target as HTMLElement;
@@ -294,7 +268,6 @@ function initScrabbleLogo() {
     }
   }, true);
 
-  // Prevent context menu (right-click drag)
   container.addEventListener('contextmenu', (e: MouseEvent) => {
     const tile = (e.target as HTMLElement).closest('.scrabble-tile') as HTMLElement;
     if (tile) {
@@ -311,7 +284,7 @@ function initScrabbleLogo() {
   });
 }
 
-// Initialize
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initScrabbleLogo);
 } else {

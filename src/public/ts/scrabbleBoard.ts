@@ -28,7 +28,6 @@ class ScrabbleBoard {
   render(): void {
     if (!this.container) return;
 
-    // Reset container and apply Grid layout
     this.container.innerHTML = "";
     this.container.className =
       "grid gap-[2px] bg-slate-800 p-[3px] rounded-lg shadow-xl w-full aspect-square max-w-[65vh] mx-auto mb-6";
@@ -39,19 +38,15 @@ class ScrabbleBoard {
       for (let col = 0; col < this.boardSize; col++) {
         const cell = document.createElement("div");
 
-        // Base cell styles: Flexbox for centering content, relative for positioning tiles
         cell.className =
           "relative flex items-center justify-center select-none text-[2.2vmin] font-bold text-slate-700/60";
         cell.dataset.row = row.toString();
         cell.dataset.col = col.toString();
 
-        // --- 1. COLOR LOGIC (Tailwind) ---
         const premiumTile = this.getPremiumTile(row, col);
 
-        // Default Color
         let bgColor = "bg-slate-200";
 
-        // Map 'TW', 'DL', etc. to Tailwind Colors
         if (premiumTile) {
           switch (premiumTile) {
             case "TW": // Triple Word
@@ -73,22 +68,18 @@ class ScrabbleBoard {
           }
         }
 
-        // Center Star Override
         if (row === 7 && col === 7) {
           bgColor = "bg-pink-400 text-white";
           cell.innerText = "★";
           cell.style.fontSize = "16px";
         }
 
-        // Apply the calculated background class
         cell.className += ` ${bgColor}`;
 
-        // --- 2. EVENTS ---
         cell.addEventListener("click", () => this.handleCellClick(row, col));
         cell.addEventListener("dragover", (e) => e.preventDefault());
         cell.addEventListener("drop", (e) => this.handleDrop(e, row, col));
 
-        // --- 3. RENDER TILE (If occupied) ---
         if (this.board[row][col]) {
           const tileData = this.board[row][col] as Tile;
           const tile = document.createElement("div");
@@ -103,12 +94,10 @@ class ScrabbleBoard {
             cell.addEventListener("click", () => this.handleCellClick(row, col));
           }
 
-          // Letter
           const letterSpan = document.createElement("span");
           letterSpan.className = "text-sm font-bold sm:text-base text-slate-900";
           letterSpan.textContent = this.board[row][col]?.letter || "";
 
-          // Point Value (tiny number in bottom right)
           const valueSpan = document.createElement("span");
           valueSpan.className =
             "absolute bottom-0.5 right-0.5 text-[7px] leading-none font-medium text-slate-500";
@@ -117,7 +106,6 @@ class ScrabbleBoard {
           tile.appendChild(letterSpan);
           tile.appendChild(valueSpan);
 
-          // Clear the background text (TW/DL) so the tile covers it cleanly
           cell.innerText = "";
           cell.appendChild(tile);
         }
@@ -180,7 +168,6 @@ class ScrabbleBoard {
     this.board[row][col] = null;
     this.selectedTiles = this.selectedTiles.filter((t) => t.row !== row || t.col !== col);
 
-    // Return tile to hand
     this.hand.push(tile);
     this.renderHand();
     this.render();
@@ -196,7 +183,6 @@ class ScrabbleBoard {
     if (typeof tiles[0] === "string") {
       this.hand = (tiles as string[]).map((letter) => ({
         letter: letter,
-        // Fallback to 0 if LETTER_VALUES is missing/undefined
         value: LETTER_VALUES && LETTER_VALUES[letter] ? LETTER_VALUES[letter] : 0,
       }));
     } else {
@@ -237,18 +223,16 @@ class ScrabbleBoard {
 
       const tileElement = document.createElement("div");
 
-      // Same styling as the board tiles, but bigger (w-10 h-10)
       tileElement.className =
         "relative flex items-center justify-center w-10 h-10 transition-transform border-b-4 rounded shadow-md bg-amber-100 border-amber-300 cursor-grab active:cursor-grabbing hover:-translate-y-1";
 
       tileElement.draggable = true;
 
-      // Letter
       const letterSpan = document.createElement("span");
       letterSpan.className = "text-lg font-bold text-slate-900";
       letterSpan.textContent = tile.letter;
 
-      // Value
+    
       const valueSpan = document.createElement("span");
       valueSpan.className = "absolute bottom-1 right-1 text-[9px] font-bold text-slate-500";
       valueSpan.textContent = (tile.value || 0).toString();
