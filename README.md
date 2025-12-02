@@ -126,3 +126,4 @@ This implementation follows standard Scrabble rules:
 Stella Parker @whoIsStella, PEOPLE PUT YOUR NAMES HERE
 Ben Klein @ben-m-klein (and @benmklein),
 Emily Perez @emilynperez
+Franco Barra Avila @fBarraAvila
