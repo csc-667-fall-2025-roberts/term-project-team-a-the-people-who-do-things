@@ -123,4 +123,4 @@ This implementation follows standard Scrabble rules:
 
 ## Contributing
 
-PEOPLE PUT YOUR NAMES HERE
+Stella Parker @whoIsStella, PEOPLE PUT YOUR NAMES HERE
