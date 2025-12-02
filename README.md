@@ -124,4 +124,5 @@ This implementation follows standard Scrabble rules:
 ## Contributing
 
 Stella Parker @whoIsStella, PEOPLE PUT YOUR NAMES HERE
-Ben Klein @ben-m-klein (and @benmklein)
+Ben Klein @ben-m-klein (and @benmklein),
+Emily Perez @emilynperez
