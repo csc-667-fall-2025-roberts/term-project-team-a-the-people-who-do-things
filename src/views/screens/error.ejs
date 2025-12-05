@@ -29,13 +29,11 @@
     </div>
 </main>
 
-<% if (process.env.NODE_ENV === 'production') { %>
-    <link rel="stylesheet" href="/styles/main.css">
-    <script type="module" src="/ts/main.ts"></script>
-<% } else { %>
-    <script type="module" src="http://localhost:5173/@vite/client"></script>
+    <% if (process.env.NODE_ENV === 'production') { %>
+    <script type="module" src="/js/main.js"></script>
+    <% } else { %>
     <script type="module" src="http://localhost:5173/ts/main.ts"></script>
-<% } %>
+    <% } %>
 
 </body>
 </html>

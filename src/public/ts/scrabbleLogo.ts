@@ -189,7 +189,7 @@ function initScrabbleLogo() {
       
       console.log('Tiles swapped successfully!');
     } else if (!targetTile) {
-      // Dropped on container, find closest tile
+      // Dropped on container, find the closest tile
       const tiles = Array.from(container.children) as HTMLElement[];
       const dropX = e.clientX;
       
