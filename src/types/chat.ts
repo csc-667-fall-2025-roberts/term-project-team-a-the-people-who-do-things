@@ -1,5 +1,5 @@
 export type ChatMessages = {
-    id: string;
-    message: string;
-    created_at: Date;
-}
+  id: string;
+  message: string;
+  created_at: Date;
+};

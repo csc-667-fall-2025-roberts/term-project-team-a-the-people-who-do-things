@@ -1,5 +1,5 @@
 import "../styles/main.css";
-import './scrabbleLogo.ts';
+import "./scrabbleLogo.ts";
 
 const path = window.location.pathname;
 
@@ -18,4 +18,3 @@ if (path === "/lobby" || path.startsWith("/lobby")) {
 } else {
   import("./screens/landing.js");
 }
-
