@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: "20"
 
 jobs:
   # ============================================
@@ -35,7 +35,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('package. json') }}
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package.json') }}
           restore-keys: |
             node-modules-${{ runner.os }}-
 
@@ -63,7 +63,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node-modules-${{ runner. os }}-${{ hashFiles('package. json') }}
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package.json') }}
 
       - name: Run TypeScript compiler
         run: npx tsc --noEmit
@@ -79,7 +79,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node. js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -88,7 +88,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node-modules-${{ runner. os }}-${{ hashFiles('package. json') }}
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package.json') }}
 
       - name: Check code formatting
         run: npx prettier --check "src/**/*.{ts,tsx,js,jsx,ejs,css,json}"
@@ -162,7 +162,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node. js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -171,7 +171,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node-modules-${{ runner. os }}-${{ hashFiles('package. json') }}
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package.json') }}
 
       - name: Check migration files syntax
         run: |
@@ -201,7 +201,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
           echo "|------|------|" >> $GITHUB_STEP_SUMMARY
-          find dist/public -name "*.js" -o -name "*. css" 2>/dev/null | while read file; do
+          find dist/public -name "*.js" -o -name "*.css" 2>/dev/null | while read file; do
             size=$(du -h "$file" | cut -f1)
             echo "| \`${file}\` | ${size} |" >> $GITHUB_STEP_SUMMARY
           done || echo "| No JS/CSS files found | - |" >> $GITHUB_STEP_SUMMARY
@@ -232,7 +232,7 @@ jobs:
             echo "FAIL - Prettier Check" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [ "${{ needs.build. result }}" == "success" ]; then
+          if [ "${{ needs.build.result }}" == "success" ]; then
             echo "PASS - Build" >> $GITHUB_STEP_SUMMARY
           else
             echo "FAIL - Build" >> $GITHUB_STEP_SUMMARY
@@ -255,7 +255,7 @@ jobs:
           needs.typecheck.result != 'success' ||
           needs.format.result != 'success' ||
           needs.build.result != 'success' ||
-          needs. migration-check.result != 'success'
+          needs.migration-check.result != 'success'
         run: |
           echo "One or more required checks failed!"
           exit 1

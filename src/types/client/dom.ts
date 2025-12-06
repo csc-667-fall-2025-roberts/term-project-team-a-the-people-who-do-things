@@ -1,7 +1,6 @@
 // DOM type helpers
 //CLIENT SIDE DOM AND DATA TYPES
-import type { Tile } from "./socket-events.js"
-
+import type { Tile } from "./socket-events.js";
 
 export type ElementById<T extends HTMLElement = HTMLElement> = T | null;
 
@@ -15,16 +14,12 @@ export interface ChatMessage {
   display_name: string;
 }
 
-
-
-
 // User interface
 export interface Users {
   id: string;
   display_name: string;
   email: string;
 }
-
 
 // Game state interface
 export interface GameState {

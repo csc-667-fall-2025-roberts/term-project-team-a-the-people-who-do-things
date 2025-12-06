@@ -11,7 +11,7 @@ router.get("/:gameId", requireAuth, async (req, res) => {
   try {
     const isLobby = gameId === "lobby";
     const limitNum = Math.min(Number(limit) ?? 50, 100);
-    const beforeCursor = typeof before === 'string' ? before : undefined;
+    const beforeCursor = typeof before === "string" ? before : undefined;
 
     let query: string;
     let params: (string | number)[];

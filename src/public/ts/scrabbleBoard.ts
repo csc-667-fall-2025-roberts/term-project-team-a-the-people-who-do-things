@@ -232,7 +232,6 @@ class ScrabbleBoard {
       letterSpan.className = "text-lg font-bold text-slate-900";
       letterSpan.textContent = tile.letter;
 
-    
       const valueSpan = document.createElement("span");
       valueSpan.className = "absolute bottom-1 right-1 text-[9px] font-bold text-slate-500";
       valueSpan.textContent = (tile.value || 0).toString();

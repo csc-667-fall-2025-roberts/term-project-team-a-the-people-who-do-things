@@ -171,7 +171,7 @@ export class ScrabbleGame {
 
     return score;
   }
-//TODO Unused method getFormedWords
+  //TODO Unused method getFormedWords
   getFormedWords(tiles: Array<{ letter: string; row: number; col: number }>): string[] {
     //TODO need full word detection logic
     const words = [];
