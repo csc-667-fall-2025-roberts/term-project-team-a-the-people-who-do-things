@@ -1,10 +1,12 @@
 import express from "express";
+import { Server } from "socket.io";
 import { z } from "zod";
 import pool from "../config/database.js";
 import { requireAuth } from "../middleware/auth.js";
 import { ScrabbleGame } from "../services/scrabbleEngine.js";
 
-const router = express.Router();
+export default function gamesRouter(io: Server) {
+  const router = express.Router();
 
 // Get lobby games
 router.get("/lobby", requireAuth, async (_req, res) => {
@@ -163,7 +165,7 @@ router.get("/:gameId", requireAuth, async (req, res) => {
 
   try {
     const gameResult = await pool.query(
-      "SELECT id, game_type, status, max_players, created_at, started_at, ended_at FROM games WHERE id = $1",
+      "SELECT id, game_type, status, max_players, created_at, started_at, ended_at, created_by FROM games WHERE id = $1",
       [gameId],
     );
 
@@ -172,13 +174,16 @@ router.get("/:gameId", requireAuth, async (req, res) => {
     }
 
     const participantsResult = await pool.query(
-      `SELECT gp.user_id, gp.is_host, gp.joined_at, u.display_name
+      `SELECT gp.user_id as id, gp.user_id, gp.is_host, gp.joined_at, u.display_name
        FROM game_participants gp
        JOIN users u ON gp.user_id = u.id
        WHERE gp.game_id = $1
        ORDER BY gp.joined_at`,
       [gameId],
     );
+
+    console.log(`[GET /api/games/${gameId}] Found ${participantsResult.rows.length} participants`);
+    console.log("Participants:", participantsResult.rows);
 
     const scoresResult = await pool.query(
       `SELECT s.user_id, s.value, s.recorded_at, u.display_name
@@ -189,11 +194,14 @@ router.get("/:gameId", requireAuth, async (req, res) => {
       [gameId],
     );
 
-    res.json({
+    const response = {
       game: gameResult.rows[0],
       game_participants: participantsResult.rows,
       scores: scoresResult.rows,
-    });
+    };
+
+    console.log(`[GET /api/games/${gameId}] Sending response:`, JSON.stringify(response, null, 2));
+    res.json(response);
   } catch (error) {
     console.error("Get game error:", error);
     res.status(500).json({ error: "Failed to retrieve game details" });
@@ -203,29 +211,122 @@ router.get("/:gameId", requireAuth, async (req, res) => {
 // Start game
 router.post("/:gameId/start", requireAuth, async (req, res) => {
   const { gameId } = req.params;
+  const client = await pool.connect();
 
   try {
-    const result = await pool.query(
+    await client.query("BEGIN");
+    
+    console.log(`[POST /api/games/${gameId}/start] User ID:`, req.session.userId);
+    
+    // First, check if user is host
+    const hostCheck = await client.query(
+      `SELECT is_host FROM game_participants 
+       WHERE game_id = $1 AND user_id = $2`,
+      [gameId, req.session.userId],
+    );
+    
+    console.log(`[POST /api/games/${gameId}/start] Host check result:`, hostCheck.rows);
+    
+    if (hostCheck.rows.length === 0) {
+      await client.query("ROLLBACK");
+      console.log(`[POST /api/games/${gameId}/start] User is not a participant`);
+      return res.status(403).json({ error: "You are not a participant in this game" });
+    }
+    
+    if (!hostCheck.rows[0].is_host) {
+      await client.query("ROLLBACK");
+      console.log(`[POST /api/games/${gameId}/start] User is not the host`);
+      return res.status(403).json({ error: "Only host can start a waiting game" });
+    }
+
+    // Verify host and update game status
+    const result = await client.query(
       `UPDATE games
        SET status = 'in_progress', started_at = now()
        WHERE id = $1 
          AND status = 'waiting'
-         AND EXISTS (
-           SELECT 1 FROM game_participants 
-           WHERE game_id = $1 AND user_id = $2 AND is_host = true
-         )
        RETURNING id`,
-      [gameId, req.session.userId],
+      [gameId],
     );
 
     if (result.rows.length === 0) {
-      return res.status(403).json({ error: "Only host can start a waiting game" });
+      await client.query("ROLLBACK");
+      console.log(`[POST /api/games/${gameId}/start] Game not found or not in waiting status`);
+      return res.status(403).json({ error: "Game not found or already started" });
     }
 
+    // Get all participants
+    const participantsResult = await client.query(
+      `SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at`,
+      [gameId],
+    );
+
+    const participants = participantsResult.rows.map((r: any) => r.user_id);
+
+    // Set the first player as the current turn
+    const firstPlayerId = participants[0];
+    await client.query(
+      `UPDATE games SET current_turn_user_id = $1 WHERE id = $2`,
+      [firstPlayerId, gameId],
+    );
+
+    // Load tile bag from DB
+    const tileBagResult = await client.query(
+      `SELECT letter FROM tile_bag WHERE game_id = $1 ORDER BY id`,
+      [gameId],
+    );
+
+    const tileBag = tileBagResult.rows.map((r: any) => r.letter);
+
+    // Deal 7 tiles to each player
+    for (const userId of participants) {
+      // Check if player already has tiles (shouldn't happen, but just in case)
+      const existingTiles = await client.query(
+        `SELECT COUNT(*) as count FROM player_tiles WHERE game_id = $1 AND user_id = $2`,
+        [gameId, userId],
+      );
+
+      if (parseInt(existingTiles.rows[0].count) === 0 && tileBag.length >= 7) {
+        // Draw 7 tiles
+        const hand = tileBag.splice(0, 7);
+
+        // Save to player_tiles
+        if (hand.length > 0) {
+          const handValues = hand.map((letter: string) => `('${gameId}', '${userId}', '${letter}')`).join(",");
+          await client.query(
+            `INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`,
+          );
+        }
+      }
+    }
+
+    // Update tile bag in DB (remove dealt tiles)
+    if (tileBagResult.rows.length > tileBag.length) {
+      const tilesToRemove = tileBagResult.rows.length - tileBag.length;
+      await client.query(
+        `DELETE FROM tile_bag 
+         WHERE id IN (
+           SELECT id FROM tile_bag 
+           WHERE game_id = $1 
+           ORDER BY id 
+           LIMIT $2
+         )`,
+        [gameId, tilesToRemove],
+      );
+    }
+
+    await client.query("COMMIT");
+    
+    // Emit game-started event to all players in the game lobby
+    io.to(gameId).emit("game-started", { gameId });
+    
     res.json({ success: true });
   } catch (error) {
+    await client.query("ROLLBACK");
     console.error("Start game error:", error);
     res.status(500).json({ error: "Failed to start game" });
+  } finally {
+    client.release();
   }
 });
 
@@ -321,4 +422,5 @@ router.post("/:gameId/move", requireAuth, async (req, res) => {
   }
 });
 
-export default router;
+  return router;
+}
