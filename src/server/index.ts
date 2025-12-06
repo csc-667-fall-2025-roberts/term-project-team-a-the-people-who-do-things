@@ -62,7 +62,7 @@ app.set("views", path.join(__dirname, "../views"));
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/games", gameRoutes);
+app.use("/api/games", gameRoutes(io));
 app.use("/api/chat", chatRoutes);
 app.use("/api/users", usersRoutes);
 
@@ -83,6 +83,12 @@ app.get("/login", (req, res) => {
 
 app.get("/lobby", requireAuth, (req, res) => {
 	res.render("screens/lobby", { user: req.users });
+});
+
+app.get("/game/:gameId/lobby", requireAuth, (req, res) => {
+	res.render("screens/gameLobby", {
+		gameId: req.params.gameId,
+	});
 });
 
 app.get("/game/:gameId", requireAuth, (req, res) => {
@@ -157,6 +163,27 @@ io.on("connection", (socket: Socket) => {
 		socket.leave("lobby");
 		console.log("User left lobby:", userId);
 	});
+
+  // Join game lobby room
+  socket.on("join-game-lobby", (gameId: string) => {
+    socket.join(gameId);
+    console.log("User joined game lobby:", userId, "gameId:", gameId);
+    
+    // Notify others in the lobby
+    socket.to(gameId).emit("player-joined-lobby", {
+      userId,
+      displayName: (socket.request as any).session?.user?.display_name || "Unknown",
+      isHost: false, // Will be determined by client
+    });
+  });
+
+  // Leave game lobby room
+  socket.on("leave-game-lobby", (gameId: string) => {
+    socket.leave(gameId);
+    console.log("User left game lobby:", userId, "gameId:", gameId);
+    
+    socket.to(gameId).emit("player-left-lobby", { userId });
+  });
 
   // Join game room
   socket.on("join-game", async (gameId: string) => {
