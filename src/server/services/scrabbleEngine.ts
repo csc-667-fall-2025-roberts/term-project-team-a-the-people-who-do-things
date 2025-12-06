@@ -1,3 +1,5 @@
+// noinspection DuplicatedCode
+
 import {
   BOARD_SIZE,
   LETTER_DISTRIBUTION,
@@ -47,7 +49,7 @@ export class ScrabbleGame {
     }
     return this.shuffle(tiles);
   }
-//IGNORE THE DUPLICATE WARNING
+  //IGNORE THE DUPLICATE WARNING
   shuffle<T>(array: T[]): T[] {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -92,7 +94,7 @@ export class ScrabbleGame {
 
     // Check tiles in hand
     const hand = this.playerHands[playerId];
-    const usedLetters = tiles.map((t) => (t.letter));
+    const usedLetters = tiles.map((t) => t.letter);
     const handCopy = [...hand];
 
     for (const letter of usedLetters) {
@@ -141,9 +143,7 @@ export class ScrabbleGame {
     return { valid: true };
   }
 
-  calculateScore(
-    tiles: Array<{ letter: string; row: number; col: number }>,
-  ): number {
+  calculateScore(tiles: Array<{ letter: string; row: number; col: number }>): number {
     let score = 0;
     let wordMultiplier = 1;
 
@@ -171,11 +171,9 @@ export class ScrabbleGame {
 
     return score;
   }
-
-  getFormedWords(
-    tiles: Array<{ letter: string; row: number; col: number }>,
-  ): string[] {
-    // need full word detection logic
+//TODO Unused method getFormedWords
+  getFormedWords(tiles: Array<{ letter: string; row: number; col: number }>): string[] {
+    //TODO need full word detection logic
     const words = [];
 
     // main word
@@ -216,7 +214,7 @@ export class ScrabbleGame {
     }
 
     // remove tiles from hand
-    const usedLetters: string[] = tiles.map((t) => ( t.letter));
+    const usedLetters: string[] = tiles.map((t) => t.letter);
     for (const letter of usedLetters) {
       const index = this.playerHands[playerId].indexOf(letter);
       this.playerHands[playerId].splice(index, 1);
@@ -321,4 +319,4 @@ export class ScrabbleGame {
   }
 }
 
-export default ScrabbleGame;
+export default ScrabbleGame; //TODO Unused default export
