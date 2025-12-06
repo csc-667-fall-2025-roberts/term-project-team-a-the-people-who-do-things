@@ -161,55 +161,84 @@ io.on("connection", (socket: Socket) => {
   // Join game room
   socket.on("join-game", async (gameId: string) => {
     socket.join(gameId);
-    const result = await pool.query(
-      "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
-      [gameId],
-    );
 
-    // Fetch participants from db
-
-    const game_participants: string[] = result.rows.map((r: any) => String(r.user_id));
-
-    let games = gameManager.getGame(gameId);
-    if (!games) {
-      games = gameManager.createGame(gameId, game_participants);
-    } else {
-      if (games.players.length !== game_participants.length) {
-        console.log("Syncing players from DB to Memory...");
-        games.players = game_participants;
-
-        games.players.forEach((id) => {
-          if (typeof games!.scores[id] === "undefined") games!.scores[id] = 0;
-          if (!games!.playerHands[id]) games!.playerHands[id] = [];
-        });
-      }
-    }
-    // Fetch tile data from DB
     try {
-      const dbHandResult = await pool.query(
-        "SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
-        [gameId, userId],
+      // 1. Fetch participants (Order is important for turn logic)
+      const participantsResult = await pool.query(
+        "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
+        [gameId]
+      );
+      const game_participants: string[] = participantsResult.rows.map((r: any) =>
+        String(r.user_id)
       );
 
-      // If DB has tiles, force the in-memory game to match the DB
-      if (dbHandResult.rows.length > 0) {
-        const hand = dbHandResult.rows.map((r: any) => r.letter);
-        games.playerHands[userId] = hand;
+      // 2. Fetch the BOARD STATE from the database
+      // This is the critical part your old code was missing!
+      const boardResult = await pool.query(
+        "SELECT row, col, letter FROM board_tiles WHERE game_id = $1",
+        [gameId]
+      );
+
+      // 3. Reconstruct the 2D Board Array from DB data
+      let boardState: (string | null)[][] | null = null;
+      
+      if (boardResult.rows.length > 0) {
+        boardState = Array(15)
+          .fill(null)
+          .map(() => Array(15).fill(null));
+        
+        for (const tile of boardResult.rows) {
+          boardState[tile.row][tile.col] = tile.letter;
+        }
       }
+
+      // 4. Initialize Game Memory
+      // If the game isn't in RAM, we create it using the Board State we just loaded
+      let game = gameManager.getGame(gameId);
+      if (!game) {
+        game = gameManager.createGame(gameId, game_participants, boardState);
+        console.log(`Game ${gameId} loaded from DB with ${boardResult.rows.length} tiles.`);
+      } else {
+        // If game exists, just ensure players list is synced
+        if (game.players.length !== game_participants.length) {
+          game.players = game_participants;
+          game.players.forEach((id) => {
+            if (typeof game!.scores[id] === "undefined") game!.scores[id] = 0;
+            if (!game!.playerHands[id]) game!.playerHands[id] = [];
+          });
+        }
+      }
+
+      // 5. Sync Player Hand from DB
+      try {
+        const dbHandResult = await pool.query(
+          "SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
+          [gameId, userId]
+        );
+        
+        if (dbHandResult.rows.length > 0) {
+          const hand = dbHandResult.rows.map((r: any) => r.letter);
+          game.playerHands[userId] = hand;
+        }
+      } catch (e) {
+        console.error("Error syncing hand:", e);
+      }
+
+      // 6. Send Game State to Client
+      const gameState = game.getGameState();
+      const playerHand = game.getPlayerHand(userId);
+
+      socket.emit("game-state", {
+        ...gameState,
+        hand: playerHand,
+      });
+
+      socket.to(gameId).emit("player-joined", { userId });
+
     } catch (e) {
-      console.error("Error syncing hand from DB:", e);
+      console.error("Error joining game:", e);
+      socket.emit("error", { message: "Failed to join game" });
     }
-
-    // Send game state
-    const gameState = games.getGameState();
-    const playerHand = games.getPlayerHand(userId);
-
-    socket.emit("game-state", {
-      ...gameState,
-      hand: playerHand,
-    });
-
-    socket.to(gameId).emit("player-joined", { userId });
   });
 
   socket.on("make-move", async ({ gameId, tiles, words, scores }) => {
