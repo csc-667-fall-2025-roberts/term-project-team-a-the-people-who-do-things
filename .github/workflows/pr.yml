@@ -14,7 +14,9 @@ env:
   NODE_VERSION: '20'
 
 jobs:
+  # ============================================
   # DEPENDENCY INSTALLATION & CACHING
+  # ============================================
   install:
     name: Install Dependencies
     runs-on: ubuntu-latest
@@ -26,22 +28,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          # Removed cache: 'npm' - will use manual caching instead
 
       - name: Cache node_modules
         id: cache-node-modules
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package. json') }}
           restore-keys: |
-            node-modules-${{ runner.os }}-
+            node-modules-${{ runner. os }}-
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
+        run: npm install
 
+  # ============================================
   # TYPE CHECKING
+  # ============================================
   typecheck:
     name: TypeScript Check
     runs-on: ubuntu-latest
@@ -54,17 +58,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Restore node_modules cache
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node-modules-${{ runner. os }}-${{ hashFiles('package-lock.json') }}
+          key: node-modules-${{ runner. os }}-${{ hashFiles('package. json') }}
 
       - name: Run TypeScript compiler
         run: npx tsc --noEmit
+
+  # ============================================
   # CODE FORMATTING CHECK
+  # ============================================
   format:
     name: Prettier Check
     runs-on: ubuntu-latest
@@ -73,22 +79,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node. js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Restore node_modules cache
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: node-modules-${{ runner. os }}-${{ hashFiles('package. json') }}
 
       - name: Check code formatting
-        run: npx prettier --check "src/**/*.{ts,tsx,js,jsx,ejs,css,json}"
+        run: npx prettier --check "src/**/*. {ts,tsx,js,jsx,ejs,css,json}"
 
+  # ============================================
   # BUILD VERIFICATION
+  # ============================================
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -101,13 +108,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Restore node_modules cache
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node-modules-${{ runner. os }}-${{ hashFiles('package-lock.json') }}
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package.json') }}
 
       - name: Build client
         run: npm run build:client
@@ -125,7 +131,9 @@ jobs:
           path: dist/
           retention-days: 1
 
+  # ============================================
   # SECURITY AUDIT
+  # ============================================
   security:
     name: Security Audit
     runs-on: ubuntu-latest
@@ -138,13 +146,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Run npm audit
         run: npm audit --audit-level=high
         continue-on-error: true
 
+  # ============================================
   # DATABASE MIGRATION CHECK
+  # ============================================
   migration-check:
     name: Migration Syntax Check
     runs-on: ubuntu-latest
@@ -153,25 +162,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node. js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Restore node_modules cache
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          key: node-modules-${{ runner. os }}-${{ hashFiles('package. json') }}
 
       - name: Check migration files syntax
         run: |
           echo "Checking migration files for TypeScript errors..."
           npx tsc --noEmit src/DB/migrations/*.ts 2>/dev/null || echo "No migration files to check or check completed"
 
+  # ============================================
   # DEPENDENCY SIZE CHECK
-
+  # ============================================
   bundle-analysis:
     name: Bundle Size Check
     runs-on: ubuntu-latest
@@ -197,7 +206,9 @@ jobs:
             echo "| \`${file}\` | ${size} |" >> $GITHUB_STEP_SUMMARY
           done || echo "| No JS/CSS files found | - |" >> $GITHUB_STEP_SUMMARY
 
+  # ============================================
   # PR VALIDATION SUMMARY
+  # ============================================
   pr-check:
     name: PR Ready
     runs-on: ubuntu-latest
@@ -215,7 +226,7 @@ jobs:
             echo "FAIL - TypeScript Check" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [ "${{ needs. format.result }}" == "success" ]; then
+          if [ "${{ needs.format.result }}" == "success" ]; then
             echo "PASS - Prettier Check" >> $GITHUB_STEP_SUMMARY
           else
             echo "FAIL - Prettier Check" >> $GITHUB_STEP_SUMMARY
@@ -233,7 +244,7 @@ jobs:
             echo "WARN - Security Audit: Issues Found (non-blocking)" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [ "${{ needs.migration-check. result }}" == "success" ]; then
+          if [ "${{ needs.migration-check.result }}" == "success" ]; then
             echo "PASS - Migration Check" >> $GITHUB_STEP_SUMMARY
           else
             echo "FAIL - Migration Check" >> $GITHUB_STEP_SUMMARY
@@ -242,8 +253,8 @@ jobs:
       - name: Fail if required checks failed
         if: |
           needs.typecheck.result != 'success' ||
-          needs. format.result != 'success' ||
-          needs.build. result != 'success' ||
+          needs.format.result != 'success' ||
+          needs.build.result != 'success' ||
           needs. migration-check.result != 'success'
         run: |
           echo "One or more required checks failed!"
