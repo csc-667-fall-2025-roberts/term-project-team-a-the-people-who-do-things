@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 const WORDS_FILE_PATH = path.join(__dirname, "words.txt");
 
 // 2. Load the dictionary efficiently
-// We use a Set because checking "Set.has('WORD')" is instant (O(1)), 
+// We use a Set because checking "Set.has('WORD')" is instant (O(1)),
 // whereas searching an Array is slow.
 console.log("Loading dictionary...");
 let VALID_WORDS: Set<string>;

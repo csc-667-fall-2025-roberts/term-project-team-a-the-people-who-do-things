@@ -144,23 +144,21 @@ export class ScrabbleGame {
 
     // NEEDS isValidWord function. Using mock function
     const formedWords = this.getFormedWords(tiles);
-    
+
     // We iterate through every word formed (Main + Cross words)
-    for (const { word } of formedWords) { 
-        // We use your temporary (or real) dictionary checker
-        if (!isValidWord(word)) {
-            return { valid: false, error: `Invalid word: ${word}` };
-        }
+    for (const { word } of formedWords) {
+      // We use your temporary (or real) dictionary checker
+      if (!isValidWord(word)) {
+        return { valid: false, error: `Invalid word: ${word}` };
+      }
     }
 
     return { valid: true };
   }
 
-  calculateScore(
-    tiles: Array<{ letter: string; row: number; col: number }>,
-  ): number {
+  calculateScore(tiles: Array<{ letter: string; row: number; col: number }>): number {
     let totalScore = 0;
-    
+
     // 1. Get all words formed (Main + Cross words) with their cell details
     const words = this.getFormedWords(tiles);
 
@@ -174,13 +172,13 @@ export class ScrabbleGame {
         // ONLY apply premiums if the tile is NEW (part of the current move)
         if (cell.isNew) {
           const premium = this.getPremiumSquareType(cell.row, cell.col);
-          
+
           if (premium === "DL") letterScore *= 2;
           if (premium === "TL") letterScore *= 3;
           if (premium === "DW") wordMultiplier *= 2;
           if (premium === "TW") wordMultiplier *= 3;
         }
-        
+
         wordScore += letterScore;
       }
 
@@ -198,14 +196,20 @@ export class ScrabbleGame {
 
   getFormedWords(
     tiles: Array<{ letter: string; row: number; col: number }>,
-  ): Array<{ word: string; cells: Array<{ letter: string; row: number; col: number; isNew: boolean }> }> {
-    const formedWords: Array<{ word: string; cells: Array<{ letter: string; row: number; col: number; isNew: boolean }> }> = [];
+  ): Array<{
+    word: string;
+    cells: Array<{ letter: string; row: number; col: number; isNew: boolean }>;
+  }> {
+    const formedWords: Array<{
+      word: string;
+      cells: Array<{ letter: string; row: number; col: number; isNew: boolean }>;
+    }> = [];
 
     // 1. Identify Direction
     const rows = [...new Set(tiles.map((t) => t.row))];
     const isHorizontal = rows.length === 1;
 
-    // PHASE 1: MAIN WORD SCAN 
+    // PHASE 1: MAIN WORD SCAN
     if (isHorizontal) {
       const row = rows[0];
       const minCol = Math.min(...tiles.map((t) => t.col));
@@ -230,12 +234,11 @@ export class ScrabbleGame {
         const boardLetter = this.board[row][c];
         const tile = tiles.find((t) => t.row === row && t.col === c);
         const letter = boardLetter || tile?.letter || "";
-        
+
         word += letter;
         cells.push({ letter, row, col: c, isNew: !!tile });
       }
       formedWords.push({ word, cells });
-
     } else {
       // Vertical Logic
       const cols = [...new Set(tiles.map((t) => t.col))];
@@ -269,7 +272,7 @@ export class ScrabbleGame {
       formedWords.push({ word, cells });
     }
 
-    // PHASE 2: PERPENDICULAR SCANS 
+    // PHASE 2: PERPENDICULAR SCANS
     for (const tile of tiles) {
       const isPerpendicularVertical = isHorizontal;
       let hasNeighbor = false;
@@ -314,7 +317,7 @@ export class ScrabbleGame {
       if (hasNeighbor && start !== -1 && end !== -1) {
         let crossWord = "";
         const crossCells = [];
-        
+
         if (isPerpendicularVertical) {
           for (let r = start; r <= end; r++) {
             const boardLetter = this.board[r][fixedIndex];

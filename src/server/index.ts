@@ -86,9 +86,9 @@ app.get("/lobby", requireAuth, (req, res) => {
 });
 
 app.get("/game/:gameId/lobby", requireAuth, (req, res) => {
-	res.render("screens/gameLobby", {
-		gameId: req.params.gameId,
-	});
+  res.render("screens/gameLobby", {
+    gameId: req.params.gameId,
+  });
 });
 
 app.get("/game/:gameId", requireAuth, (req, res) => {
@@ -168,7 +168,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("join-game-lobby", (gameId: string) => {
     socket.join(gameId);
     console.log("User joined game lobby:", userId, "gameId:", gameId);
-    
+
     // Notify others in the lobby
     socket.to(gameId).emit("player-joined-lobby", {
       userId,
@@ -181,7 +181,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("leave-game-lobby", (gameId: string) => {
     socket.leave(gameId);
     console.log("User left game lobby:", userId, "gameId:", gameId);
-    
+
     socket.to(gameId).emit("player-left-lobby", { userId });
   });
 
@@ -193,27 +193,27 @@ io.on("connection", (socket: Socket) => {
       // 1. Fetch participants (Order is important for turn logic)
       const participantsResult = await pool.query(
         "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
-        [gameId]
+        [gameId],
       );
       const game_participants: string[] = participantsResult.rows.map((r: any) =>
-        String(r.user_id)
+        String(r.user_id),
       );
 
       // 2. Fetch the BOARD STATE from the database
 
       const boardResult = await pool.query(
         "SELECT row, col, letter FROM board_tiles WHERE game_id = $1",
-        [gameId]
+        [gameId],
       );
 
       // 3. Reconstruct the 2D Board Array from DB data
       let boardState: (string | null)[][] | null = null;
-      
+
       if (boardResult.rows.length > 0) {
         boardState = Array(15)
           .fill(null)
           .map(() => Array(15).fill(null));
-        
+
         for (const tile of boardResult.rows) {
           boardState[tile.row][tile.col] = tile.letter;
         }
@@ -240,7 +240,7 @@ io.on("connection", (socket: Socket) => {
       try {
         const dbHandResult = await pool.query(
           "SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
-          [gameId, userId]
+          [gameId, userId],
         );
 
         if (dbHandResult.rows.length > 0) {
@@ -260,7 +260,7 @@ io.on("connection", (socket: Socket) => {
               .join(",");
 
             await pool.query(
-              `INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`
+              `INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`,
             );
           }
         }
@@ -278,7 +278,6 @@ io.on("connection", (socket: Socket) => {
       });
 
       socket.to(gameId).emit("player-joined", { userId });
-
     } catch (e) {
       console.error("Error joining game:", e);
       socket.emit("error", { message: "Failed to join game" });
