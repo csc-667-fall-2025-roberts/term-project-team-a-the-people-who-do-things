@@ -1,27 +1,33 @@
-// dictionary for word validation
-// NOT COMPLETE
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const VALID_WORDS = new Set([
-  "HELLO",
-  "WORLD",
-  "GAME",
-  "WORD",
-  "PLAY",
-  "SCORE",
-  "TILE",
-  "BOARD",
-  "CAT",
-  "DOG",
-  "HOUSE",
-  "TREE",
-  "BOOK",
-  "READ",
-  "WRITE",
-  "CODE",
-  //TODO Add more SHIT or make an api
-]);
+// 1. Get the correct path to words.txt
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const WORDS_FILE_PATH = path.join(__dirname, "words.txt");
+
+// 2. Load the dictionary efficiently
+// We use a Set because checking "Set.has('WORD')" is instant (O(1)),
+// whereas searching an Array is slow.
+console.log("Loading dictionary...");
+let VALID_WORDS: Set<string>;
+
+try {
+  const fileContent = fs.readFileSync(WORDS_FILE_PATH, "utf-8");
+  // Split by new line, trim whitespace, and convert to UPPERCASE
+  const wordList = fileContent.split("\n").map((w) => w.trim().toUpperCase());
+  VALID_WORDS = new Set(wordList);
+  console.log(`Dictionary loaded successfully with ${VALID_WORDS.size} words.`);
+} catch (error) {
+  console.error("FAILED TO LOAD DICTIONARY from:", WORDS_FILE_PATH);
+  console.error(error);
+  // Fallback to a tiny list so the server doesn't crash
+  VALID_WORDS = new Set(["HELLO", "WORLD", "TEST", "SCRABBLE"]);
+}
 
 export function isValidWord(word: string): boolean {
+  if (!word) return false;
   return VALID_WORDS.has(word.toUpperCase());
 }
 

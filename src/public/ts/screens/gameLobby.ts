@@ -92,14 +92,19 @@ function addChatMessage(message: LobbyChatMessage) {
 async function loadGameLobbyData() {
   try {
     console.log("Loading game lobby data for gameId:", gameId);
-    
+
     const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
     currentUser = user;
     console.log("Current user:", currentUser);
 
     const response = (await api.games.get(gameId)) as {
       game: { max_players: number; created_by: string };
-      game_participants: Array<{ id: string; user_id: string; display_name: string; is_host: boolean }>;
+      game_participants: Array<{
+        id: string;
+        user_id: string;
+        display_name: string;
+        is_host: boolean;
+      }>;
     };
 
     console.log("API response:", response);
@@ -124,8 +129,8 @@ async function loadGameLobbyData() {
     console.log("Mapped participants:", participants);
 
     // Check if user is host - check both created_by and is_host flag
-    const userParticipant = participants.find((p) => p.id === currentUser.id);
-    isHost = (game.created_by === currentUser.id) || (userParticipant?.is_host === true);
+    const userParticipant = participants.find((p) => p.id === currentUser?.id);
+    isHost = game.created_by === currentUser.id || userParticipant?.is_host === true;
     console.log("Is host check:", {
       created_by: game.created_by,
       currentUser_id: currentUser.id,
@@ -149,8 +154,12 @@ async function loadGameLobbyData() {
 }
 
 function renderPlayers(participants: GameParticipant[], maxPlayers: number) {
-  console.log("renderPlayers called with:", { participants, maxPlayers, playersList: !!playersList });
-  
+  console.log("renderPlayers called with:", {
+    participants,
+    maxPlayers,
+    playersList: !!playersList,
+  });
+
   if (!playersList) {
     console.error("playersList element not found!");
     return;
@@ -185,7 +194,7 @@ function renderPlayers(participants: GameParticipant[], maxPlayers: number) {
       `,
     )
     .join("");
-  
+
   console.log("Generated HTML:", html);
   playersList.innerHTML = html;
 }
@@ -208,7 +217,7 @@ async function loadChatMessages() {
   try {
     const { messages } = (await api.chat.getMessages(gameId)) as { messages: LobbyChatMessage[] };
     chatMessages.innerHTML = "";
-    
+
     // Remove the "Chat room initialized..." message
     const initMessage = chatMessages.querySelector(".text-center.text-xs.text-gray-400");
     if (initMessage) initMessage.remove();
@@ -264,10 +273,13 @@ startGameBtn?.addEventListener("click", async () => {
   }
 });
 
-socket.on("player-joined-lobby", (data: { userId: string; displayName: string; isHost: boolean }) => {
-  console.log("Player joined lobby:", data);
-  void loadGameLobbyData(); // Reload data to update player list
-});
+socket.on(
+  "player-joined-lobby",
+  (data: { userId: string; displayName: string; isHost: boolean }) => {
+    console.log("Player joined lobby:", data);
+    void loadGameLobbyData(); // Reload data to update player list
+  },
+);
 
 socket.on("player-left-lobby", (data: { userId: string }) => {
   console.log("Player left lobby:", data);
@@ -298,4 +310,3 @@ if (document.readyState === "loading") {
 window.addEventListener("beforeunload", () => {
   socket.emit("leave-game-lobby", gameId);
 });
-

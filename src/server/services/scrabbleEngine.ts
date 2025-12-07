@@ -7,6 +7,8 @@ import {
   PREMIUM_SQUARES,
 } from "./scrabbleConstants.js";
 
+import { isValidWord } from "./dictionary.js";
+
 export class ScrabbleGame {
   gameId: string;
   board: (string | null)[][];
@@ -140,67 +142,202 @@ export class ScrabbleGame {
       }
     }
 
+    // NEEDS isValidWord function. Using mock function
+    const formedWords = this.getFormedWords(tiles);
+
+    // We iterate through every word formed (Main + Cross words)
+    for (const { word } of formedWords) {
+      // We use your temporary (or real) dictionary checker
+      if (!isValidWord(word)) {
+        return { valid: false, error: `Invalid word: ${word}` };
+      }
+    }
+
     return { valid: true };
   }
 
   calculateScore(tiles: Array<{ letter: string; row: number; col: number }>): number {
-    let score = 0;
-    let wordMultiplier = 1;
+    let totalScore = 0;
 
-    for (const tile of tiles) {
-      let letterScore: number = LETTER_VALUES[tile.letter as keyof typeof LETTER_VALUES];
-      const premium = this.getPremiumSquareType(tile.row, tile.col);
+    // 1. Get all words formed (Main + Cross words) with their cell details
+    const words = this.getFormedWords(tiles);
 
-      if (!this.board[tile.row][tile.col]) {
-        // Only count premium on new tiles
-        if (premium === "DL") letterScore *= 2;
-        if (premium === "TL") letterScore *= 3;
-        if (premium === "DW") wordMultiplier *= 2;
-        if (premium === "TW") wordMultiplier *= 3;
+    for (const wordObj of words) {
+      let wordScore = 0;
+      let wordMultiplier = 1;
+
+      for (const cell of wordObj.cells) {
+        let letterScore = LETTER_VALUES[cell.letter as keyof typeof LETTER_VALUES] || 0;
+
+        // ONLY apply premiums if the tile is NEW (part of the current move)
+        if (cell.isNew) {
+          const premium = this.getPremiumSquareType(cell.row, cell.col);
+
+          if (premium === "DL") letterScore *= 2;
+          if (premium === "TL") letterScore *= 3;
+          if (premium === "DW") wordMultiplier *= 2;
+          if (premium === "TW") wordMultiplier *= 3;
+        }
+
+        wordScore += letterScore;
       }
 
-      score += letterScore;
+      // Multiply the total word score
+      totalScore += wordScore * wordMultiplier;
     }
 
-    score *= wordMultiplier;
-
-    // bonus for using all 7 tiles
+    // 50-point bonus for using all 7 tiles (Bingo)
     if (tiles.length === 7) {
-      score += 50;
+      totalScore += 50;
     }
 
-    return score;
+    return totalScore;
   }
-  //TODO Unused method getFormedWords
-  getFormedWords(tiles: Array<{ letter: string; row: number; col: number }>): string[] {
-    //TODO need full word detection logic
-    const words = [];
 
-    // main word
+  getFormedWords(tiles: Array<{ letter: string; row: number; col: number }>): Array<{
+    word: string;
+    cells: Array<{ letter: string; row: number; col: number; isNew: boolean }>;
+  }> {
+    const formedWords: Array<{
+      word: string;
+      cells: Array<{ letter: string; row: number; col: number; isNew: boolean }>;
+    }> = [];
+
+    // 1. Identify Direction
     const rows = [...new Set(tiles.map((t) => t.row))];
-    const cols = [...new Set(tiles.map((t) => t.col))];
+    const isHorizontal = rows.length === 1;
 
-    if (rows.length === 1) {
+    // PHASE 1: MAIN WORD SCAN
+    if (isHorizontal) {
       const row = rows[0];
-      const minCol = Math.min(...cols);
-      const maxCol = Math.max(...cols);
-      let word = "";
-      for (let c = minCol; c <= maxCol; c++) {
-        word += this.board[row][c] || tiles.find((t) => t.row === row && t.col === c)?.letter || "";
+      const minCol = Math.min(...tiles.map((t) => t.col));
+      const maxCol = Math.max(...tiles.map((t) => t.col));
+
+      // Scan Left
+      let startCol = minCol;
+      while (startCol > 0 && this.board[row][startCol - 1]) {
+        startCol--;
       }
-      words.push(word);
+
+      // Scan Right
+      let endCol = maxCol;
+      while (endCol < BOARD_SIZE - 1 && this.board[row][endCol + 1]) {
+        endCol++;
+      }
+
+      // Capture Word AND Cells
+      let word = "";
+      const cells = [];
+      for (let c = startCol; c <= endCol; c++) {
+        const boardLetter = this.board[row][c];
+        const tile = tiles.find((t) => t.row === row && t.col === c);
+        const letter = boardLetter || tile?.letter || "";
+
+        word += letter;
+        cells.push({ letter, row, col: c, isNew: !!tile });
+      }
+      formedWords.push({ word, cells });
     } else {
+      // Vertical Logic
+      const cols = [...new Set(tiles.map((t) => t.col))];
       const col = cols[0];
-      const minRow = Math.min(...rows);
-      const maxRow = Math.max(...rows);
-      let word = "";
-      for (let r = minRow; r <= maxRow; r++) {
-        word += this.board[r][col] || tiles.find((t) => t.row === r && t.col === col)?.letter || "";
+      const minRow = Math.min(...tiles.map((t) => t.row));
+      const maxRow = Math.max(...tiles.map((t) => t.row));
+
+      // Scan Up
+      let startRow = minRow;
+      while (startRow > 0 && this.board[startRow - 1][col]) {
+        startRow--;
       }
-      words.push(word);
+
+      // Scan Down
+      let endRow = maxRow;
+      while (endRow < BOARD_SIZE - 1 && this.board[endRow + 1][col]) {
+        endRow++;
+      }
+
+      // Capture Word AND Cells
+      let word = "";
+      const cells = [];
+      for (let r = startRow; r <= endRow; r++) {
+        const boardLetter = this.board[r][col];
+        const tile = tiles.find((t) => t.row === r && t.col === col);
+        const letter = boardLetter || tile?.letter || "";
+
+        word += letter;
+        cells.push({ letter, row: r, col, isNew: !!tile });
+      }
+      formedWords.push({ word, cells });
     }
 
-    return words;
+    // PHASE 2: PERPENDICULAR SCANS
+    for (const tile of tiles) {
+      const isPerpendicularVertical = isHorizontal;
+      let hasNeighbor = false;
+      let start = -1;
+      let end = -1;
+      let fixedIndex = -1;
+
+      if (isPerpendicularVertical) {
+        fixedIndex = tile.col;
+        const r = tile.row;
+        const neighborUp = r > 0 && this.board[r - 1][fixedIndex] !== null;
+        const neighborDown = r < BOARD_SIZE - 1 && this.board[r + 1][fixedIndex] !== null;
+
+        if (neighborUp || neighborDown) {
+          hasNeighbor = true;
+          let cursor = r;
+          while (cursor > 0 && this.board[cursor - 1][fixedIndex]) cursor--;
+          start = cursor;
+
+          cursor = r;
+          while (cursor < BOARD_SIZE - 1 && this.board[cursor + 1][fixedIndex]) cursor++;
+          end = cursor;
+        }
+      } else {
+        fixedIndex = tile.row;
+        const c = tile.col;
+        const neighborLeft = c > 0 && this.board[fixedIndex][c - 1] !== null;
+        const neighborRight = c < BOARD_SIZE - 1 && this.board[fixedIndex][c + 1] !== null;
+
+        if (neighborLeft || neighborRight) {
+          hasNeighbor = true;
+          let cursor = c;
+          while (cursor > 0 && this.board[fixedIndex][cursor - 1]) cursor--;
+          start = cursor;
+
+          cursor = c;
+          while (cursor < BOARD_SIZE - 1 && this.board[fixedIndex][cursor + 1]) cursor++;
+          end = cursor;
+        }
+      }
+
+      if (hasNeighbor && start !== -1 && end !== -1) {
+        let crossWord = "";
+        const crossCells = [];
+
+        if (isPerpendicularVertical) {
+          for (let r = start; r <= end; r++) {
+            const boardLetter = this.board[r][fixedIndex];
+            const t = tiles.find((t) => t.row === r && t.col === fixedIndex);
+            const letter = boardLetter || t?.letter || "";
+            crossWord += letter;
+            crossCells.push({ letter, row: r, col: fixedIndex, isNew: !!t });
+          }
+        } else {
+          for (let c = start; c <= end; c++) {
+            const boardLetter = this.board[fixedIndex][c];
+            const t = tiles.find((t) => t.row === fixedIndex && t.col === c);
+            const letter = boardLetter || t?.letter || "";
+            crossWord += letter;
+            crossCells.push({ letter, row: fixedIndex, col: c, isNew: !!t });
+          }
+        }
+        formedWords.push({ word: crossWord, cells: crossCells });
+      }
+    }
+
+    return formedWords;
   }
 
   applyMove(

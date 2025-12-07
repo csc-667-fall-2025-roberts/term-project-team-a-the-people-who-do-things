@@ -28,14 +28,18 @@ async function init(): Promise<void> {
   currentUser = user;
 
   const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
+
+  // Save the participants so 'updateScores' knows thier names
+  participants = gameData.game_participants;
+
   renderPlayers(gameData.game_participants);
   renderScores(gameData.scores);
   await loadChatHistory();
 
-	socket.emit("join-game", gameId);
-	
-	// Initialize timer display
-	updateTimerDisplay();
+  socket.emit("join-game", gameId);
+
+  // Initialize timer display
+  updateTimerDisplay();
 }
 
 init().catch((error) => {
@@ -211,91 +215,91 @@ function updateCurrentTurn(playerId: string) {
   const currentTurnEl = document.getElementById("current-turn");
   if (!currentTurnEl) return;
 
-	currentPlayerId = playerId;
-	const isCurrentUser = playerId === currentUser.id;
-	currentTurnEl.textContent = isCurrentUser ? "Your turn" : "Opponent's turn";
-	
-	// Enable/disable submit button based on turn
-	const submitBtn = document.getElementById("submit-move-btn") as HTMLButtonElement | null;
-	const passBtn = document.getElementById("pass-btn") as HTMLButtonElement | null;
-	
-	if (submitBtn) {
-		submitBtn.disabled = !isCurrentUser;
-		submitBtn.classList.toggle("opacity-50", !isCurrentUser);
-		submitBtn.classList.toggle("cursor-not-allowed", !isCurrentUser);
-	}
-	
-	if (passBtn) {
-		passBtn.disabled = !isCurrentUser;
-		passBtn.classList.toggle("opacity-50", !isCurrentUser);
-		passBtn.classList.toggle("cursor-not-allowed", !isCurrentUser);
-	}
-	
-	// Reset and start timer
-	resetTurnTimer();
-	if (isCurrentUser) {
-		startTurnTimer();
-	} else {
-		// Update timer display to show "Waiting..." when not your turn
-		updateTimerDisplay();
-	}
+  currentPlayerId = playerId;
+  const isCurrentUser = playerId === currentUser.id;
+  currentTurnEl.textContent = isCurrentUser ? "Your turn" : "Opponent's turn";
+
+  // Enable/disable submit button based on turn
+  const submitBtn = document.getElementById("submit-move-btn") as HTMLButtonElement | null;
+  const passBtn = document.getElementById("pass-btn") as HTMLButtonElement | null;
+
+  if (submitBtn) {
+    submitBtn.disabled = !isCurrentUser;
+    submitBtn.classList.toggle("opacity-50", !isCurrentUser);
+    submitBtn.classList.toggle("cursor-not-allowed", !isCurrentUser);
+  }
+
+  if (passBtn) {
+    passBtn.disabled = !isCurrentUser;
+    passBtn.classList.toggle("opacity-50", !isCurrentUser);
+    passBtn.classList.toggle("cursor-not-allowed", !isCurrentUser);
+  }
+
+  // Reset and start timer
+  resetTurnTimer();
+  if (isCurrentUser) {
+    startTurnTimer();
+  } else {
+    // Update timer display to show "Waiting..." when not your turn
+    updateTimerDisplay();
+  }
 }
 
 function resetTurnTimer() {
-	if (turnTimer !== null) {
-		clearInterval(turnTimer);
-		turnTimer = null;
-	}
-	timeLeft = TURN_DURATION;
-	updateTimerDisplay();
+  if (turnTimer !== null) {
+    clearInterval(turnTimer);
+    turnTimer = null;
+  }
+  timeLeft = TURN_DURATION;
+  updateTimerDisplay();
 }
 
 function startTurnTimer() {
-	resetTurnTimer();
-	
-	turnTimer = window.setInterval(() => {
-		timeLeft--;
-		updateTimerDisplay();
-		
-		if (timeLeft <= 0) {
-			clearInterval(turnTimer!);
-			turnTimer = null;
-			// Auto-pass the turn
-			if (currentPlayerId === currentUser?.id) {
-				console.log("Time's up! Auto-passing turn...");
-				socket.emit("pass-turn", { gameId });
-			}
-		}
-	}, 1000);
+  resetTurnTimer();
+
+  turnTimer = window.setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+
+    if (timeLeft <= 0) {
+      clearInterval(turnTimer!);
+      turnTimer = null;
+      // Auto-pass the turn
+      if (currentPlayerId === currentUser?.id) {
+        console.log("Time's up! Auto-passing turn...");
+        socket.emit("pass-turn", { gameId });
+      }
+    }
+  }, 1000);
 }
 
 function updateTimerDisplay() {
-	const timerEl = document.getElementById("turn-timer");
-	if (!timerEl) {
-		console.warn("Timer element not found!");
-		return;
-	}
-	
-	// Always show the timer, even when it's not your turn
-	if (currentPlayerId === currentUser?.id) {
-		// It's your turn - show countdown
-		if (timeLeft <= 10) {
-			timerEl.classList.remove("text-slate-600", "text-blue-600");
-			timerEl.classList.add("text-red-600", "font-bold");
-		} else if (timeLeft <= 30) {
-			timerEl.classList.remove("text-red-600", "text-blue-600");
-			timerEl.classList.add("text-slate-600", "font-bold");
-		} else {
-			timerEl.classList.remove("text-red-600", "text-slate-600");
-			timerEl.classList.add("text-blue-600", "font-bold");
-		}
-		timerEl.textContent = `${timeLeft}s`;
-	} else {
-		// Not your turn - show waiting message
-		timerEl.classList.remove("text-red-600", "text-blue-600", "font-bold");
-		timerEl.classList.add("text-slate-400");
-		timerEl.textContent = "Waiting...";
-	}
+  const timerEl = document.getElementById("turn-timer");
+  if (!timerEl) {
+    console.warn("Timer element not found!");
+    return;
+  }
+
+  // Always show the timer, even when it's not your turn
+  if (currentPlayerId === currentUser?.id) {
+    // It's your turn - show countdown
+    if (timeLeft <= 10) {
+      timerEl.classList.remove("text-slate-600", "text-blue-600");
+      timerEl.classList.add("text-red-600", "font-bold");
+    } else if (timeLeft <= 30) {
+      timerEl.classList.remove("text-red-600", "text-blue-600");
+      timerEl.classList.add("text-slate-600", "font-bold");
+    } else {
+      timerEl.classList.remove("text-red-600", "text-slate-600");
+      timerEl.classList.add("text-blue-600", "font-bold");
+    }
+    timerEl.textContent = `${timeLeft}s`;
+  } else {
+    // Not your turn - show waiting message
+    timerEl.classList.remove("text-red-600", "text-blue-600", "font-bold");
+    timerEl.classList.add("text-slate-400");
+    timerEl.textContent = "Waiting...";
+  }
 }
 //IGNORE THE DUPLICATE WARNING
 function shuffleArray<T>(array: T[]) {
@@ -313,38 +317,32 @@ function escapeHtml(text: string) {
   return div.innerHTML;
 }
 const handlers = {
-	gameState: (state: unknown) => {
-		const typedState = state as GameStateResponse;
-		board.updateBoard(typedState.board);
-		board.setHand(typedState.hand);
-		updateGameInfo(typedState);
-		if (typedState.currentPlayer) {
-			updateCurrentTurn(typedState.currentPlayer);
-		}
-	},
-	moveMade: (data: unknown) => {
-		const typedData = data as MoveMadeResponse;
-		console.log("Move made event received:", typedData);
-		console.log("Current hand before update:", board.getHand());
-		console.log("Board state from server:", typedData.gameState.board);
-
-    // Update the board immediately with the new tiles
-    if (typedData.gameState && typedData.gameState.board) {
-      board.updateBoard(typedData.gameState.board);
+  gameState: (state: unknown) => {
+    const typedState = state as GameStateResponse;
+    board.updateBoard(typedState.board);
+    board.setHand(typedState.hand);
+    updateGameInfo(typedState);
+    if (typedState.currentPlayer) {
+      updateCurrentTurn(typedState.currentPlayer);
     }
+  },
+  moveMade: (data: unknown) => {
+    const typedData = data as MoveMadeResponse;
+    console.log("Move made event received:", typedData);
 
+    // 1. Update the Board (Show the tiles the other player placed!)
+    board.updateBoard(typedData.gameState.board);
+
+    // 2. Update Gae Info (Tiles Remaining and Current turn)
+    //updateCurrentTurn(typedData.currentPlayer);
+    updateGameInfo(typedData.gameState);
+
+    // 3. Update the Scores
+    updateScores(typedData.gameState.scores);
+
+    // 4. If *I* made the move, clear my selection so I don't see stuck tiles
     if (currentUser && typedData.userId === currentUser.id) {
       board.clearSelection();
-    }
-    
-    // Update turn if currentPlayer is provided
-    if (typedData.currentPlayer) {
-      updateCurrentTurn(typedData.currentPlayer);
-    }
-    
-    // Update game info (scores, tiles remaining, etc.)
-    if (typedData.gameState) {
-      updateGameInfo(typedData.gameState);
     }
   },
   playerJoined: async () => {
