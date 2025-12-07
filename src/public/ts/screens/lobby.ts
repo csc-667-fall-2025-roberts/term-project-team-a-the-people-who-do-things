@@ -221,7 +221,7 @@ gamesContainer?.addEventListener("click", async (event) => {
 
   try {
     await api.games.join(gameId);
-    window.location.href = `/game/${gameId}`;
+    window.location.href = `/game/${gameId}/lobby`;
   } catch (error) {
     if (error instanceof Error) {
       alert(error.message);
@@ -250,7 +250,7 @@ createGameForm?.addEventListener("submit", async (event) => {
       game: { id: string };
     };
 
-    window.location.href = `/game/${game.id}`;
+    window.location.href = `/game/${game.id}/lobby`;
   } catch (error) {
     console.error("Failed to create game:", error);
     alert(error instanceof Error ? error.message : "Failed to create game");

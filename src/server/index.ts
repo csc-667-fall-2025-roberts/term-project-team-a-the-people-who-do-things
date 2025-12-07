@@ -21,7 +21,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer);
 
 if (process.env.NODE_ENV === "production") {
-	app.set("trust proxy", 1); 
+  app.set("trust proxy", 1);
 }
 
 // Middleware
@@ -30,27 +30,27 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static
 if (process.env.NODE_ENV === "production") {
-	app.use(express.static(path.join(__dirname, "../public")));
+  app.use(express.static(path.join(__dirname, "../public")));
 } else {
-	app.use(express.static(path.join(__dirname, "../public")));
+  app.use(express.static(path.join(__dirname, "../public")));
 }
 
 // Session config
 const PgSession = pgSession(session);
 const sessionMiddleware = session({
-	store: new PgSession({
-		pool,
-		tableName: "user_sessions",
-	}),
-	secret: process.env.SESSION_SECRET || "scrabble-secret-key-change-in-production",
-	resave: false,
-	saveUninitialized: false,
-	cookie: {
-		maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "lax",
-	},
+  store: new PgSession({
+    pool,
+    tableName: "user_sessions",
+  }),
+  secret: process.env.SESSION_SECRET || "scrabble-secret-key-change-in-production",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  },
 });
 
 app.use(sessionMiddleware);
@@ -62,101 +62,128 @@ app.set("views", path.join(__dirname, "../views"));
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/games", gameRoutes);
+app.use("/api/games", gameRoutes(io));
 app.use("/api/chat", chatRoutes);
 app.use("/api/users", usersRoutes);
 
 // Page routes
 app.get("/", (req, res) => {
-	res.render("screens/landing", { users: req.users });
+  res.render("screens/landing", { users: req.users });
 });
 
 app.get("/signup", (req, res) => {
-	if (req.users) return res.redirect("/lobby");
-	res.render("screens/signup");
+  if (req.users) return res.redirect("/lobby");
+  res.render("screens/signup");
 });
 
 app.get("/login", (req, res) => {
-	if (req.users) return res.redirect("/lobby");
-	res.render("screens/login");
+  if (req.users) return res.redirect("/lobby");
+  res.render("screens/login");
 });
 
 app.get("/lobby", requireAuth, (req, res) => {
-	res.render("screens/lobby", { user: req.users });
+  res.render("screens/lobby", { user: req.users });
+});
+
+app.get("/game/:gameId/lobby", requireAuth, (req, res) => {
+	res.render("screens/gameLobby", {
+		gameId: req.params.gameId,
+	});
 });
 
 app.get("/game/:gameId", requireAuth, (req, res) => {
-	console.log("Game route hit:", req.params.gameId, "User:", req.users?.id);
-	res.render("screens/gameRoom", {
-		user: req.users,
-		gameId: req.params.gameId,
-	});
+  console.log("Game route hit:", req.params.gameId, "User:", req.users?.id);
+  res.render("screens/gameRoom", {
+    user: req.users,
+    gameId: req.params.gameId,
+  });
 });
 
 app.get("/game/:gameId/results", requireAuth, (req, res) => {
-	res.render("screens/gameResults", {
-		user: req.users,
-		gameId: req.params.gameId,
-	});
+  res.render("screens/gameResults", {
+    user: req.users,
+    gameId: req.params.gameId,
+  });
 });
 
 app.get("/settings", requireAuth, (req, res) => {
-	res.render("screens/settings", { user: req.users });
+  res.render("screens/settings", { user: req.users });
 });
 
 app.get("/error", (req, res) => {
-	res.render("screens/error", { user: req.users });
+  res.render("screens/error", { user: req.users });
 });
 
 // src/server/index.ts
 
 app.get("/settings", requireAuth, (req, res) => {
-	const safeUser = req.users || {
-		display_name: "Ghost User",
-		email: "error@example.com",
-	};
+  const safeUser = req.users || {
+    display_name: "Ghost User",
+    email: "error@example.com",
+  };
 
-	res.render("screens/settings", {
-		user: safeUser,
-		NODE_ENV: process.env.NODE_ENV,
-	});
+  res.render("screens/settings", {
+    user: safeUser,
+    NODE_ENV: process.env.NODE_ENV,
+  });
 });
 
 app.get(/.*\.map$/, (req, res) => {
-	res.status(404).end();
+  res.status(404).end();
 });
 
 app.use((req, res) => {
-	res.status(404).render("screens/error", { user: req.users, message: "Page Not Found" });
+  res.status(404).render("screens/error", { user: req.users, message: "Page Not Found" });
 });
 
 // Socket config
 function wrap(middleware: RequestHandler) {
-	return (socket: Socket, next: (err?: Error) => void) => {
-		middleware(socket.request as Request, {} as Response, next as any);
-	};
+  return (socket: Socket, next: (err?: Error) => void) => {
+    middleware(socket.request as Request, {} as Response, next as any);
+  };
 }
 
 io.use(wrap(sessionMiddleware));
 
 io.on("connection", (socket: Socket) => {
-	const userId = (socket.request as any).session?.userId;
+  const userId = (socket.request as any).session?.userId;
 
-	console.log("User connected:", userId);
+  console.log("User connected:", userId);
 
-	socket.data.userId = userId;
+  socket.data.userId = userId;
 
-	// Join lobby room
-	socket.on("join-lobby", () => {
-		socket.join("lobby");
-		console.log("User joined lobby:", userId);
-	});
+  // Join lobby room
+  socket.on("join-lobby", () => {
+    socket.join("lobby");
+    console.log("User joined lobby:", userId);
+  });
 
-	// Leave lobby room
-	socket.on("leave-lobby", () => {
-		socket.leave("lobby");
-		console.log("User left lobby:", userId);
-	});
+  // Leave lobby room
+  socket.on("leave-lobby", () => {
+    socket.leave("lobby");
+    console.log("User left lobby:", userId);
+  });
+
+  // Join game lobby room
+  socket.on("join-game-lobby", (gameId: string) => {
+    socket.join(gameId);
+    console.log("User joined game lobby:", userId, "gameId:", gameId);
+    
+    // Notify others in the lobby
+    socket.to(gameId).emit("player-joined-lobby", {
+      userId,
+      displayName: (socket.request as any).session?.user?.display_name || "Unknown",
+      isHost: false, // Will be determined by client
+    });
+  });
+
+  // Leave game lobby room
+  socket.on("leave-game-lobby", (gameId: string) => {
+    socket.leave(gameId);
+    console.log("User left game lobby:", userId, "gameId:", gameId);
+    
+    socket.to(gameId).emit("player-left-lobby", { userId });
+  });
 
   // Join game room
   socket.on("join-game", async (gameId: string) => {
@@ -173,7 +200,7 @@ io.on("connection", (socket: Socket) => {
       );
 
       // 2. Fetch the BOARD STATE from the database
-      // This is the critical part your old code was missing!
+
       const boardResult = await pool.query(
         "SELECT row, col, letter FROM board_tiles WHERE game_id = $1",
         [gameId]
@@ -357,106 +384,106 @@ io.on("connection", (socket: Socket) => {
     }
   });
 
-	socket.on("pass-turn", async ({ gameId }) => {
-		const game = gameManager.getGame(gameId);
-		if (!game) {
-			return socket.emit("error", { message: "Game not found" });
-		}
+  socket.on("pass-turn", async ({ gameId }) => {
+    const game = gameManager.getGame(gameId);
+    if (!game) {
+      return socket.emit("error", { message: "Game not found" });
+    }
 
-		const result = game.pass(userId);
-		if (!result.valid) {
-			return socket.emit("error", { message: result.error });
-		}
+    const result = game.pass(userId);
+    if (!result.valid) {
+      return socket.emit("error", { message: result.error });
+    }
 
-		if (result.gameOver) {
-			await pool.query("UPDATE games SET status = $1, ended_at = now() WHERE id = $2", [
-				"finished",
-				gameId,
-			]);
+    if (result.gameOver) {
+      await pool.query("UPDATE games SET status = $1, ended_at = now() WHERE id = $2", [
+        "finished",
+        gameId,
+      ]);
 
-			io.to(gameId).emit("game-over", {
-				scores: game.scores,
-			});
-		} else {
-			// Go to next player's turn
-			await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
-				result.currentPlayer,
-				gameId,
-			]);
+      io.to(gameId).emit("game-over", {
+        scores: game.scores,
+      });
+    } else {
+      // Go to next player's turn
+      await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
+        result.currentPlayer,
+        gameId,
+      ]);
 
-			io.to(gameId).emit("turn-passed", {
-				userId,
-				currentPlayer: result.currentPlayer,
-			});
-		}
-	});
+      io.to(gameId).emit("turn-passed", {
+        userId,
+        currentPlayer: result.currentPlayer,
+      });
+    }
+  });
 
-	socket.on("exchange-tiles", async ({ gameId, tiles }) => {
-		const game = gameManager.getGame(gameId);
-		if (!game) {
-			return socket.emit("error", { message: "Game not found" });
-		}
+  socket.on("exchange-tiles", async ({ gameId, tiles }) => {
+    const game = gameManager.getGame(gameId);
+    if (!game) {
+      return socket.emit("error", { message: "Game not found" });
+    }
 
-		const result = game.exchangeTiles(userId, tiles);
-		if (!result.valid) {
-			return socket.emit("error", { message: result.error });
-		}
+    const result = game.exchangeTiles(userId, tiles);
+    if (!result.valid) {
+      return socket.emit("error", { message: result.error });
+    }
 
-		socket.emit("tiles-exchanged", {
-			newTiles: result.newTiles,
-		});
+    socket.emit("tiles-exchanged", {
+      newTiles: result.newTiles,
+    });
 
-		io.to(gameId).emit("turn-changed", {
-			currentPlayer: result.currentPlayer,
-		});
-	});
+    io.to(gameId).emit("turn-changed", {
+      currentPlayer: result.currentPlayer,
+    });
+  });
 
-	// Chat
-	socket.on("send-message", async ({ gameId, message }) => {
-		try {
-			const isLobby = gameId === "lobby" || gameId === null;
-			const dbGameId = isLobby ? null : gameId;
+  // Chat
+  socket.on("send-message", async ({ gameId, message }) => {
+    try {
+      const isLobby = gameId === "lobby" || gameId === null;
+      const dbGameId = isLobby ? null : gameId;
 
-			const result = await pool.query(
-				"INSERT INTO chat_messages (game_id, user_id, message) VALUES ($1, $2, $3) RETURNING *",
-				[dbGameId, userId, message],
-			);
+      const result = await pool.query(
+        "INSERT INTO chat_messages (game_id, user_id, message) VALUES ($1, $2, $3) RETURNING *",
+        [dbGameId, userId, message],
+      );
 
-			const userResult = await pool.query("SELECT display_name FROM users WHERE id = $1", [userId]);
+      const userResult = await pool.query("SELECT display_name FROM users WHERE id = $1", [userId]);
 
-			const chatMessage = {
-				...result.rows[0],
-				display_name: userResult.rows[0].display_name,
-				game_id: result.rows[0].game_id,
-			};
+      const chatMessage = {
+        ...result.rows[0],
+        display_name: userResult.rows[0].display_name,
+        game_id: result.rows[0].game_id,
+      };
 
-			console.log("Sending chat message:", chatMessage);
+      console.log("Sending chat message:", chatMessage);
 
-			if (isLobby) {
-				console.log("Emitting to lobby room");
-				io.to("lobby").emit("new-message", chatMessage);
-			} else {
-				io.to(gameId).emit("new-message", chatMessage);
-			}
-		} catch (error) {
-			console.error("Error sending message:", error);
-		}
-	});
+      if (isLobby) {
+        console.log("Emitting to lobby room");
+        io.to("lobby").emit("new-message", chatMessage);
+      } else {
+        io.to(gameId).emit("new-message", chatMessage);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  });
 
-	// Leave game
-	socket.on("leave-game", (gameId) => {
-		socket.leave(gameId);
-		socket.to(gameId).emit("player-left", { userId });
-	});
+  // Leave game
+  socket.on("leave-game", (gameId) => {
+    socket.leave(gameId);
+    socket.to(gameId).emit("player-left", { userId });
+  });
 
-	socket.on("disconnect", () => {
-		console.log("User disconnected:", userId);
-	});
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", userId);
+  });
 });
 
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
-	console.log(`Server started on port ${PORT}`);
-	//   console.log(`Environment: ${NODE_ENV}`);
-	console.log(`http://localhost:${PORT}`);
+  console.log(`Server started on port ${PORT}`);
+  //   console.log(`Environment: ${NODE_ENV}`);
+  console.log(`http://localhost:${PORT}`);
 });

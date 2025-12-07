@@ -1,5 +1,5 @@
-import { api } from "../api.js";
 import "../../styles/main.css";
+import { api } from "../api.js";
 
 const form = document.getElementById("login-form") as HTMLFormElement | null;
 const errorMessage = document.getElementById("error-message");
