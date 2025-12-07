@@ -22,6 +22,10 @@ async function init(): Promise<void> {
 	currentUser = user;
 
 	const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
+
+	// Save the participants so 'updateScores' knows thier names
+	participants = gameData.game_participants;
+
 	renderPlayers(gameData.game_participants);
 	renderScores(gameData.scores);
 	await loadChatHistory();
@@ -230,13 +234,22 @@ const handlers = {
 	moveMade: (data: unknown) => {
 		const typedData = data as MoveMadeResponse;
 		console.log("Move made event received:", typedData);
-		console.log("Current hand before update:", board.getHand());
-		console.log("Board state from server:", typedData.gameState.board);
 
-    if (currentUser && typedData.userId === currentUser.id) {
-      board.clearSelection();
-    }
-  },
+		// 1. Update the Board (Show the tiles the other player placed!)
+		board.updateBoard(typedData.gameState.board);
+
+		// 2. Update Gae Info (Tiles Remaining and Current turn)
+		//updateCurrentTurn(typedData.currentPlayer);
+		updateGameInfo(typedData.gameState);
+
+		// 3. Update the Scores
+		updateScores(typedData.gameState.scores);
+
+		// 4. If *I* made the move, clear my selection so I don't see stuck tiles
+		if (currentUser && typedData.userId === currentUser.id) {
+			board.clearSelection();
+		}
+	},
   playerJoined: async () => {
     console.log("Another player joined. Refreshing list...");
 

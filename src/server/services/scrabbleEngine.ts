@@ -5,17 +5,7 @@ import {
   PREMIUM_SQUARES,
 } from "./scrabbleConstants.js";
 
-// --- TEMPORARY MOCK FUNCTION (Delete this when Stella finishes dictionary.ts) ---
-function isValidWord(word: string): boolean {
-    // This is just to test your Engine logic. 
-    // It pretends only these words exist.
-    const FAKE_DICTIONARY = [
-        'HELLO', 'WORLD', 'CAT', 'DOG', 'CATS', 'SO', 'OX', 'TO', 'AT',
-        'AX', 'WE', 'GO', 'NO', 'UP', 'US', 'IT',
-        'GIEE', 'GLEE', 'FLEDGE', 'LEDGE'
-    ]; 
-    return FAKE_DICTIONARY.includes(word.toUpperCase());
-}
+import { isValidWord } from "./dictionary.js";
 
 export class ScrabbleGame {
   gameId: string;

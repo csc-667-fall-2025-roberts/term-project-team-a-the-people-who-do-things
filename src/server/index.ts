@@ -209,16 +209,33 @@ io.on("connection", (socket: Socket) => {
         }
       }
 
-      // 5. Sync Player Hand from DB
+      // 5. Sync Player Hand from DB (or Draw if empty)
       try {
         const dbHandResult = await pool.query(
           "SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
           [gameId, userId]
         );
-        
+
         if (dbHandResult.rows.length > 0) {
+          // Case A: Returning Player (Has tiles in DB) -> Load them
           const hand = dbHandResult.rows.map((r: any) => r.letter);
           game.playerHands[userId] = hand;
+        } else {
+          // Case B: New Player (No tiles in DB) -> Draw 7 & Save
+          console.log(`Player ${userId} has no tiles. Drawing starting hand...`);
+          const newHand = game.drawTiles(7);
+          game.playerHands[userId] = newHand;
+
+          if (newHand.length > 0) {
+            // Save these new tiles to the DB so they persist on refresh
+            const handValues = newHand
+              .map((letter) => `('${gameId}', '${userId}', '${letter}')`)
+              .join(",");
+
+            await pool.query(
+              `INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`
+            );
+          }
         }
       } catch (e) {
         console.error("Error syncing hand:", e);
