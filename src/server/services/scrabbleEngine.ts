@@ -194,9 +194,7 @@ export class ScrabbleGame {
     return totalScore;
   }
 
-  getFormedWords(
-    tiles: Array<{ letter: string; row: number; col: number }>,
-  ): Array<{
+  getFormedWords(tiles: Array<{ letter: string; row: number; col: number }>): Array<{
     word: string;
     cells: Array<{ letter: string; row: number; col: number; isNew: boolean }>;
   }> {
