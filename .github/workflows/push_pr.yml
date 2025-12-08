@@ -22,7 +22,7 @@ permissions:
   pull-requests: read
 
 jobs:
- changes:
+  changes:
     name: Detect Changes
     if: github.event_name == 'push' || github.head_ref == 'Stella' || github.head_ref == 'safetybranch'
     runs-on: ubuntu-latest
@@ -58,413 +58,413 @@ jobs:
           workflows:
           - '.github/workflows/**'
 
-    src-install:
-      name: Install Dependencies
-      needs: changes
-      if: needs.changes.outputs.src == 'true' || needs.changes.outputs.config_files == 'true'
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+  src-install:
+    name: Install Dependencies
+    needs: changes
+    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.config_files == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        - name: Setup Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: ${{ env.NODE_VERSION }}
-            registry-url: 'https://registry.npmjs.org'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
 
-        - name: Cache node_modules
-          uses: actions/cache@v4
-          id: cache-node-modules
-          with:
-            path: node_modules
-            key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
-            restore-keys: |
-              node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-
 
-        - name: Install dependencies
-          if: steps.cache-node-modules.outputs.cache-hit != 'true'
-          run: npm install --prefer-offline --no-audit
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm install --prefer-offline --no-audit
 
-        - name: Verify node_modules integrity
-          run: |
-            if [ !  -d "node_modules" ]; then
-              echo "::error::node_modules directory not found after install/cache restore"
+      - name: Verify node_modules integrity
+        run: |
+          if [ !  -d "node_modules" ]; then
+            echo "::error::node_modules directory not found after install/cache restore"
+            exit 1
+          fi
+          echo "node_modules directory exists with $(ls -1 node_modules | wc -l) packages"
+
+  typecheck:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+    needs: src-install
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore node_modules cache
+        id: cache-restore
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
+          fail-on-cache-miss: true
+
+      - name: Run TypeScript compiler
+        run: npx tsc --noEmit --pretty
+
+      - name: Report TypeScript version
+        run: npx tsc --version
+
+  lint:
+    name: ESLint Check
+    needs: [changes, src-install]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+           path: node_modules
+           key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
+           fail-on-cache-miss: true
+
+      - name: Run TypeScript type checking
+        run: npm run typecheck
+
+      - name: Install ESLint if not present
+        run: |
+          if ! npm list eslint > /dev/null 2>&1; then
+            npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-react eslint-plugin-react-hooks
+          fi
+
+      - name: Run ESLint
+        run: |
+          if [ -f ".eslintrc.json" ] || [ -f ".eslintrc.js" ] || [ -f "eslint.config.js" ]; then
+            npx eslint "src/**/*.{ts,tsx,js,jsx}" --format=stylish --max-warnings=0
+          else
+            echo "::notice::ESLint configuration not found, skipping lint check"
+          fi
+
+  format:
+    name: Prettier Check
+    runs-on: ubuntu-latest
+    needs: src-install
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
+          fail-on-cache-miss: true
+
+      - name: Check code formatting
+        id: prettier-check
+        run: npx prettier --check "src/**/*.{ts,tsx,js,jsx,ejs,css,json}" --log-level warn
+
+      - name: Suggest fix command on failure
+        if: failure()
+        run: |
+          echo "::error::Code formatting check failed. Run 'npx prettier --write \"src/**/*.{ts,tsx,js,jsx,ejs,css,json}\"' locally to fix."
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: src-install
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
+          fail-on-cache-miss: true
+
+      - name: Build client
+        run: npm run build:client
+        env:
+          NODE_ENV: production
+
+      - name: Build server
+        run: npx tsc -p tsconfig.json
+
+      - name: Copy views
+        run: npm run copy:views
+
+      - name: Verify build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "::error::Build output directory 'dist' not found"
+            exit 1
+          fi
+          echo "Build output contents:"
+          find dist -type f | head -50
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: dist/
+          retention-days: 1
+          if-no-files-found: error
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: src-install
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
+          fail-on-cache-miss: true
+
+      - name: Run tests
+        run: |
+          if npm run | grep -q "test"; then
+            npm test -- --passWithNoTests --ci
+          else
+            echo "::notice::No test script found in package.json, skipping tests"
+          fi
+        env:
+          CI: true
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: src-install
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run npm audit
+        id: npm-audit
+        run: |
+          echo "## Security Audit Results" >> $GITHUB_STEP_SUMMARY
+          npm audit --audit-level=high 2>&1 | tee audit-results.txt || true
+
+          if npm audit --audit-level=high 2>&1 | grep -q "found 0 vulnerabilities"; then
+            echo "No high or critical vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Security vulnerabilities detected (review recommended)" >> $GITHUB_STEP_SUMMARY
+            echo "::warning::Security vulnerabilities detected.  Review audit-results.txt"
+          fi
+        continue-on-error: true
+
+      - name: Check for known vulnerable dependencies
+        run: |
+          if [ -f "package-lock.json" ]; then
+            echo "Checking package-lock.json for integrity..."
+            node -e "JSON.parse(require('fs').readFileSync('package-lock.json'))" || {
+              echo "::error::package-lock.json is malformed"
               exit 1
-            fi
-            echo "node_modules directory exists with $(ls -1 node_modules | wc -l) packages"
+            }
+          fi
 
-    typecheck:
-      name: TypeScript Check
-      runs-on: ubuntu-latest
-      needs: src-install
-      timeout-minutes: 10
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+  migration-check:
+    name: Migration Syntax Check
+    runs-on: ubuntu-latest
+    needs: src-install
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        - name: Setup Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: ${{ env.NODE_VERSION }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
-        - name: Restore node_modules cache
-          id: cache-restore
-          uses: actions/cache@v4
-          with:
-            path: node_modules
-            key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
-            fail-on-cache-miss: true
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
+          fail-on-cache-miss: true
 
-        - name: Run TypeScript compiler
-          run: npx tsc --noEmit --pretty
+      - name: Check migration files syntax
+        run: |
+          echo "## Migration Check Results" >> $GITHUB_STEP_SUMMARY
 
-        - name: Report TypeScript version
-          run: npx tsc --version
+          MIGRATION_DIR="src/DB/migrations"
+          if [ -d "$MIGRATION_DIR" ] && [ "$(ls -A $MIGRATION_DIR/*.ts 2>/dev/null)" ]; then
+            echo "Checking migration files for TypeScript errors..."
+            npx tsc --noEmit $MIGRATION_DIR/*.ts
+            echo "All migration files pass TypeScript check" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No migration files found in $MIGRATION_DIR" >> $GITHUB_STEP_SUMMARY
+            echo "::notice::No migration files to check"
+          fi
 
-    lint:
-      name: ESLint Check
-      needs: [changes, src-install]
-      runs-on: ubuntu-latest
-      timeout-minutes: 10
-      continue-on-error: true
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+  bundle-analysis:
+    name: Bundle Size Check
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        - name: Setup Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: ${{ env.NODE_VERSION }}
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: dist/
 
-        - name: Restore node_modules
-          uses: actions/cache@v4
-          with:
-             path: node_modules
-             key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
-             fail-on-cache-miss: true
+      - name: Report bundle sizes
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
 
-        - name: Run TypeScript type checking
-          run: npm run typecheck
+          if [ -d "dist/public" ]; then
+            echo "| File | Size | Gzipped |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|------|---------|" >> $GITHUB_STEP_SUMMARY
 
-        - name: Install ESLint if not present
-          run: |
-            if ! npm list eslint > /dev/null 2>&1; then
-              npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-react eslint-plugin-react-hooks
-            fi
-
-        - name: Run ESLint
-          run: |
-            if [ -f ".eslintrc.json" ] || [ -f ".eslintrc.js" ] || [ -f "eslint.config.js" ]; then
-              npx eslint "src/**/*.{ts,tsx,js,jsx}" --format=stylish --max-warnings=0
-            else
-              echo "::notice::ESLint configuration not found, skipping lint check"
-            fi
-
-    format:
-      name: Prettier Check
-      runs-on: ubuntu-latest
-      needs: src-install
-      timeout-minutes: 5
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-
-        - name: Setup Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: ${{ env.NODE_VERSION }}
-
-        - name: Restore node_modules cache
-          uses: actions/cache@v4
-          with:
-            path: node_modules
-            key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
-            fail-on-cache-miss: true
-
-        - name: Check code formatting
-          id: prettier-check
-          run: npx prettier --check "src/**/*.{ts,tsx,js,jsx,ejs,css,json}" --log-level warn
-
-        - name: Suggest fix command on failure
-          if: failure()
-          run: |
-            echo "::error::Code formatting check failed. Run 'npx prettier --write \"src/**/*.{ts,tsx,js,jsx,ejs,css,json}\"' locally to fix."
-
-    build:
-      name: Build
-      runs-on: ubuntu-latest
-      needs: src-install
-      timeout-minutes: 15
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-
-        - name: Setup Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: ${{ env.NODE_VERSION }}
-
-        - name: Restore node_modules cache
-          uses: actions/cache@v4
-          with:
-            path: node_modules
-            key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
-            fail-on-cache-miss: true
-
-        - name: Build client
-          run: npm run build:client
-          env:
-            NODE_ENV: production
-
-        - name: Build server
-          run: npx tsc -p tsconfig.json
-
-        - name: Copy views
-          run: npm run copy:views
-
-        - name: Verify build output
-          run: |
-            if [ ! -d "dist" ]; then
-              echo "::error::Build output directory 'dist' not found"
-              exit 1
-            fi
-            echo "Build output contents:"
-            find dist -type f | head -50
-
-        - name: Upload build artifacts
-          uses: actions/upload-artifact@v4
-          with:
-            name: build-output
-            path: dist/
-            retention-days: 1
-            if-no-files-found: error
-
-    test:
-      name: Unit Tests
-      runs-on: ubuntu-latest
-      needs: src-install
-      timeout-minutes: 15
-      continue-on-error: true
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-
-        - name: Setup Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: ${{ env.NODE_VERSION }}
-
-        - name: Restore node_modules cache
-          uses: actions/cache@v4
-          with:
-            path: node_modules
-            key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
-            fail-on-cache-miss: true
-
-        - name: Run tests
-          run: |
-            if npm run | grep -q "test"; then
-              npm test -- --passWithNoTests --ci
-            else
-              echo "::notice::No test script found in package.json, skipping tests"
-            fi
-          env:
-            CI: true
-
-    security:
-      name: Security Audit
-      runs-on: ubuntu-latest
-      needs: src-install
-      timeout-minutes: 10
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-
-        - name: Setup Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: ${{ env.NODE_VERSION }}
-
-        - name: Run npm audit
-          id: npm-audit
-          run: |
-            echo "## Security Audit Results" >> $GITHUB_STEP_SUMMARY
-            npm audit --audit-level=high 2>&1 | tee audit-results.txt || true
-
-            if npm audit --audit-level=high 2>&1 | grep -q "found 0 vulnerabilities"; then
-              echo "No high or critical vulnerabilities found" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "Security vulnerabilities detected (review recommended)" >> $GITHUB_STEP_SUMMARY
-              echo "::warning::Security vulnerabilities detected.  Review audit-results.txt"
-            fi
-          continue-on-error: true
-
-        - name: Check for known vulnerable dependencies
-          run: |
-            if [ -f "package-lock.json" ]; then
-              echo "Checking package-lock.json for integrity..."
-              node -e "JSON.parse(require('fs').readFileSync('package-lock.json'))" || {
-                echo "::error::package-lock.json is malformed"
-                exit 1
-              }
-            fi
-
-    migration-check:
-      name: Migration Syntax Check
-      runs-on: ubuntu-latest
-      needs: src-install
-      timeout-minutes: 5
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-
-        - name: Setup Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: ${{ env.NODE_VERSION }}
-
-        - name: Restore node_modules cache
-          uses: actions/cache@v4
-          with:
-            path: node_modules
-            key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
-            fail-on-cache-miss: true
-
-        - name: Check migration files syntax
-          run: |
-            echo "## Migration Check Results" >> $GITHUB_STEP_SUMMARY
-
-            MIGRATION_DIR="src/DB/migrations"
-            if [ -d "$MIGRATION_DIR" ] && [ "$(ls -A $MIGRATION_DIR/*.ts 2>/dev/null)" ]; then
-              echo "Checking migration files for TypeScript errors..."
-              npx tsc --noEmit $MIGRATION_DIR/*.ts
-              echo "All migration files pass TypeScript check" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "No migration files found in $MIGRATION_DIR" >> $GITHUB_STEP_SUMMARY
-              echo "::notice::No migration files to check"
-            fi
-
-    bundle-analysis:
-      name: Bundle Size Check
-      runs-on: ubuntu-latest
-      needs: build
-      timeout-minutes: 5
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-
-        - name: Download build artifacts
-          uses: actions/download-artifact@v4
-          with:
-            name: build-output
-            path: dist/
-
-        - name: Report bundle sizes
-          run: |
-            echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-
-            if [ -d "dist/public" ]; then
-              echo "| File | Size | Gzipped |" >> $GITHUB_STEP_SUMMARY
-              echo "|------|------|---------|" >> $GITHUB_STEP_SUMMARY
-
-              find dist/public \( -name "*.js" -o -name "*.css" \) -type f 2>/dev/null | sort | while read file; do
-                size=$(du -h "$file" | cut -f1)
-                gzip_size=$(gzip -c "$file" | wc -c | awk '{printf "%.1fK", $1/1024}')
-                echo "| \`${file#dist/}\` | ${size} | ${gzip_size} |" >> $GITHUB_STEP_SUMMARY
-              done
-
-              total=$(du -sh dist/public 2>/dev/null | cut -f1 || echo "N/A")
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "**Total public assets size:** ${total}" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "No dist/public directory found" >> $GITHUB_STEP_SUMMARY
-            fi
-
-        - name: Check bundle size limits
-          run: |
-            MAX_SIZE_KB=1024
-
-            find dist/public -name "*.js" -type f 2>/dev/null | while read file; do
-              size_kb=$(du -k "$file" | cut -f1)
-              if [ "$size_kb" -gt "$MAX_SIZE_KB" ]; then
-                echo "::warning file=$file::Bundle file exceeds ${MAX_SIZE_KB}KB limit (${size_kb}KB)"
-              fi
+            find dist/public \( -name "*.js" -o -name "*.css" \) -type f 2>/dev/null | sort | while read file; do
+              size=$(du -h "$file" | cut -f1)
+              gzip_size=$(gzip -c "$file" | wc -c | awk '{printf "%.1fK", $1/1024}')
+              echo "| \`${file#dist/}\` | ${size} | ${gzip_size} |" >> $GITHUB_STEP_SUMMARY
             done
 
-    pr-check:
-      name: PR Ready
-      runs-on: ubuntu-latest
-      needs: [typecheck, format, build, security, migration-check, lint, test]
-      if: always()
-      timeout-minutes: 5
-      steps:
-        - name: Check all jobs status
-          run: |
-            echo "## PR Validation Summary" >> $GITHUB_STEP_SUMMARY
+            total=$(du -sh dist/public 2>/dev/null | cut -f1 || echo "N/A")
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
-            echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+            echo "**Total public assets size:** ${total}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No dist/public directory found" >> $GITHUB_STEP_SUMMARY
+          fi
 
-            if [ "${{ needs.typecheck.result }}" == "success" ]; then
-              echo "| TypeScript Check | Pass |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| TypeScript Check | Fail |" >> $GITHUB_STEP_SUMMARY
+      - name: Check bundle size limits
+        run: |
+          MAX_SIZE_KB=1024
+
+          find dist/public -name "*.js" -type f 2>/dev/null | while read file; do
+            size_kb=$(du -k "$file" | cut -f1)
+            if [ "$size_kb" -gt "$MAX_SIZE_KB" ]; then
+              echo "::warning file=$file::Bundle file exceeds ${MAX_SIZE_KB}KB limit (${size_kb}KB)"
             fi
+          done
 
-            if [ "${{ needs.format.result }}" == "success" ]; then
-              echo "| Prettier Check | Pass |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| Prettier Check | Fail |" >> $GITHUB_STEP_SUMMARY
-            fi
+  pr-check:
+    name: PR Ready
+    runs-on: ubuntu-latest
+    needs: [typecheck, format, build, security, migration-check, lint, test]
+    if: always()
+    timeout-minutes: 5
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "## PR Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
 
-            if [ "${{ needs.build.result }}" == "success" ]; then
-              echo "| Build | Pass |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| Build | Fail |" >> $GITHUB_STEP_SUMMARY
-            fi
+          if [ "${{ needs.typecheck.result }}" == "success" ]; then
+            echo "| TypeScript Check | Pass |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| TypeScript Check | Fail |" >> $GITHUB_STEP_SUMMARY
+          fi
 
-            if [ "${{ needs.migration-check.result }}" == "success" ]; then
-              echo "| Migration Check | Pass |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| Migration Check | Fail |" >> $GITHUB_STEP_SUMMARY
-            fi
+          if [ "${{ needs.format.result }}" == "success" ]; then
+            echo "| Prettier Check | Pass |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Prettier Check | Fail |" >> $GITHUB_STEP_SUMMARY
+          fi
 
-            if [ "${{ needs.security.result }}" == "success" ]; then
-              echo "| Security Audit | Pass |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| Security Audit | Review Recommended |" >> $GITHUB_STEP_SUMMARY
-            fi
+          if [ "${{ needs.build.result }}" == "success" ]; then
+            echo "| Build | Pass |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Build | Fail |" >> $GITHUB_STEP_SUMMARY
+          fi
 
-            if [ "${{ needs.lint.result }}" == "success" ]; then
-              echo "| ESLint | Pass |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| ESLint | Issues Found |" >> $GITHUB_STEP_SUMMARY
-            fi
+          if [ "${{ needs.migration-check.result }}" == "success" ]; then
+            echo "| Migration Check | Pass |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Migration Check | Fail |" >> $GITHUB_STEP_SUMMARY
+          fi
 
-            if [ "${{ needs.test.result }}" == "success" ]; then
-              echo "| Unit Tests | Pass |" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "| Unit Tests | Issues Found |" >> $GITHUB_STEP_SUMMARY
-            fi
+          if [ "${{ needs.security.result }}" == "success" ]; then
+            echo "| Security Audit | Pass |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Security Audit | Review Recommended |" >> $GITHUB_STEP_SUMMARY
+          fi
 
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "---" >> $GITHUB_STEP_SUMMARY
-            echo "_Generated at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')_" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.lint.result }}" == "success" ]; then
+            echo "| ESLint | Pass |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| ESLint | Issues Found |" >> $GITHUB_STEP_SUMMARY
+          fi
 
-        - name: Fail if required checks failed
-          if: |
-            needs.typecheck.result != 'success' ||
-            needs.format.result != 'success' ||
-            needs.build.result != 'success' ||
-            needs.migration-check.result != 'success'
-          run: |
-            echo "::error::One or more required checks failed!"
-            echo ""
-            echo "Failed checks:"
-            [ "${{ needs.typecheck.result }}" != "success" ] && echo "  - TypeScript Check"
-            [ "${{ needs.format.result }}" != "success" ] && echo "  - Prettier Check"
-            [ "${{ needs.build.result }}" != "success" ] && echo "  - Build"
-            [ "${{ needs.migration-check.result }}" != "success" ] && echo "  - Migration Check"
-            exit 1
+          if [ "${{ needs.test.result }}" == "success" ]; then
+            echo "| Unit Tests | Pass |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Unit Tests | Issues Found |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "_Generated at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')_" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if required checks failed
+        if: |
+          needs.typecheck.result != 'success' ||
+          needs.format.result != 'success' ||
+          needs.build.result != 'success' ||
+          needs.migration-check.result != 'success'
+        run: |
+          echo "::error::One or more required checks failed!"
+          echo ""
+          echo "Failed checks:"
+          [ "${{ needs.typecheck.result }}" != "success" ] && echo "  - TypeScript Check"
+          [ "${{ needs.format.result }}" != "success" ] && echo "  - Prettier Check"
+          [ "${{ needs.build.result }}" != "success" ] && echo "  - Build"
+          [ "${{ needs.migration-check.result }}" != "success" ] && echo "  - Migration Check"
+          exit 1
