@@ -77,6 +77,7 @@ export interface MoveMadeResponse {
   tiles: Tile[];
   words: string[];
   score: number;
+  currentPlayer: string;
 }
 
 export interface Tile {

@@ -4,7 +4,7 @@ import { resolve } from "path";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  root: "src/public", 
+  root: "src/public",
   publicDir: false,
   build: {
     minify: false,
