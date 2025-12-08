@@ -24,7 +24,6 @@ permissions:
 jobs:
   changes:
     name: Detect Changes
-    if: github.event_name == 'push' || github.head_ref == 'Stella' || github.head_ref == 'safetybranch'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
