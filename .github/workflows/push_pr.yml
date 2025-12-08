@@ -3,8 +3,8 @@ name: Pull Request CI
 on:
   push:
    branches:
-     - Stella,
-      - safetybranch
+     - "Stella"
+     - "safetybranch"
   pull_request:
     branches: [main, development]
     types: [opened, synchronize, reopened]
