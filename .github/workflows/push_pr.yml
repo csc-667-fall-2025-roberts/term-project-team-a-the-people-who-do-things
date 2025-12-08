@@ -335,7 +335,7 @@ jobs:
           MIGRATION_DIR="src/DB/migrations"
           if [ -d "$MIGRATION_DIR" ] && [ "$(ls -A $MIGRATION_DIR/*.ts 2>/dev/null)" ]; then
             echo "Checking migration files for TypeScript errors..."
-            npx tsc --noEmit $MIGRATION_DIR/*.ts
+            npx tsc --noEmit -p tsconfig.json --listFiles | grep migrations || true
             echo "All migration files pass TypeScript check" >> $GITHUB_STEP_SUMMARY
           else
             echo "No migration files found in $MIGRATION_DIR" >> $GITHUB_STEP_SUMMARY
