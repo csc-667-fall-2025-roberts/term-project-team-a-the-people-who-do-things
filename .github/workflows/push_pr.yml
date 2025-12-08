@@ -2,9 +2,9 @@ name: Pull Request CI
 
 on:
   push:
-   branches:
-     - "Stella"
-     - "safetybranch"
+    branches:
+      - "Stella"
+      - "safetybranch"
   pull_request:
     branches: [main, development]
     types: [opened, synchronize, reopened]
@@ -36,27 +36,27 @@ jobs:
       - uses: dorny/paths-filter@v2
         id: changes
         with:
-         filters: |
-          src:
-          - 'src/**'
-          public:
-          - 'src/public/**'
-          server:
-          - 'src/server/**'
-          types:
-          - 'src/**/*.ts'
-          - 'src/**/*.tsx'
-          views:
-          - 'src/views/**'
-          config_files:
-          - 'package.json'
-          - 'postcss.config.js'
-          - 'tailwind.config.js'
-          - 'tsconfig.json'
-          - 'vite.config.ts'
-          - '.prettierrc'
-          workflows:
-          - '.github/workflows/**'
+          filters: |
+            src:
+            - 'src/**'
+            public:
+            - 'src/public/**'
+            server:
+            - 'src/server/**'
+            types:
+            - 'src/**/*.ts'
+            - 'src/**/*.tsx'
+            views:
+            - 'src/views/**'
+            config_files:
+            - 'package.json'
+            - 'postcss.config.js'
+            - 'tailwind.config.js'
+            - 'tsconfig.json'
+            - 'vite.config.ts'
+            - '.prettierrc'
+            workflows:
+            - '.github/workflows/**'
 
   src-install:
     name: Install Dependencies
@@ -71,7 +71,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -140,9 +140,9 @@ jobs:
       - name: Restore node_modules
         uses: actions/cache@v4
         with:
-           path: node_modules
-           key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
-           fail-on-cache-miss: true
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
+          fail-on-cache-miss: true
 
       - name: Run TypeScript type checking
         run: npm run typecheck
@@ -409,42 +409,56 @@ jobs:
 
           if [ "${{ needs.typecheck.result }}" == "success" ]; then
             echo "| TypeScript Check | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.typecheck.result }}" == "skipped" ]; then
+            echo "| TypeScript Check | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| TypeScript Check | Fail |" >> $GITHUB_STEP_SUMMARY
           fi
 
           if [ "${{ needs.format.result }}" == "success" ]; then
             echo "| Prettier Check | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.format.result }}" == "skipped" ]; then
+            echo "| Prettier Check | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Prettier Check | Fail |" >> $GITHUB_STEP_SUMMARY
           fi
 
           if [ "${{ needs.build.result }}" == "success" ]; then
             echo "| Build | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.build.result }}" == "skipped" ]; then
+            echo "| Build | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Build | Fail |" >> $GITHUB_STEP_SUMMARY
           fi
 
           if [ "${{ needs.migration-check.result }}" == "success" ]; then
             echo "| Migration Check | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.migration-check.result }}" == "skipped" ]; then
+            echo "| Migration Check | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Migration Check | Fail |" >> $GITHUB_STEP_SUMMARY
           fi
 
           if [ "${{ needs.security.result }}" == "success" ]; then
             echo "| Security Audit | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.security.result }}" == "skipped" ]; then
+            echo "| Security Audit | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Security Audit | Review Recommended |" >> $GITHUB_STEP_SUMMARY
           fi
 
           if [ "${{ needs.lint.result }}" == "success" ]; then
             echo "| ESLint | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.lint.result }}" == "skipped" ]; then
+            echo "| ESLint | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| ESLint | Issues Found |" >> $GITHUB_STEP_SUMMARY
           fi
 
           if [ "${{ needs.test.result }}" == "success" ]; then
             echo "| Unit Tests | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.test.result }}" == "skipped" ]; then
+            echo "| Unit Tests | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Unit Tests | Issues Found |" >> $GITHUB_STEP_SUMMARY
           fi
@@ -455,16 +469,16 @@ jobs:
 
       - name: Fail if required checks failed
         if: |
-          needs.typecheck.result != 'success' ||
-          needs.format.result != 'success' ||
-          needs.build.result != 'success' ||
-          needs.migration-check.result != 'success'
+          (needs.typecheck.result != 'success' && needs.typecheck.result != 'skipped') ||
+          (needs.format.result != 'success' && needs.format.result != 'skipped') ||
+          (needs.build.result != 'success' && needs.build.result != 'skipped') ||
+          (needs.migration-check.result != 'success' && needs.migration-check.result != 'skipped')
         run: |
           echo "::error::One or more required checks failed!"
           echo ""
           echo "Failed checks:"
-          [ "${{ needs.typecheck.result }}" != "success" ] && echo "  - TypeScript Check"
-          [ "${{ needs.format.result }}" != "success" ] && echo "  - Prettier Check"
-          [ "${{ needs.build.result }}" != "success" ] && echo "  - Build"
-          [ "${{ needs.migration-check.result }}" != "success" ] && echo "  - Migration Check"
+          [ "${{ needs.typecheck.result }}" != "success" ] && [ "${{ needs.typecheck.result }}" != "skipped" ] && echo "  - TypeScript Check"
+          [ "${{ needs.format.result }}" != "success" ] && [ "${{ needs.format.result }}" != "skipped" ] && echo "  - Prettier Check"
+          [ "${{ needs.build.result }}" != "success" ] && [ "${{ needs.build.result }}" != "skipped" ] && echo "  - Build"
+          [ "${{ needs.migration-check.result }}" != "success" ] && [ "${{ needs.migration-check.result }}" != "skipped" ] && echo "  - Migration Check"
           exit 1
