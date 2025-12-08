@@ -1,4 +1,4 @@
-name: Pull Request CI
+name: Push and Pull CI
 
 on:
   push:
@@ -59,8 +59,6 @@ jobs:
 
   src-install:
     name: Install Dependencies
-    needs: changes
-    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.config_files == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
