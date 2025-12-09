@@ -9,6 +9,7 @@ import pool from "./config/database.js";
 import { attachUser, requireAuth } from "./middleware/auth.js";
 import authRoutes from "./routes/auth.js";
 import chatRoutes from "./routes/chat.js";
+import dictionaryRoutes from "./routes/dictionary.js";
 import gameRoutes from "./routes/games.js";
 import usersRoutes from "./routes/users.js";
 import gameManager from "./services/gameManager.js";
@@ -21,7 +22,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer);
 
 if (process.env.NODE_ENV === "production") {
-  app.set("trust proxy", 1);
+	app.set("trust proxy", 1);
 }
 
 // Middleware
@@ -30,27 +31,27 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../public")));
+	app.use(express.static(path.join(__dirname, "../public")));
 } else {
-  app.use(express.static(path.join(__dirname, "../public")));
+	app.use(express.static(path.join(__dirname, "../public")));
 }
 
 // Session config
 const PgSession = pgSession(session);
 const sessionMiddleware = session({
-  store: new PgSession({
-    pool,
-    tableName: "user_sessions",
-  }),
-  secret: process.env.SESSION_SECRET || "scrabble-secret-key-change-in-production",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-  },
+	store: new PgSession({
+		pool,
+		tableName: "user_sessions",
+	}),
+	secret: process.env.SESSION_SECRET || "scrabble-secret-key-change-in-production",
+	resave: false,
+	saveUninitialized: false,
+	cookie: {
+		maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "lax",
+	},
 });
 
 app.use(sessionMiddleware);
@@ -62,427 +63,428 @@ app.set("views", path.join(__dirname, "../views"));
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/dictionary", dictionaryRoutes);
 app.use("/api/games", gameRoutes(io));
 app.use("/api/chat", chatRoutes);
 app.use("/api/users", usersRoutes);
 
 // Page routes
 app.get("/", (req, res) => {
-  res.render("screens/landing", { users: req.users });
+	res.render("screens/landing", { users: req.users });
 });
 
 app.get("/signup", (req, res) => {
-  if (req.users) return res.redirect("/lobby");
-  res.render("screens/signup");
+	if (req.users) return res.redirect("/lobby");
+	res.render("screens/signup");
 });
 
 app.get("/login", (req, res) => {
-  if (req.users) return res.redirect("/lobby");
-  res.render("screens/login");
+	if (req.users) return res.redirect("/lobby");
+	res.render("screens/login");
 });
 
 app.get("/lobby", requireAuth, (req, res) => {
-  res.render("screens/lobby", { user: req.users });
+	res.render("screens/lobby", { user: req.users });
 });
 
 app.get("/game/:gameId/lobby", requireAuth, (req, res) => {
-  res.render("screens/gameLobby", {
-    gameId: req.params.gameId,
-  });
+	res.render("screens/gameLobby", {
+		gameId: req.params.gameId,
+	});
 });
 
 app.get("/game/:gameId", requireAuth, (req, res) => {
-  console.log("Game route hit:", req.params.gameId, "User:", req.users?.id);
-  res.render("screens/gameRoom", {
-    user: req.users,
-    gameId: req.params.gameId,
-  });
+	console.log("Game route hit:", req.params.gameId, "User:", req.users?.id);
+	res.render("screens/gameRoom", {
+		user: req.users,
+		gameId: req.params.gameId,
+	});
 });
 
 app.get("/game/:gameId/results", requireAuth, (req, res) => {
-  res.render("screens/gameResults", {
-    user: req.users,
-    gameId: req.params.gameId,
-  });
+	res.render("screens/gameResults", {
+		user: req.users,
+		gameId: req.params.gameId,
+	});
 });
 
 app.get("/settings", requireAuth, (req, res) => {
-  res.render("screens/settings", { user: req.users });
+	res.render("screens/settings", { user: req.users });
 });
 
 app.get("/error", (req, res) => {
-  res.render("screens/error", { user: req.users });
+	res.render("screens/error", { user: req.users });
 });
 
 // src/server/index.ts
 
 app.get("/settings", requireAuth, (req, res) => {
-  const safeUser = req.users || {
-    display_name: "Ghost User",
-    email: "error@example.com",
-  };
+	const safeUser = req.users || {
+		display_name: "Ghost User",
+		email: "error@example.com",
+	};
 
-  res.render("screens/settings", {
-    user: safeUser,
-    NODE_ENV: process.env.NODE_ENV,
-  });
+	res.render("screens/settings", {
+		user: safeUser,
+		NODE_ENV: process.env.NODE_ENV,
+	});
 });
 
 app.get(/.*\.map$/, (req, res) => {
-  res.status(404).end();
+	res.status(404).end();
 });
 
 app.use((req, res) => {
-  res.status(404).render("screens/error", { user: req.users, message: "Page Not Found" });
+	res.status(404).render("screens/error", { user: req.users, message: "Page Not Found" });
 });
 
 // Socket config
 function wrap(middleware: RequestHandler) {
-  return (socket: Socket, next: (err?: Error) => void) => {
-    middleware(socket.request as Request, {} as Response, next as any);
-  };
+	return (socket: Socket, next: (err?: Error) => void) => {
+		middleware(socket.request as Request, {} as Response, next as any);
+	};
 }
 
 io.use(wrap(sessionMiddleware));
 
 io.on("connection", (socket: Socket) => {
-  const userId = (socket.request as any).session?.userId;
+	const userId = (socket.request as any).session?.userId;
 
-  console.log("User connected:", userId);
+	console.log("User connected:", userId);
 
-  socket.data.userId = userId;
+	socket.data.userId = userId;
 
-  // Join lobby room
-  socket.on("join-lobby", () => {
-    socket.join("lobby");
-    console.log("User joined lobby:", userId);
-  });
+	// Join lobby room
+	socket.on("join-lobby", () => {
+		socket.join("lobby");
+		console.log("User joined lobby:", userId);
+	});
 
-  // Leave lobby room
-  socket.on("leave-lobby", () => {
-    socket.leave("lobby");
-    console.log("User left lobby:", userId);
-  });
+	// Leave lobby room
+	socket.on("leave-lobby", () => {
+		socket.leave("lobby");
+		console.log("User left lobby:", userId);
+	});
 
-  // Join game lobby room
-  socket.on("join-game-lobby", (gameId: string) => {
-    socket.join(gameId);
-    console.log("User joined game lobby:", userId, "gameId:", gameId);
+	// Join game lobby room
+	socket.on("join-game-lobby", (gameId: string) => {
+		socket.join(gameId);
+		console.log("User joined game lobby:", userId, "gameId:", gameId);
 
-    // Notify others in the lobby
-    socket.to(gameId).emit("player-joined-lobby", {
-      userId,
-      displayName: (socket.request as any).session?.user?.display_name || "Unknown",
-      isHost: false, // Will be determined by client
-    });
-  });
+		// Notify others in the lobby
+		socket.to(gameId).emit("player-joined-lobby", {
+			userId,
+			displayName: (socket.request as any).session?.user?.display_name || "Unknown",
+			isHost: false, // Will be determined by client
+		});
+	});
 
-  // Leave game lobby room
-  socket.on("leave-game-lobby", (gameId: string) => {
-    socket.leave(gameId);
-    console.log("User left game lobby:", userId, "gameId:", gameId);
+	// Leave game lobby room
+	socket.on("leave-game-lobby", (gameId: string) => {
+		socket.leave(gameId);
+		console.log("User left game lobby:", userId, "gameId:", gameId);
 
-    socket.to(gameId).emit("player-left-lobby", { userId });
-  });
+		socket.to(gameId).emit("player-left-lobby", { userId });
+	});
 
-  // Join game room
-  socket.on("join-game", async (gameId: string) => {
-    socket.join(gameId);
+	// Join game room
+	socket.on("join-game", async (gameId: string) => {
+		socket.join(gameId);
 
-    try {
-      // 1. Fetch participants (Order is important for turn logic)
-      const participantsResult = await pool.query(
-        "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
-        [gameId],
-      );
-      const game_participants: string[] = participantsResult.rows.map((r: any) =>
-        String(r.user_id),
-      );
+		try {
+			// 1. Fetch participants (Order is important for turn logic)
+			const participantsResult = await pool.query(
+				"SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
+				[gameId],
+			);
+			const game_participants: string[] = participantsResult.rows.map((r: any) =>
+				String(r.user_id),
+			);
 
-      // 2. Fetch the BOARD STATE from the database
+			// 2. Fetch the BOARD STATE from the database
 
-      const boardResult = await pool.query(
-        "SELECT row, col, letter FROM board_tiles WHERE game_id = $1",
-        [gameId],
-      );
+			const boardResult = await pool.query(
+				"SELECT row, col, letter FROM board_tiles WHERE game_id = $1",
+				[gameId],
+			);
 
-      // 3. Reconstruct the 2D Board Array from DB data
-      let boardState: (string | null)[][] | null = null;
+			// 3. Reconstruct the 2D Board Array from DB data
+			let boardState: (string | null)[][] | null = null;
 
-      if (boardResult.rows.length > 0) {
-        boardState = Array(15)
-          .fill(null)
-          .map(() => Array(15).fill(null));
+			if (boardResult.rows.length > 0) {
+				boardState = Array(15)
+					.fill(null)
+					.map(() => Array(15).fill(null));
 
-        for (const tile of boardResult.rows) {
-          boardState[tile.row][tile.col] = tile.letter;
-        }
-      }
+				for (const tile of boardResult.rows) {
+					boardState[tile.row][tile.col] = tile.letter;
+				}
+			}
 
-      // 4. Initialize Game Memory
-      // If the game isn't in RAM, we create it using the Board State we just loaded
-      let game = gameManager.getGame(gameId);
-      if (!game) {
-        game = gameManager.createGame(gameId, game_participants, boardState);
-        console.log(`Game ${gameId} loaded from DB with ${boardResult.rows.length} tiles.`);
-      } else {
-        // If game exists, just ensure players list is synced
-        if (game.players.length !== game_participants.length) {
-          game.players = game_participants;
-          game.players.forEach((id) => {
-            if (typeof game!.scores[id] === "undefined") game!.scores[id] = 0;
-            if (!game!.playerHands[id]) game!.playerHands[id] = [];
-          });
-        }
-      }
+			// 4. Initialize Game Memory
+			// If the game isn't in RAM, we create it using the Board State we just loaded
+			let game = gameManager.getGame(gameId);
+			if (!game) {
+				game = gameManager.createGame(gameId, game_participants, boardState);
+				console.log(`Game ${gameId} loaded from DB with ${boardResult.rows.length} tiles.`);
+			} else {
+				// If game exists, just ensure players list is synced
+				if (game.players.length !== game_participants.length) {
+					game.players = game_participants;
+					game.players.forEach((id) => {
+						if (typeof game!.scores[id] === "undefined") game!.scores[id] = 0;
+						if (!game!.playerHands[id]) game!.playerHands[id] = [];
+					});
+				}
+			}
 
-      // 5. Sync Player Hand from DB (or Draw if empty)
-      try {
-        const dbHandResult = await pool.query(
-          "SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
-          [gameId, userId],
-        );
+			// 5. Sync Player Hand from DB (or Draw if empty)
+			try {
+				const dbHandResult = await pool.query(
+					"SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
+					[gameId, userId],
+				);
 
-        if (dbHandResult.rows.length > 0) {
-          // Case A: Returning Player (Has tiles in DB) -> Load them
-          const hand = dbHandResult.rows.map((r: any) => r.letter);
-          game.playerHands[userId] = hand;
-        } else {
-          // Case B: New Player (No tiles in DB) -> Draw 7 & Save
-          console.log(`Player ${userId} has no tiles. Drawing starting hand...`);
-          const newHand = game.drawTiles(7);
-          game.playerHands[userId] = newHand;
+				if (dbHandResult.rows.length > 0) {
+					// Case A: Returning Player (Has tiles in DB) -> Load them
+					const hand = dbHandResult.rows.map((r: any) => r.letter);
+					game.playerHands[userId] = hand;
+				} else {
+					// Case B: New Player (No tiles in DB) -> Draw 7 & Save
+					console.log(`Player ${userId} has no tiles. Drawing starting hand...`);
+					const newHand = game.drawTiles(7);
+					game.playerHands[userId] = newHand;
 
-          if (newHand.length > 0) {
-            // Save these new tiles to the DB so they persist on refresh
-            const handValues = newHand
-              .map((letter) => `('${gameId}', '${userId}', '${letter}')`)
-              .join(",");
+					if (newHand.length > 0) {
+						// Save these new tiles to the DB so they persist on refresh
+						const handValues = newHand
+							.map((letter) => `('${gameId}', '${userId}', '${letter}')`)
+							.join(",");
 
-            await pool.query(
-              `INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`,
-            );
-          }
-        }
-      } catch (e) {
-        console.error("Error syncing hand:", e);
-      }
+						await pool.query(
+							`INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`,
+						);
+					}
+				}
+			} catch (e) {
+				console.error("Error syncing hand:", e);
+			}
 
-      // 6. Send Game State to Client
-      const gameState = game.getGameState();
-      const playerHand = game.getPlayerHand(userId);
+			// 6. Send Game State to Client
+			const gameState = game.getGameState();
+			const playerHand = game.getPlayerHand(userId);
 
-      socket.emit("game-state", {
-        ...gameState,
-        hand: playerHand,
-      });
+			socket.emit("game-state", {
+				...gameState,
+				hand: playerHand,
+			});
 
-      socket.to(gameId).emit("player-joined", { userId });
-    } catch (e) {
-      console.error("Error joining game:", e);
-      socket.emit("error", { message: "Failed to join game" });
-    }
-  });
+			socket.to(gameId).emit("player-joined", { userId });
+		} catch (e) {
+			console.error("Error joining game:", e);
+			socket.emit("error", { message: "Failed to join game" });
+		}
+	});
 
-  socket.on("make-move", async ({ gameId, tiles, words, scores }) => {
-    const game = gameManager.getGame(gameId);
-    if (!game) {
-      return socket.emit("error", { message: "Game not found" });
-    }
+	socket.on("make-move", async ({ gameId, tiles, words, scores }) => {
+		const game = gameManager.getGame(gameId);
+		if (!game) {
+			return socket.emit("error", { message: "Game not found" });
+		}
 
-    const validation = game.validateMove(userId, tiles);
-    if (!validation.valid) {
-      return socket.emit("error", { message: validation.error });
-    }
+		const validation = game.validateMove(userId, tiles);
+		if (!validation.valid) {
+			return socket.emit("error", { message: validation.error });
+		}
 
-    const calculatedScore = game.calculateScore(tiles);
-    const result = game.applyMove(userId, tiles, calculatedScore);
+		const calculatedScore = game.calculateScore(tiles);
+		const result = game.applyMove(userId, tiles, calculatedScore);
 
-    io.to(gameId).emit("move-made", {
-      userId,
-      tiles,
-      score: calculatedScore,
-      currentPlayer: result.currentPlayer,
-      gameState: game.getGameState(),
-    });
+		io.to(gameId).emit("move-made", {
+			userId,
+			tiles,
+			score: calculatedScore,
+			currentPlayer: result.currentPlayer,
+			gameState: game.getGameState(),
+		});
 
-    socket.emit("new-tiles", { tiles: game.getPlayerHand(userId) });
+		socket.emit("new-tiles", { tiles: game.getPlayerHand(userId) });
 
-    try {
-      await pool.query(
-        "INSERT INTO moves (game_id, user_id, turn_number, payload) VALUES ($1, $2, $3, $4)",
-        [
-          gameId,
-          userId,
-          game.currentPlayerIndex,
-          JSON.stringify({ tiles, words, score: calculatedScore }),
-        ],
-      );
+		try {
+			await pool.query(
+				"INSERT INTO moves (game_id, user_id, turn_number, payload) VALUES ($1, $2, $3, $4)",
+				[
+					gameId,
+					userId,
+					game.currentPlayerIndex,
+					JSON.stringify({ tiles, words, score: calculatedScore }),
+				],
+			);
 
-      await pool.query(
-        `INSERT INTO scores (game_id, user_id, value)
+			await pool.query(
+				`INSERT INTO scores (game_id, user_id, value)
          VALUES ($1, $2, $3)
          ON CONFLICT (game_id, user_id) DO UPDATE
          SET value = scores.value + $3`,
-        [gameId, userId, calculatedScore],
-      );
-      // Save tiles to board in DB
-      const boardInsert = tiles
-        .map((t: any) => `('${gameId}', ${t.row}, ${t.col}, '${t.letter}', '${userId}')`)
-        .join(",");
+				[gameId, userId, calculatedScore],
+			);
+			// Save tiles to board in DB
+			const boardInsert = tiles
+				.map((t: any) => `('${gameId}', ${t.row}, ${t.col}, '${t.letter}', '${userId}')`)
+				.join(",");
 
-      await pool.query(
-        `INSERT INTO board_tiles (game_id, row, col, letter, placed_by) 
+			await pool.query(
+				`INSERT INTO board_tiles (game_id, row, col, letter, placed_by)
         VALUES ${boardInsert}
         ON CONFLICT (game_id, row, col) DO NOTHING`,
-      );
+			);
 
-      // Remove used tiles from hand in DB
-      for (const t of tiles) {
-        await pool.query(
-          `DELETE FROM player_tiles 
+			// Remove used tiles from hand in DB
+			for (const t of tiles) {
+				await pool.query(
+					`DELETE FROM player_tiles
         WHERE id IN (
-        SELECT id FROM player_tiles 
-        WHERE game_id = $1 AND user_id = $2 AND letter = $3 
+        SELECT id FROM player_tiles
+        WHERE game_id = $1 AND user_id = $2 AND letter = $3
         LIMIT 1
         )`,
-          [gameId, userId, t.letter],
-        );
-      }
+					[gameId, userId, t.letter],
+				);
+			}
 
-      // Add new tiles to DB hand
-      if (result.newTiles.length > 0) {
-        const newHand = result.newTiles.map((l) => `('${gameId}', '${userId}', '${l}')`).join(",");
+			// Add new tiles to DB hand
+			if (result.newTiles.length > 0) {
+				const newHand = result.newTiles.map((l) => `('${gameId}', '${userId}', '${l}')`).join(",");
 
-        await pool.query(
-          `INSERT INTO player_tiles (game_id, user_id, letter) 
+				await pool.query(
+					`INSERT INTO player_tiles (game_id, user_id, letter)
         VALUES ${newHand}`,
-        );
-      }
+				);
+			}
 
-      // Remove drawn tiles from DB bag
-      if (result.newTiles.length > 0) {
-        await pool.query(
-          `DELETE FROM tile_bag 
+			// Remove drawn tiles from DB bag
+			if (result.newTiles.length > 0) {
+				await pool.query(
+					`DELETE FROM tile_bag
             WHERE id IN (
-            SELECT id FROM tile_bag 
-            WHERE game_id = $1 
+            SELECT id FROM tile_bag
+            WHERE game_id = $1
             LIMIT $2
             )`,
-          [gameId, result.newTiles.length],
-        );
-      }
+					[gameId, result.newTiles.length],
+				);
+			}
 
-      // Update turn
-      await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
-        result.currentPlayer,
-        gameId,
-      ]);
-    } catch (error) {
-      console.error("Error saving move:", error);
-    }
-  });
+			// Update turn
+			await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
+				result.currentPlayer,
+				gameId,
+			]);
+		} catch (error) {
+			console.error("Error saving move:", error);
+		}
+	});
 
-  socket.on("pass-turn", async ({ gameId }) => {
-    const game = gameManager.getGame(gameId);
-    if (!game) {
-      return socket.emit("error", { message: "Game not found" });
-    }
+	socket.on("pass-turn", async ({ gameId }) => {
+		const game = gameManager.getGame(gameId);
+		if (!game) {
+			return socket.emit("error", { message: "Game not found" });
+		}
 
-    const result = game.pass(userId);
-    if (!result.valid) {
-      return socket.emit("error", { message: result.error });
-    }
+		const result = game.pass(userId);
+		if (!result.valid) {
+			return socket.emit("error", { message: result.error });
+		}
 
-    if (result.gameOver) {
-      await pool.query("UPDATE games SET status = $1, ended_at = now() WHERE id = $2", [
-        "finished",
-        gameId,
-      ]);
+		if (result.gameOver) {
+			await pool.query("UPDATE games SET status = $1, ended_at = now() WHERE id = $2", [
+				"finished",
+				gameId,
+			]);
 
-      io.to(gameId).emit("game-over", {
-        scores: game.scores,
-      });
-    } else {
-      // Go to next player's turn
-      await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
-        result.currentPlayer,
-        gameId,
-      ]);
+			io.to(gameId).emit("game-over", {
+				scores: game.scores,
+			});
+		} else {
+			// Go to next player's turn
+			await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
+				result.currentPlayer,
+				gameId,
+			]);
 
-      io.to(gameId).emit("turn-passed", {
-        userId,
-        currentPlayer: result.currentPlayer,
-      });
-    }
-  });
+			io.to(gameId).emit("turn-passed", {
+				userId,
+				currentPlayer: result.currentPlayer,
+			});
+		}
+	});
 
-  socket.on("exchange-tiles", async ({ gameId, tiles }) => {
-    const game = gameManager.getGame(gameId);
-    if (!game) {
-      return socket.emit("error", { message: "Game not found" });
-    }
+	socket.on("exchange-tiles", async ({ gameId, tiles }) => {
+		const game = gameManager.getGame(gameId);
+		if (!game) {
+			return socket.emit("error", { message: "Game not found" });
+		}
 
-    const result = game.exchangeTiles(userId, tiles);
-    if (!result.valid) {
-      return socket.emit("error", { message: result.error });
-    }
+		const result = game.exchangeTiles(userId, tiles);
+		if (!result.valid) {
+			return socket.emit("error", { message: result.error });
+		}
 
-    socket.emit("tiles-exchanged", {
-      newTiles: result.newTiles,
-    });
+		socket.emit("tiles-exchanged", {
+			newTiles: result.newTiles,
+		});
 
-    io.to(gameId).emit("turn-changed", {
-      currentPlayer: result.currentPlayer,
-    });
-  });
+		io.to(gameId).emit("turn-changed", {
+			currentPlayer: result.currentPlayer,
+		});
+	});
 
-  // Chat
-  socket.on("send-message", async ({ gameId, message }) => {
-    try {
-      const isLobby = gameId === "lobby" || gameId === null;
-      const dbGameId = isLobby ? null : gameId;
+	// Chat
+	socket.on("send-message", async ({ gameId, message }) => {
+		try {
+			const isLobby = gameId === "lobby" || gameId === null;
+			const dbGameId = isLobby ? null : gameId;
 
-      const result = await pool.query(
-        "INSERT INTO chat_messages (game_id, user_id, message) VALUES ($1, $2, $3) RETURNING *",
-        [dbGameId, userId, message],
-      );
+			const result = await pool.query(
+				"INSERT INTO chat_messages (game_id, user_id, message) VALUES ($1, $2, $3) RETURNING *",
+				[dbGameId, userId, message],
+			);
 
-      const userResult = await pool.query("SELECT display_name FROM users WHERE id = $1", [userId]);
+			const userResult = await pool.query("SELECT display_name FROM users WHERE id = $1", [userId]);
 
-      const chatMessage = {
-        ...result.rows[0],
-        display_name: userResult.rows[0].display_name,
-        game_id: result.rows[0].game_id,
-      };
+			const chatMessage = {
+				...result.rows[0],
+				display_name: userResult.rows[0].display_name,
+				game_id: result.rows[0].game_id,
+			};
 
-      console.log("Sending chat message:", chatMessage);
+			console.log("Sending chat message:", chatMessage);
 
-      if (isLobby) {
-        console.log("Emitting to lobby room");
-        io.to("lobby").emit("new-message", chatMessage);
-      } else {
-        io.to(gameId).emit("new-message", chatMessage);
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
-  });
+			if (isLobby) {
+				console.log("Emitting to lobby room");
+				io.to("lobby").emit("new-message", chatMessage);
+			} else {
+				io.to(gameId).emit("new-message", chatMessage);
+			}
+		} catch (error) {
+			console.error("Error sending message:", error);
+		}
+	});
 
-  // Leave game
-  socket.on("leave-game", (gameId) => {
-    socket.leave(gameId);
-    socket.to(gameId).emit("player-left", { userId });
-  });
+	// Leave game
+	socket.on("leave-game", (gameId) => {
+		socket.leave(gameId);
+		socket.to(gameId).emit("player-left", { userId });
+	});
 
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", userId);
-  });
+	socket.on("disconnect", () => {
+		console.log("User disconnected:", userId);
+	});
 });
 
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
-  //   console.log(`Environment: ${NODE_ENV}`);
-  console.log(`http://localhost:${PORT}`);
+	console.log(`Server started on port ${PORT}`);
+	//   console.log(`Environment: ${NODE_ENV}`);
+	console.log(`http://localhost:${PORT}`);
 });
