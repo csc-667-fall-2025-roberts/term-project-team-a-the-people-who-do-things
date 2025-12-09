@@ -1,10 +1,10 @@
 import express, { Request, Response } from "express";
 import {
-	isValidWord,
-	validateWords,
-	getWordInfo,
-	getDictionaryStats,
-	validateWordDetailed,
+  getDictionaryStats,
+  getWordInfo,
+  isValidWord,
+  validateWordDetailed,
+  validateWords,
 } from "../services/dictionary.js";
 
 const router = express.Router();
@@ -15,16 +15,16 @@ const router = express.Router();
  * Body: { word: string }
  */
 router.post("/validate", (req: Request, res: Response) => {
-	const { word } = req.body;
+  const { word } = req.body;
 
-	if (!word) {
-		return res.status(400).json({
-			error: "Word is required",
-		});
-	}
+  if (!word) {
+    return res.status(400).json({
+      error: "Word is required",
+    });
+  }
 
-	const result = validateWordDetailed(word);
-	return res.json(result);
+  const result = validateWordDetailed(word);
+  return res.json(result);
 });
 
 /**
@@ -33,16 +33,16 @@ router.post("/validate", (req: Request, res: Response) => {
  * Body: { words: string[] }
  */
 router.post("/validate-multiple", (req: Request, res: Response) => {
-	const { words } = req.body;
+  const { words } = req.body;
 
-	if (!Array.isArray(words)) {
-		return res.status(400).json({
-			error: "Words must be an array",
-		});
-	}
+  if (!Array.isArray(words)) {
+    return res.status(400).json({
+      error: "Words must be an array",
+    });
+  }
 
-	const result = validateWords(words);
-	return res.json(result);
+  const result = validateWords(words);
+  return res.json(result);
 });
 
 /**
@@ -50,26 +50,25 @@ router.post("/validate-multiple", (req: Request, res: Response) => {
  * Get information about a specific word
  */
 router.get("/word/:word", (req: Request, res: Response) => {
-	const { word } = req.params;
+  const { word } = req.params;
 
-	if (!word) {
-		return res.status(400).json({
-			error: "Word is required",
-		});
-	}
+  if (!word) {
+    return res.status(400).json({
+      error: "Word is required",
+    });
+  }
 
-	const info = getWordInfo(word);
-	return res.json(info);
+  const info = getWordInfo(word);
+  return res.json(info);
 });
-
 
 /**
  * GET /api/dictionary/stats
  * Get dictionary statistics
  */
 router.get("/stats", (_req: Request, res: Response) => {
-	const stats = getDictionaryStats();
-	return res.json(stats);
+  const stats = getDictionaryStats();
+  return res.json(stats);
 });
 
 /**
@@ -78,19 +77,19 @@ router.get("/stats", (_req: Request, res: Response) => {
  * Body: { word: string }
  */
 router.post("/quick-check", (req: Request, res: Response) => {
-	const { word } = req.body;
+  const { word } = req.body;
 
-	if (!word) {
-		return res.status(400).json({
-			error: "Word is required",
-		});
-	}
+  if (!word) {
+    return res.status(400).json({
+      error: "Word is required",
+    });
+  }
 
-	const valid = isValidWord(word);
-	return res.json({
-		word: word.toUpperCase(),
-		valid,
-	});
+  const valid = isValidWord(word);
+  return res.json({
+    word: word.toUpperCase(),
+    valid,
+  });
 });
 
 export default router;
