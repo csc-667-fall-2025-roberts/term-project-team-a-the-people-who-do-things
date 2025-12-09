@@ -251,10 +251,10 @@ async function loadChatMessages() {
     messages.forEach((message) => {
       addChatMessage({
         ...message,
-        game_id: message.game_id ?? gameId,
+        game_id: gameId,
       });
     });
-  } catch (error) {
+  } catch {
     // console.error("Failed to load chat messages:", error);
   }
 }

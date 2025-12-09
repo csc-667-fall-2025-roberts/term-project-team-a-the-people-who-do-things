@@ -1,8 +1,8 @@
 import type { SocketEvents } from "../../types/client/socket-events.js";
 
 export class SocketManager {
-  socket: any;
-  listeners: Map<string, Function[]>;
+  socket: unknown;
+  listeners: Map<string, void[]>;
 
   constructor() {
     if (typeof io === "undefined") {
@@ -13,7 +13,7 @@ export class SocketManager {
   }
 
   on<K extends keyof SocketEvents>(event: K, callback: (data: SocketEvents[K]) => void): void;
-  on(event: string, callback: (data: any) => void): void;
+  on(event: string, callback: (data: unknown) => void): void;
   on(event: string, callback: (data: any) => void): void {
     this.socket.on(event, callback);
 
