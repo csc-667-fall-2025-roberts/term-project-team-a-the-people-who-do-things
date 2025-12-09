@@ -1,10 +1,10 @@
 export const api = {
   async request(url: string | URL | RequestInfo, options = {}) {
-  const response = await fetch(url, {
+    const response = await fetch(url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        ...((options as { headers?: Record<string, string> }).headers),
+        ...(options as { headers?: Record<string, string> }).headers,
       },
     });
 
