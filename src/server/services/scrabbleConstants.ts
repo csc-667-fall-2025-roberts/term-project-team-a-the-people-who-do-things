@@ -128,3 +128,28 @@ export const PREMIUM_SQUARES: { [key: string]: [number, number][] } = {
     [14, 11],
   ], // Double Letter
 };
+
+// Scrabble game constants
+export const TILES_PER_PLAYER = 7;
+export const BINGO_BONUS = 50; // Bonus  points for using all 7 tiles in one turn
+export const TOTAL_TILES = 100; // Total tiles
+
+// Helper to get total tile count
+export function getTotalTileCount(): number {
+  return Object.values(LETTER_DISTRIBUTION).reduce((sum, count) => sum + count, 0);
+}
+
+// Helper to validate letter exists
+export function isValidLetter(letter: string): boolean {
+  return letter in LETTER_VALUES;
+}
+
+// Premium square type checker
+export function getPremiumType(row: number, col: number): string | null {
+  for (const [type, positions] of Object.entries(PREMIUM_SQUARES)) {
+    if (positions.some(([r, c]) => r === row && c === col)) {
+      return type;
+    }
+  }
+  return null;
+}

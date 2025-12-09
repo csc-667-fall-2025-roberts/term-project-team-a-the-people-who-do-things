@@ -9,6 +9,7 @@ import pool from "./config/database.js";
 import { attachUser, requireAuth } from "./middleware/auth.js";
 import authRoutes from "./routes/auth.js";
 import chatRoutes from "./routes/chat.js";
+import dictionaryRoutes from "./routes/dictionary.js";
 import gameRoutes from "./routes/games.js";
 import usersRoutes from "./routes/users.js";
 import gameManager from "./services/gameManager.js";
@@ -62,6 +63,7 @@ app.set("views", path.join(__dirname, "../views"));
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/dictionary", dictionaryRoutes);
 app.use("/api/games", gameRoutes(io));
 app.use("/api/chat", chatRoutes);
 app.use("/api/users", usersRoutes);
@@ -87,7 +89,9 @@ app.get("/lobby", requireAuth, (req, res) => {
 
 app.get("/game/:gameId/lobby", requireAuth, (req, res) => {
   res.render("screens/gameLobby", {
+    user: req.users,
     gameId: req.params.gameId,
+    NODE_ENV: process.env.NODE_ENV,
   });
 });
 
@@ -173,7 +177,7 @@ io.on("connection", (socket: Socket) => {
     socket.to(gameId).emit("player-joined-lobby", {
       userId,
       displayName: (socket.request as any).session?.user?.display_name || "Unknown",
-      isHost: false, // Will be determined by client
+      isHost: false,
     });
   });
 
@@ -190,7 +194,6 @@ io.on("connection", (socket: Socket) => {
     socket.join(gameId);
 
     try {
-      // 1. Fetch participants (Order is important for turn logic)
       const participantsResult = await pool.query(
         "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
         [gameId],
@@ -199,14 +202,11 @@ io.on("connection", (socket: Socket) => {
         String(r.user_id),
       );
 
-      // 2. Fetch the BOARD STATE from the database
-
       const boardResult = await pool.query(
         "SELECT row, col, letter FROM board_tiles WHERE game_id = $1",
         [gameId],
       );
 
-      // 3. Reconstruct the 2D Board Array from DB data
       let boardState: (string | null)[][] | null = null;
 
       if (boardResult.rows.length > 0) {
@@ -219,14 +219,11 @@ io.on("connection", (socket: Socket) => {
         }
       }
 
-      // 4. Initialize Game Memory
-      // If the game isn't in RAM, we create it using the Board State we just loaded
       let game = gameManager.getGame(gameId);
       if (!game) {
         game = gameManager.createGame(gameId, game_participants, boardState);
         console.log(`Game ${gameId} loaded from DB with ${boardResult.rows.length} tiles.`);
       } else {
-        // If game exists, just ensure players list is synced
         if (game.players.length !== game_participants.length) {
           game.players = game_participants;
           game.players.forEach((id) => {
@@ -236,7 +233,6 @@ io.on("connection", (socket: Socket) => {
         }
       }
 
-      // 5. Sync Player Hand from DB (or Draw if empty)
       try {
         const dbHandResult = await pool.query(
           "SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
@@ -244,17 +240,14 @@ io.on("connection", (socket: Socket) => {
         );
 
         if (dbHandResult.rows.length > 0) {
-          // Case A: Returning Player (Has tiles in DB) -> Load them
           const hand = dbHandResult.rows.map((r: any) => r.letter);
           game.playerHands[userId] = hand;
         } else {
-          // Case B: New Player (No tiles in DB) -> Draw 7 & Save
           console.log(`Player ${userId} has no tiles. Drawing starting hand...`);
           const newHand = game.drawTiles(7);
           game.playerHands[userId] = newHand;
 
           if (newHand.length > 0) {
-            // Save these new tiles to the DB so they persist on refresh
             const handValues = newHand
               .map((letter) => `('${gameId}', '${userId}', '${letter}')`)
               .join(",");
@@ -268,7 +261,6 @@ io.on("connection", (socket: Socket) => {
         console.error("Error syncing hand:", e);
       }
 
-      // 6. Send Game State to Client
       const gameState = game.getGameState();
       const playerHand = game.getPlayerHand(userId);
 
@@ -332,41 +324,38 @@ io.on("connection", (socket: Socket) => {
         .join(",");
 
       await pool.query(
-        `INSERT INTO board_tiles (game_id, row, col, letter, placed_by) 
+        `INSERT INTO board_tiles (game_id, row, col, letter, placed_by)
         VALUES ${boardInsert}
         ON CONFLICT (game_id, row, col) DO NOTHING`,
       );
 
-      // Remove used tiles from hand in DB
       for (const t of tiles) {
         await pool.query(
-          `DELETE FROM player_tiles 
+          `DELETE FROM player_tiles
         WHERE id IN (
-        SELECT id FROM player_tiles 
-        WHERE game_id = $1 AND user_id = $2 AND letter = $3 
+        SELECT id FROM player_tiles
+        WHERE game_id = $1 AND user_id = $2 AND letter = $3
         LIMIT 1
         )`,
           [gameId, userId, t.letter],
         );
       }
 
-      // Add new tiles to DB hand
       if (result.newTiles.length > 0) {
         const newHand = result.newTiles.map((l) => `('${gameId}', '${userId}', '${l}')`).join(",");
 
         await pool.query(
-          `INSERT INTO player_tiles (game_id, user_id, letter) 
+          `INSERT INTO player_tiles (game_id, user_id, letter)
         VALUES ${newHand}`,
         );
       }
 
-      // Remove drawn tiles from DB bag
       if (result.newTiles.length > 0) {
         await pool.query(
-          `DELETE FROM tile_bag 
+          `DELETE FROM tile_bag
             WHERE id IN (
-            SELECT id FROM tile_bag 
-            WHERE game_id = $1 
+            SELECT id FROM tile_bag
+            WHERE game_id = $1
             LIMIT $2
             )`,
           [gameId, result.newTiles.length],
@@ -404,7 +393,6 @@ io.on("connection", (socket: Socket) => {
         scores: game.scores,
       });
     } else {
-      // Go to next player's turn
       await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
         result.currentPlayer,
         gameId,

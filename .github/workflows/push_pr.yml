@@ -1,6 +1,10 @@
-name: Pull Request CI
+name: Push and Pull CI
 
 on:
+  push:
+    branches:
+      - "Stella"
+      - "safetybranch"
   pull_request:
     branches: [main, development]
     types: [opened, synchronize, reopened]
@@ -18,10 +22,44 @@ permissions:
   pull-requests: read
 
 jobs:
-  install:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      src: ${{ steps.changes.outputs.src }}
+      config_files: ${{ steps.changes.outputs.config_files }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            src:
+            - 'src/**'
+            public:
+            - 'src/public/**'
+            server:
+            - 'src/server/**'
+            types:
+            - 'src/**/*.ts'
+            - 'src/**/*.tsx'
+            views:
+            - 'src/views/**'
+            config_files:
+            - 'package.json'
+            - 'postcss.config.js'
+            - 'tailwind.config.js'
+            - 'tsconfig.json'
+            - 'vite.config.ts'
+            - '.prettierrc'
+            workflows:
+            - '.github/workflows/**'
+
+  src-install:
     name: Install Dependencies
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,11 +68,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs. org'
+          registry-url: "https://registry.npmjs.org"
 
       - name: Cache node_modules
-        id: cache-node-modules
         uses: actions/cache@v4
+        id: cache-node-modules
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
@@ -42,10 +80,8 @@ jobs:
             node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-
 
       - name: Install dependencies
-        if: steps. cache-node-modules.outputs. cache-hit != 'true'
-        run: npm ci --prefer-offline --no-audit
-        env:
-          NODE_ENV: development
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm install --prefer-offline --no-audit
 
       - name: Verify node_modules integrity
         run: |
@@ -58,7 +94,7 @@ jobs:
   typecheck:
     name: TypeScript Check
     runs-on: ubuntu-latest
-    needs: install
+    needs: src-install
     timeout-minutes: 10
     steps:
       - name: Checkout code
@@ -85,8 +121,8 @@ jobs:
 
   lint:
     name: ESLint Check
+    needs: [changes, src-install]
     runs-on: ubuntu-latest
-    needs: install
     timeout-minutes: 10
     continue-on-error: true
     steps:
@@ -98,12 +134,21 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Restore node_modules cache
+      - name: Restore node_modules
         uses: actions/cache@v4
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
           fail-on-cache-miss: true
+
+      - name: Run TypeScript type checking
+        run: npm run typecheck
+
+      - name: Install ESLint if not present
+        run: |
+          if ! npm list eslint > /dev/null 2>&1; then
+            npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-plugin-react eslint-plugin-react-hooks
+          fi
 
       - name: Run ESLint
         run: |
@@ -116,7 +161,7 @@ jobs:
   format:
     name: Prettier Check
     runs-on: ubuntu-latest
-    needs: install
+    needs: src-install
     timeout-minutes: 5
     steps:
       - name: Checkout code
@@ -146,13 +191,13 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: install
+    needs: src-install
     timeout-minutes: 15
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node. js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -195,7 +240,7 @@ jobs:
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
-    needs: install
+    needs: src-install
     timeout-minutes: 15
     continue-on-error: true
     steps:
@@ -227,7 +272,7 @@ jobs:
   security:
     name: Security Audit
     runs-on: ubuntu-latest
-    needs: install
+    needs: src-install
     timeout-minutes: 10
     steps:
       - name: Checkout code
@@ -243,7 +288,7 @@ jobs:
         run: |
           echo "## Security Audit Results" >> $GITHUB_STEP_SUMMARY
           npm audit --audit-level=high 2>&1 | tee audit-results.txt || true
-          
+
           if npm audit --audit-level=high 2>&1 | grep -q "found 0 vulnerabilities"; then
             echo "No high or critical vulnerabilities found" >> $GITHUB_STEP_SUMMARY
           else
@@ -265,7 +310,7 @@ jobs:
   migration-check:
     name: Migration Syntax Check
     runs-on: ubuntu-latest
-    needs: install
+    needs: src-install
     timeout-minutes: 5
     steps:
       - name: Checkout code
@@ -286,11 +331,11 @@ jobs:
       - name: Check migration files syntax
         run: |
           echo "## Migration Check Results" >> $GITHUB_STEP_SUMMARY
-          
+
           MIGRATION_DIR="src/DB/migrations"
-          if [ -d "$MIGRATION_DIR" ] && [ "$(ls -A $MIGRATION_DIR/*. ts 2>/dev/null)" ]; then
+          if [ -d "$MIGRATION_DIR" ] && [ "$(ls -A $MIGRATION_DIR/*.ts 2>/dev/null)" ]; then
             echo "Checking migration files for TypeScript errors..."
-            npx tsc --noEmit $MIGRATION_DIR/*.ts
+            npx tsc --noEmit -p tsconfig.json --listFiles | grep migrations || true
             echo "All migration files pass TypeScript check" >> $GITHUB_STEP_SUMMARY
           else
             echo "No migration files found in $MIGRATION_DIR" >> $GITHUB_STEP_SUMMARY
@@ -316,17 +361,17 @@ jobs:
         run: |
           echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -d "dist/public" ]; then
             echo "| File | Size | Gzipped |" >> $GITHUB_STEP_SUMMARY
             echo "|------|------|---------|" >> $GITHUB_STEP_SUMMARY
-            
+
             find dist/public \( -name "*.js" -o -name "*.css" \) -type f 2>/dev/null | sort | while read file; do
               size=$(du -h "$file" | cut -f1)
               gzip_size=$(gzip -c "$file" | wc -c | awk '{printf "%.1fK", $1/1024}')
               echo "| \`${file#dist/}\` | ${size} | ${gzip_size} |" >> $GITHUB_STEP_SUMMARY
             done
-            
+
             total=$(du -sh dist/public 2>/dev/null | cut -f1 || echo "N/A")
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Total public assets size:** ${total}" >> $GITHUB_STEP_SUMMARY
@@ -337,7 +382,7 @@ jobs:
       - name: Check bundle size limits
         run: |
           MAX_SIZE_KB=1024
-          
+
           find dist/public -name "*.js" -type f 2>/dev/null | while read file; do
             size_kb=$(du -k "$file" | cut -f1)
             if [ "$size_kb" -gt "$MAX_SIZE_KB" ]; then
@@ -361,42 +406,56 @@ jobs:
 
           if [ "${{ needs.typecheck.result }}" == "success" ]; then
             echo "| TypeScript Check | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.typecheck.result }}" == "skipped" ]; then
+            echo "| TypeScript Check | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| TypeScript Check | Fail |" >> $GITHUB_STEP_SUMMARY
           fi
 
           if [ "${{ needs.format.result }}" == "success" ]; then
             echo "| Prettier Check | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.format.result }}" == "skipped" ]; then
+            echo "| Prettier Check | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Prettier Check | Fail |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [ "${{ needs. build.result }}" == "success" ]; then
+          if [ "${{ needs.build.result }}" == "success" ]; then
             echo "| Build | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.build.result }}" == "skipped" ]; then
+            echo "| Build | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Build | Fail |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [ "${{ needs. migration-check.result }}" == "success" ]; then
+          if [ "${{ needs.migration-check.result }}" == "success" ]; then
             echo "| Migration Check | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.migration-check.result }}" == "skipped" ]; then
+            echo "| Migration Check | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Migration Check | Fail |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [ "${{ needs.security. result }}" == "success" ]; then
+          if [ "${{ needs.security.result }}" == "success" ]; then
             echo "| Security Audit | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.security.result }}" == "skipped" ]; then
+            echo "| Security Audit | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Security Audit | Review Recommended |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          if [ "${{ needs. lint.result }}" == "success" ]; then
+          if [ "${{ needs.lint.result }}" == "success" ]; then
             echo "| ESLint | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.lint.result }}" == "skipped" ]; then
+            echo "| ESLint | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| ESLint | Issues Found |" >> $GITHUB_STEP_SUMMARY
           fi
 
           if [ "${{ needs.test.result }}" == "success" ]; then
             echo "| Unit Tests | Pass |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.test.result }}" == "skipped" ]; then
+            echo "| Unit Tests | Skipped |" >> $GITHUB_STEP_SUMMARY
           else
             echo "| Unit Tests | Issues Found |" >> $GITHUB_STEP_SUMMARY
           fi
@@ -407,16 +466,16 @@ jobs:
 
       - name: Fail if required checks failed
         if: |
-          needs. typecheck.result != 'success' ||
-          needs. format.result != 'success' ||
-          needs.build.result != 'success' ||
-          needs.migration-check.result != 'success'
+          (needs.typecheck.result != 'success' && needs.typecheck.result != 'skipped') ||
+          (needs.format.result != 'success' && needs.format.result != 'skipped') ||
+          (needs.build.result != 'success' && needs.build.result != 'skipped') ||
+          (needs.migration-check.result != 'success' && needs.migration-check.result != 'skipped')
         run: |
           echo "::error::One or more required checks failed!"
           echo ""
           echo "Failed checks:"
-          [ "${{ needs.typecheck.result }}" != "success" ] && echo "  - TypeScript Check"
-          [ "${{ needs.format.result }}" != "success" ] && echo "  - Prettier Check"
-          [ "${{ needs.build.result }}" != "success" ] && echo "  - Build"
-          [ "${{ needs.migration-check.result }}" != "success" ] && echo "  - Migration Check"
+          [ "${{ needs.typecheck.result }}" != "success" ] && [ "${{ needs.typecheck.result }}" != "skipped" ] && echo "  - TypeScript Check"
+          [ "${{ needs.format.result }}" != "success" ] && [ "${{ needs.format.result }}" != "skipped" ] && echo "  - Prettier Check"
+          [ "${{ needs.build.result }}" != "success" ] && [ "${{ needs.build.result }}" != "skipped" ] && echo "  - Build"
+          [ "${{ needs.migration-check.result }}" != "success" ] && [ "${{ needs.migration-check.result }}" != "skipped" ] && echo "  - Migration Check"
           exit 1

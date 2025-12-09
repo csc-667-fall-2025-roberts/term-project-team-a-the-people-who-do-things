@@ -8,7 +8,6 @@ import { ScrabbleGame } from "../services/scrabbleEngine.js";
 export default function gamesRouter(io: Server) {
   const router = express.Router();
 
-  // Get lobby games
   router.get("/lobby", requireAuth, async (_req, res) => {
     try {
       const result = await pool.query(
@@ -132,7 +131,7 @@ export default function gamesRouter(io: Server) {
         return res.status(400).json({ error: "Game already started" });
       }
 
-      if (game.current_players >= game.max_players) {
+      if (game.player_count >= game.max_players) {
         await client.query("ROLLBACK");
         return res.status(400).json({ error: "Game is full" });
       }
@@ -225,9 +224,9 @@ export default function gamesRouter(io: Server) {
 
       console.log(`[POST /api/games/${gameId}/start] User ID:`, req.session.userId);
 
-      // First, check if user is host
+      // check if user is host
       const hostCheck = await client.query(
-        `SELECT is_host FROM game_participants 
+        `SELECT is_host FROM game_participants
        WHERE game_id = $1 AND user_id = $2`,
         [gameId, req.session.userId],
       );
@@ -246,13 +245,40 @@ export default function gamesRouter(io: Server) {
         return res.status(403).json({ error: "Only host can start a waiting game" });
       }
 
-      // Verify host and update game status
+      // Check player count
+      const gameCheckResult = await client.query(
+        `SELECT g.max_players, COUNT(gp.user_id) as player_count
+	       FROM games g
+	       LEFT JOIN game_participants gp ON g.id = gp.game_id
+	       WHERE g.id = $1
+	       GROUP BY g.id, g.max_players`,
+        [gameId],
+      );
+
+      if (gameCheckResult.rows.length === 0) {
+        await client.query("ROLLBACK");
+        console.log(`[POST /api/games/${gameId}/start] Game not found`);
+        return res.status(404).json({ error: "Game not found" });
+      }
+
+      const { max_players, player_count } = gameCheckResult.rows[0];
+
+      if (player_count > max_players) {
+        await client.query("ROLLBACK");
+        console.log(
+          `[POST /api/games/${gameId}/start] Too many players: ${player_count}/${max_players}`,
+        );
+        return res.status(400).json({
+          error: `Cannot start game: Too many players (${player_count}/${max_players})`,
+        });
+      }
+
       const result = await client.query(
         `UPDATE games
-       SET status = 'in_progress', started_at = now()
-       WHERE id = $1 
-         AND status = 'waiting'
-       RETURNING id`,
+	       SET status = 'in_progress', started_at = now()
+	       WHERE id = $1
+	         AND status = 'waiting'
+	       RETURNING id`,
         [gameId],
       );
 
@@ -262,7 +288,6 @@ export default function gamesRouter(io: Server) {
         return res.status(403).json({ error: "Game not found or already started" });
       }
 
-      // Get all participants
       const participantsResult = await client.query(
         `SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at`,
         [gameId],
@@ -287,14 +312,12 @@ export default function gamesRouter(io: Server) {
 
       // Deal 7 tiles to each player
       for (const userId of participants) {
-        // Check if player already has tiles (shouldn't happen, but just in case)
         const existingTiles = await client.query(
           `SELECT COUNT(*) as count FROM player_tiles WHERE game_id = $1 AND user_id = $2`,
           [gameId, userId],
         );
 
         if (parseInt(existingTiles.rows[0].count) === 0 && tileBag.length >= 7) {
-          // Draw 7 tiles
           const hand = tileBag.splice(0, 7);
 
           // Save to player_tiles
@@ -313,11 +336,11 @@ export default function gamesRouter(io: Server) {
       if (tileBagResult.rows.length > tileBag.length) {
         const tilesToRemove = tileBagResult.rows.length - tileBag.length;
         await client.query(
-          `DELETE FROM tile_bag 
+          `DELETE FROM tile_bag
          WHERE id IN (
-           SELECT id FROM tile_bag 
-           WHERE game_id = $1 
-           ORDER BY id 
+           SELECT id FROM tile_bag
+           WHERE game_id = $1
+           ORDER BY id
            LIMIT $2
          )`,
           [gameId, tilesToRemove],
@@ -326,7 +349,6 @@ export default function gamesRouter(io: Server) {
 
       await client.query("COMMIT");
 
-      // Emit game-started event to all players in the game lobby
       io.to(gameId).emit("game-started", { gameId });
 
       res.json({ success: true });
@@ -369,7 +391,6 @@ export default function gamesRouter(io: Server) {
     try {
       await client.query("BEGIN");
 
-      // Verify user is participant and game is in progress
       const participantCheck = await client.query(
         `SELECT gp.user_id, g.status, g.current_turn_user_id
        FROM game_participants gp

@@ -4,7 +4,7 @@ export const api = {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        ...(options as any).headers,
+        ...(options as { headers?: Record<string, string> }).headers,
       },
     });
 
