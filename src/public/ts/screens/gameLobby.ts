@@ -31,6 +31,8 @@ if (!gameId) {
 
 let currentUser: { id: string; display_name: string } | null = null;
 let isHost = false;
+let currentMaxPlayers = 0;
+let currentParticipantCount = 0;
 
 const playersList = document.getElementById("players-list");
 const startGameBtn = document.getElementById("start-game-btn");
@@ -73,7 +75,6 @@ function addChatMessage(message: LobbyChatMessage) {
     return;
   }
 
-  // Remove the "Chat room initialized..." message if it exists
   const initMessage = chatMessages.querySelector(".text-center.text-xs.text-gray-400");
   if (initMessage) initMessage.remove();
 
@@ -91,11 +92,11 @@ function addChatMessage(message: LobbyChatMessage) {
 
 async function loadGameLobbyData() {
   try {
-    console.log("Loading game lobby data for gameId:", gameId);
+    // console.log("Loading game lobby data for gameId:", gameId);
 
     const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
     currentUser = user;
-    console.log("Current user:", currentUser);
+    // console.log("Current user:", currentUser);
 
     const response = (await api.games.get(gameId)) as {
       game: { max_players: number; created_by: string };
@@ -107,9 +108,9 @@ async function loadGameLobbyData() {
       }>;
     };
 
-    console.log("API response:", response);
-    console.log("Game:", response.game);
-    console.log("Participants raw:", response.game_participants);
+    // console.log("API response:", response);
+    // console.log("Game:", response.game);
+    // console.log("Participants raw:", response.game_participants);
 
     const { game, game_participants } = response;
 
@@ -119,7 +120,6 @@ async function loadGameLobbyData() {
       return;
     }
 
-    // Map user_id to id for the GameParticipant type
     const participants: GameParticipant[] = (game_participants || []).map((p) => ({
       id: p.id || p.user_id,
       display_name: p.display_name,
@@ -128,7 +128,6 @@ async function loadGameLobbyData() {
 
     console.log("Mapped participants:", participants);
 
-    // Check if user is host - check both created_by and is_host flag
     const userParticipant = participants.find((p) => p.id === currentUser?.id);
     isHost = game.created_by === currentUser.id || userParticipant?.is_host === true;
     console.log("Is host check:", {
@@ -141,11 +140,14 @@ async function loadGameLobbyData() {
     if (gameIdDisplay) gameIdDisplay.textContent = gameId;
     if (maxPlayersDisplay) maxPlayersDisplay.textContent = game.max_players.toString();
 
+    currentMaxPlayers = game.max_players;
+    currentParticipantCount = participants.length;
+
     renderPlayers(participants, game.max_players);
     updateStartButtonVisibility();
     initLobbyChat();
 
-    socket.emit("join-game-lobby", gameId); // New socket event for game lobby
+    socket.emit("join-game-lobby", gameId);
   } catch (error) {
     console.error("Failed to load game lobby data:", error);
     console.error("Error details:", error instanceof Error ? error.message : String(error));
@@ -161,28 +163,42 @@ function renderPlayers(participants: GameParticipant[], maxPlayers: number) {
   });
 
   if (!playersList) {
-    console.error("playersList element not found!");
+    // console.error("playersList element not found!");
     return;
   }
 
   if (playerCountDisplay) {
     playerCountDisplay.textContent = participants.length.toString();
-    console.log("Set player count to:", participants.length);
+    // console.log("Set player count to:", participants.length);
   }
 
   if (maxPlayersDisplay) {
     maxPlayersDisplay.textContent = maxPlayers.toString();
-    console.log("Set max players to:", maxPlayers);
+    // console.log("Set max players to:", maxPlayers);
   }
 
   if (participants.length === 0) {
-    console.log("No participants, showing waiting message");
+    // console.log("No participants, showing waiting message");
     playersList.innerHTML = `<p class="text-gray-500 text-center py-4">Waiting for players...</p>`;
     return;
   }
 
-  console.log("Rendering", participants.length, "participants");
-  const html = participants
+  const isOverCapacity = participants.length > maxPlayers;
+  // console.log("Rendering", participants.length, "participants", isOverCapacity ? "(OVER CAPACITY)" : "");
+
+  let html = "";
+
+  // Add warning if over capacity
+  if (isOverCapacity) {
+    html += `
+      <div class="p-3 mb-3 bg-red-100 border border-red-400 rounded-lg">
+        <p class="text-red-800 font-semibold text-sm">⚠️ Too many players!</p>
+        <p class="text-red-700 text-xs">This lobby has ${participants.length} players but only supports ${maxPlayers}. Some players must leave before the game can start.</p>
+      </div>
+    `;
+  }
+
+  html += participants
     .map(
       (participant) => `
         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border ${
@@ -194,16 +210,27 @@ function renderPlayers(participants: GameParticipant[], maxPlayers: number) {
       `,
     )
     .join("");
-
-  console.log("Generated HTML:", html);
   playersList.innerHTML = html;
 }
 
 function updateStartButtonVisibility() {
   if (startGameBtn) {
+    const isOverCapacity = currentParticipantCount > currentMaxPlayers;
+
     if (isHost) {
       startGameBtn.classList.remove("hidden");
       if (waitingMessage) waitingMessage.classList.add("hidden");
+
+      // Disable button if over capacity
+      if (isOverCapacity) {
+        (startGameBtn as HTMLButtonElement).disabled = true;
+        startGameBtn.classList.add("opacity-50", "cursor-not-allowed");
+        startGameBtn.title = "Too many players in lobby";
+      } else {
+        (startGameBtn as HTMLButtonElement).disabled = false;
+        startGameBtn.classList.remove("opacity-50", "cursor-not-allowed");
+        startGameBtn.title = "";
+      }
     } else {
       startGameBtn.classList.add("hidden");
       if (waitingMessage) waitingMessage.classList.remove("hidden");
@@ -218,7 +245,6 @@ async function loadChatMessages() {
     const { messages } = (await api.chat.getMessages(gameId)) as { messages: LobbyChatMessage[] };
     chatMessages.innerHTML = "";
 
-    // Remove the "Chat room initialized..." message
     const initMessage = chatMessages.querySelector(".text-center.text-xs.text-gray-400");
     if (initMessage) initMessage.remove();
 
@@ -229,20 +255,18 @@ async function loadChatMessages() {
       });
     });
   } catch (error) {
-    console.error("Failed to load chat messages:", error);
+    // console.error("Failed to load chat messages:", error);
   }
 }
 
 function initLobbyChat() {
   if (!chatForm || !chatInput || !chatMessages) {
-    console.error("Chat elements not found for game lobby chat");
+    // console.error("Chat elements not found for game lobby chat");
     return;
   }
 
-  // Load existing messages
   void loadChatMessages();
 
-  // Handle sending messages
   chatForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const message = chatInput.value.trim();
@@ -251,10 +275,8 @@ function initLobbyChat() {
     socket.emit("send-message", { gameId, message });
   });
 
-  // Listen for new messages
   socket.on("new-message", (data: unknown) => {
     const message = data as LobbyChatMessage & { game_id?: string | null };
-    // Check if message belongs to this game
     if (message && (message.game_id === gameId || String(message.game_id) === String(gameId))) {
       addChatMessage(message as LobbyChatMessage);
     }
@@ -263,9 +285,15 @@ function initLobbyChat() {
 
 startGameBtn?.addEventListener("click", async () => {
   if (isHost) {
+    if (currentParticipantCount > currentMaxPlayers) {
+      alert(
+        `Cannot start game: Too many players (${currentParticipantCount}/${currentMaxPlayers}). Some players must leave first.`,
+      );
+      return;
+    }
+
     try {
       await api.games.start(gameId);
-      // Server will emit 'game-started' event, which will redirect players
     } catch (error) {
       console.error("Failed to start game:", error);
       alert("Failed to start game. Please try again.");
@@ -276,34 +304,29 @@ startGameBtn?.addEventListener("click", async () => {
 socket.on(
   "player-joined-lobby",
   (data: { userId: string; displayName: string; isHost: boolean }) => {
-    console.log("Player joined lobby:", data);
-    void loadGameLobbyData(); // Reload data to update player list
+    void loadGameLobbyData();
   },
 );
 
 socket.on("player-left-lobby", (data: { userId: string }) => {
-  console.log("Player left lobby:", data);
-  void loadGameLobbyData(); // Reload data to update player list
+  void loadGameLobbyData();
 });
 
 socket.on("game-started", (data: { gameId: string }) => {
   if (data.gameId === gameId) {
-    window.location.href = `/game/${gameId}`; // Redirect to actual game room
+    window.location.href = `/game/${gameId}`;
   }
 });
 
-// Initialize on page load
-console.log("gameLobby.ts: Setting up DOMContentLoaded listener");
-console.log("gameLobby.ts: window.GAME_ID =", window.GAME_ID);
-console.log("gameLobby.ts: gameId =", gameId);
+// console.log("gameLobby.ts: Setting up DOMContentLoaded listener");
+// console.log("gameLobby.ts: window.GAME_ID =", window.GAME_ID);
+// console.log("gameLobby.ts: gameId =", gameId);
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
-    console.log("gameLobby.ts: DOMContentLoaded fired, calling loadGameLobbyData");
     void loadGameLobbyData();
   });
 } else {
-  console.log("gameLobby.ts: DOM already loaded, calling loadGameLobbyData immediately");
   void loadGameLobbyData();
 }
 
