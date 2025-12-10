@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import {describe, expect, it } from "vitest";
+
 import {
-	isValidWord,
-	validateWords,
-	getWordInfo,
 	getDictionaryStats,
+	getWordInfo,
+	isValidWord,
 	validateWordDetailed,
+	validateWords,
 } from "./dictionary.js";
 
 describe("Dictionary Service", () => {

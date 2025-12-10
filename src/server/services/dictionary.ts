@@ -1,6 +1,6 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,14 +69,14 @@ export function getWordInfo(word: string): {
 
 export function getDictionaryStats(): {
   totalWords: number;
-  wordsByLength: { [length: number]: number };
+  wordsByLength: Record<number, number>;
 } {
-  let totalLength = 0;
-  const wordsByLength: { [length: number]: number } = {};
+  let _totalLength = 0;
+  const wordsByLength: Record<number, number> = {};
 
   for (const word of WORD_LIST) {
     const len = word.length;
-    totalLength += len;
+    _totalLength += len;
     wordsByLength[len] = (wordsByLength[len] || 0) + 1;
   }
 

@@ -1,7 +1,12 @@
 import type { SocketEvents } from "../../types/client/socket-events.js";
 
 export class SocketManager {
-  socket: unknown;
+  socket: {
+    emit(event: string, ...args: unknown[]): void;
+    on(event: string, handler: (data: unknown) => void): void;
+    off(event: string, handler?: (data: unknown) => void): void;
+    removeAllListeners(event?: string): void;
+  };
   listeners: Map<string, void[]>;
 
   constructor() {

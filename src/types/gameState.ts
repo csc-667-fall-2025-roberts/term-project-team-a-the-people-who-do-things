@@ -2,11 +2,11 @@ import { Games } from "./games.js";
 import { Participants } from "./participants.js";
 import { Users } from "./users.js";
 
-export type GameState = {
+export interface GameState {
   gameID?: keyof Games;
   userID?: keyof Users;
-  board?: Array<number>;
+  board?: number[];
   currentPlayers?: Participants[];
   scores?: number;
   tilesRemaining?: number;
-};
+}

@@ -1,7 +1,7 @@
 import type { Users } from "./users.ts";
 
-export type Scores = {
+export interface Scores {
   userID: keyof Users;
   value: number;
   recorded_at: Date;
-};
+}

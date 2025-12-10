@@ -1,4 +1,4 @@
-export type Users = {
+export interface Users {
   id?: string;
   email?: string;
   password_hash?: string;
@@ -6,4 +6,4 @@ export type Users = {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
-};
+}

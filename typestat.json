@@ -1,0 +1,12 @@
+{
+    "fixes": {
+        "incompleteTypes": true,
+		    "missingProperties": true,
+						
+		"package": {
+				"directory": "../term-project-team-a-the-people-who-do-things",
+				"file": "./package.json"
+    },
+    "projectPath": "tsconfig.json"
+    }
+}

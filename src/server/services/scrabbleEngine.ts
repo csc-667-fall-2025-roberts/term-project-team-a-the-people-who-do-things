@@ -1,5 +1,6 @@
 // noinspection DuplicatedCode
 
+import { isValidWord } from "./dictionary.js";
 import {
   BOARD_SIZE,
   LETTER_DISTRIBUTION,
@@ -7,16 +8,14 @@ import {
   PREMIUM_SQUARES,
 } from "./scrabbleConstants.js";
 
-import { isValidWord } from "./dictionary.js";
-
 export class ScrabbleGame {
   gameId: string;
   board: (string | null)[][];
   tileBag: string[];
   players: string[];
   currentPlayerIndex: number;
-  playerHands: { [playerId: string]: string[] };
-  scores: { [playerId: string]: number };
+  playerHands: Record<string, string[]>;
+  scores: Record<string, number>;
   consecutivePasses: number;
 
   constructor(gameId: string, players: string[], board: (string | null)[][] | null = null) {
@@ -44,7 +43,7 @@ export class ScrabbleGame {
   initializeTileBag(): string[] {
     const tiles: string[] = [];
     for (const [letter, count] of Object.entries(LETTER_DISTRIBUTION)) {
-      const numCount = count as number;
+      const numCount = count;
       for (let i = 0; i < numCount; i++) {
         tiles.push(letter);
       }
@@ -72,7 +71,7 @@ export class ScrabbleGame {
 
   getPremiumSquareType(row: number, col: number): string | null {
     for (const [type, positions] of Object.entries(PREMIUM_SQUARES)) {
-      const posArray = positions as [number, number][];
+      const posArray = positions;
       if (posArray.some(([r, c]: [number, number]) => r === row && c === col)) {
         return type;
       }
@@ -82,7 +81,7 @@ export class ScrabbleGame {
 
   validateMove(
     playerId: string,
-    tiles: Array<{ letter: string; row: number; col: number }>,
+    tiles: { letter: string; row: number; col: number }[],
   ): { valid: boolean; error?: string } {
     // tiles: [{ letter, row, col }]
 
@@ -156,7 +155,7 @@ export class ScrabbleGame {
     return { valid: true };
   }
 
-  calculateScore(tiles: Array<{ letter: string; row: number; col: number }>): number {
+  calculateScore(tiles: { letter: string; row: number; col: number }[]): number {
     let totalScore = 0;
 
     // 1. Get all words formed (Main + Cross words) with their cell details
@@ -167,7 +166,7 @@ export class ScrabbleGame {
       let wordMultiplier = 1;
 
       for (const cell of wordObj.cells) {
-        let letterScore = LETTER_VALUES[cell.letter as keyof typeof LETTER_VALUES] || 0;
+        let letterScore = LETTER_VALUES[cell.letter] || 0;
 
         // ONLY apply premiums if the tile is NEW (part of the current move)
         if (cell.isNew) {
@@ -194,14 +193,14 @@ export class ScrabbleGame {
     return totalScore;
   }
 
-  getFormedWords(tiles: Array<{ letter: string; row: number; col: number }>): Array<{
+  getFormedWords(tiles: { letter: string; row: number; col: number }[]): {
     word: string;
-    cells: Array<{ letter: string; row: number; col: number; isNew: boolean }>;
-  }> {
-    const formedWords: Array<{
+    cells: { letter: string; row: number; col: number; isNew: boolean }[];
+  }[] {
+    const formedWords: {
       word: string;
-      cells: Array<{ letter: string; row: number; col: number; isNew: boolean }>;
-    }> = [];
+      cells: { letter: string; row: number; col: number; isNew: boolean }[];
+    }[] = [];
 
     // 1. Identify Direction
     const rows = [...new Set(tiles.map((t) => t.row))];
@@ -227,7 +226,7 @@ export class ScrabbleGame {
 
       // Capture Word AND Cells
       let word = "";
-      const cells = [];
+      const cells: { letter: string; row: any; col: number; isNew: boolean }[] = [];
       for (let c = startCol; c <= endCol; c++) {
         const boardLetter = this.board[row][c];
         const tile = tiles.find((t) => t.row === row && t.col === c);
@@ -258,7 +257,7 @@ export class ScrabbleGame {
 
       // Capture Word AND Cells
       let word = "";
-      const cells = [];
+      const cells: { letter: string; row: number; col: any; isNew: boolean }[] = [];
       for (let r = startRow; r <= endRow; r++) {
         const boardLetter = this.board[r][col];
         const tile = tiles.find((t) => t.row === r && t.col === col);
@@ -314,7 +313,7 @@ export class ScrabbleGame {
 
       if (hasNeighbor && start !== -1 && end !== -1) {
         let crossWord = "";
-        const crossCells = [];
+        const crossCells: { letter: string; row: number; col: number; isNew: boolean }[] = [];
 
         if (isPerpendicularVertical) {
           for (let r = start; r <= end; r++) {
@@ -342,7 +341,7 @@ export class ScrabbleGame {
 
   applyMove(
     playerId: string,
-    tiles: Array<{ letter: string; row: number; col: number }>,
+    tiles: { letter: string; row: number; col: number }[],
     score: number,
   ): { newTiles: string[]; currentPlayer: string } {
     // place tiles on board
@@ -440,7 +439,7 @@ export class ScrabbleGame {
   getGameState(): {
     board: (string | null)[][];
     currentPlayer: string;
-    scores: { [playerId: string]: number };
+    scores: Record<string, number>;
     tilesRemaining: number;
   } {
     return {

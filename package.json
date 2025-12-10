@@ -26,8 +26,9 @@
 		"format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,ejs,json,css}\"",
 		"format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,ejs,json,css}\"",
 		"check": "npm run typecheck && npm run lint && npm run format:check",
-		"lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --format=stylish --max-warnings=0",
-		"lint:fix": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --fix"
+		"lint": "eslint . --max-warnings=0",
+		"lint:fix": "eslint . --fix",
+		"fix": "npm run lint:fix && npm run format"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.1",
@@ -46,7 +47,13 @@
 		"cpy-cli": "^6.0.0",
 		"cross-env": "^10.1.0",
 		"eslint": "^9.39.1",
+		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-ejs": "^0.0.2",
+		"eslint-plugin-interface-to-type": "^1.0.2",
+		"eslint-plugin-no-comments": "^1.1.10",
+		"eslint-plugin-simple-import-sort": "^12.1.1",
+		"eslint-plugin-unicorn": "^62.0.0",
+		"eslint-plugin-unused-imports": "^4.3.0",
 		"express-session": "^1.18.2",
 		"globals": "^16.5.0",
 		"jiti": "^2.6.1",
@@ -61,6 +68,7 @@
 		"tsx": "^4.20.6",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.49.0",
+		"typestat": "^0.8.4",
 		"vitest": "^4.0.15"
 	},
 	"dependencies": {

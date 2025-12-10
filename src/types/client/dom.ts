@@ -27,7 +27,7 @@ export interface GameState {
   hand: Tile[];
   currentPlayer: string;
   tilesRemaining: number;
-  scores: { [userId: string]: number };
+  scores: Record<string, number>;
   gameOver?: boolean;
   winner?: string;
 }
