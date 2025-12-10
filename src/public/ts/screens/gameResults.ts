@@ -6,8 +6,8 @@ const gameId = window.GAME_ID;
 interface GameResultData {
   game_participants: GameParticipant[];
   scores: ScoreEntry[];
-  started_at?: string | string | number | Date | VarDate;
-  ended_at?: string | string | number | Date | VarDate;
+  started_at?: string | string | number | Date;
+  ended_at?: string | string | number | Date;
   max_players?: number;
 }
 

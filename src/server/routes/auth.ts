@@ -119,7 +119,6 @@ router.get("/me", async (req: express.Request, res: express.Response) => {
 });
 
 export default router;
-const router = express.Router();
 
 // Helper interface for Postgres errors
 interface DbError extends Error {
@@ -204,7 +203,7 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
   }
 });
 
-router.post("/logout", (req: express.Request, res: express_1.Response) => {
+router.post("/logout", (req: express.Request, res: express.Response) => {
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ error: "Failed to logout" });
@@ -213,7 +212,7 @@ router.post("/logout", (req: express.Request, res: express_1.Response) => {
   });
 });
 
-router.get("/me", async (req: express_1.Request, res: express_1.Response) => {
+router.get("/me", async (req: express.Request, res: express.Response) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Not authenticated" });
   }

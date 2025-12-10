@@ -7,7 +7,7 @@ export class SocketManager {
     off(event: string, handler?: (data: unknown) => void): void;
     removeAllListeners(event?: string): void;
   };
-  listeners: Map<string, void[]>;
+  listeners: Map<string, ((data: unknown) => void)[]>;
 
   constructor() {
     if (typeof io === "undefined") {
@@ -38,27 +38,27 @@ export class SocketManager {
     }
   }
 
-  off(event: string, callback: Function): void {
-    this.socket.off(event, callback);
-
-    if (this.listeners.has(event)) {
-      const callbacks = this.listeners.get(event)!;
-      const index = callbacks.indexOf(callback);
-      if (index > -1) {
-        callbacks.splice(index, 1);
+  off(event: string, callback: (data: unknown) => void): void {
+      this.socket.off(event, callback);
+      if (this.listeners.has(event)) {
+          const callbacks = this.listeners.get(event)!;
+          const index = callbacks.indexOf(callback);
+          if (index > -1) {
+              callbacks.splice(index, 1);
+          }
       }
-    }
   }
 
   removeAllListeners(event: string): void {
-    if (this.listeners.has(event)) {
-      const callbacks = this.listeners.get(event)!;
-      callbacks.forEach((callback: Function) => {
-        this.socket.off(event, callback);
-      });
-      this.listeners.delete(event);
-    }
+      if (this.listeners.has(event)) {
+          const callbacks = this.listeners.get(event)!;
+          callbacks.forEach((callback) => {
+              this.socket.off(event, callback);
+          });
+          this.listeners.delete(event);
+      }
   }
+
 }
 
 // Export a singleton instance
