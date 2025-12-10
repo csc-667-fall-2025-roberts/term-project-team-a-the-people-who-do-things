@@ -39,26 +39,25 @@ export class SocketManager {
   }
 
   off(event: string, callback: (data: unknown) => void): void {
-      this.socket.off(event, callback);
-      if (this.listeners.has(event)) {
-          const callbacks = this.listeners.get(event)!;
-          const index = callbacks.indexOf(callback);
-          if (index > -1) {
-              callbacks.splice(index, 1);
-          }
+    this.socket.off(event, callback);
+    if (this.listeners.has(event)) {
+      const callbacks = this.listeners.get(event)!;
+      const index = callbacks.indexOf(callback);
+      if (index > -1) {
+        callbacks.splice(index, 1);
       }
+    }
   }
 
   removeAllListeners(event: string): void {
-      if (this.listeners.has(event)) {
-          const callbacks = this.listeners.get(event)!;
-          callbacks.forEach((callback) => {
-              this.socket.off(event, callback);
-          });
-          this.listeners.delete(event);
-      }
+    if (this.listeners.has(event)) {
+      const callbacks = this.listeners.get(event)!;
+      callbacks.forEach((callback) => {
+        this.socket.off(event, callback);
+      });
+      this.listeners.delete(event);
+    }
   }
-
 }
 
 // Export a singleton instance
