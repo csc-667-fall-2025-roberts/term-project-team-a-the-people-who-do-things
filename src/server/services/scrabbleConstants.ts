@@ -1,6 +1,6 @@
 export const BOARD_SIZE = 15;
 
-export const LETTER_VALUES: { [key: string]: number } = {
+export const LETTER_VALUES: Record<string, number> = {
   A: 1,
   B: 3,
   C: 3,
@@ -29,7 +29,7 @@ export const LETTER_VALUES: { [key: string]: number } = {
   Z: 10,
 };
 
-export const LETTER_DISTRIBUTION: { [key: string]: number } = {
+export const LETTER_DISTRIBUTION: Record<string, number> = {
   A: 9,
   B: 2,
   C: 2,
@@ -58,7 +58,7 @@ export const LETTER_DISTRIBUTION: { [key: string]: number } = {
   Z: 1,
 };
 
-export const PREMIUM_SQUARES: { [key: string]: [number, number][] } = {
+export const PREMIUM_SQUARES: Record<string, [number, number][]> = {
   TW: [
     [0, 0],
     [0, 7],

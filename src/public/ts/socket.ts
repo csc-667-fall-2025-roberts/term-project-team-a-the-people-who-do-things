@@ -1,8 +1,13 @@
 import type { SocketEvents } from "../../types/client/socket-events.js";
 
 export class SocketManager {
-  socket: unknown;
-  listeners: Map<string, void[]>;
+  socket: {
+    emit(event: string, ...args: unknown[]): void;
+    on(event: string, handler: (data: unknown) => void): void;
+    off(event: string, handler?: (data: unknown) => void): void;
+    removeAllListeners(event?: string): void;
+  };
+  listeners: Map<string, ((data: unknown) => void)[]>;
 
   constructor() {
     if (typeof io === "undefined") {
@@ -33,9 +38,8 @@ export class SocketManager {
     }
   }
 
-  off(event: string, callback: Function): void {
+  off(event: string, callback: (data: unknown) => void): void {
     this.socket.off(event, callback);
-
     if (this.listeners.has(event)) {
       const callbacks = this.listeners.get(event)!;
       const index = callbacks.indexOf(callback);
@@ -48,7 +52,7 @@ export class SocketManager {
   removeAllListeners(event: string): void {
     if (this.listeners.has(event)) {
       const callbacks = this.listeners.get(event)!;
-      callbacks.forEach((callback: Function) => {
+      callbacks.forEach((callback) => {
         this.socket.off(event, callback);
       });
       this.listeners.delete(event);

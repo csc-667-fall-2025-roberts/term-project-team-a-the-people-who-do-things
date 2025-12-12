@@ -25,10 +25,10 @@ export interface GameParticipant {
   display_name: string;
 }
 
-export type ScoreEntry = {
+export interface ScoreEntry {
   user_id: string;
   value: number;
-};
+}
 
 // Score interface
 export interface Scores {
@@ -66,7 +66,7 @@ export interface GameStateResponse {
   hand: Tile[];
   currentPlayer: string;
   tilesRemaining: number;
-  scores: { [userId: string]: number };
+  scores: Record<string, number>;
   gameOver?: boolean;
   winner?: string;
 }
@@ -100,7 +100,7 @@ export interface TurnPassedResponse {
 
 export interface GameOverResponse {
   winner: string;
-  finalScores: { [userId: string]: number };
+  finalScores: Record<string, number>;
   gameId: string;
   isOver: boolean;
 }
@@ -124,6 +124,20 @@ export interface GameSummaryResponse {
   scores: ScoreEntry[];
 }
 
+export interface PlayerJoinedLobbyData {
+  userId: string;
+  isHost: boolean;
+}
+
+export interface PlayerLeftLobbyData {
+  userId: string;
+  isHost: boolean;
+}
+
+export interface GameStartedData {
+  gameId: string;
+}
+
 // Socket event map
 export interface SocketEvents {
   // Client to Server
@@ -144,6 +158,9 @@ export interface SocketEvents {
   "new-message": NewMessageResponse;
   error: ErrorResponse;
   "game-summary": GameSummaryResponse;
+  "player-joined-lobby": PlayerJoinedLobbyData;
+  "player-left-lobby": PlayerLeftLobbyData;
+  "game-started": GameStartedData;
 }
 
 export {};

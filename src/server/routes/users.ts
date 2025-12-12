@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import express from "express";
+
 import pool from "../config/database.js";
 import { requireAuth } from "../middleware/auth.js";
 

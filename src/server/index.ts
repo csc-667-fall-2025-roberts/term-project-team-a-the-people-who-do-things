@@ -1,10 +1,12 @@
+import { createServer } from "node:http";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import pgSession from "connect-pg-simple";
 import express, { Request, RequestHandler, Response } from "express";
 import session from "express-session";
-import { createServer } from "http";
-import path from "path";
 import { Server, Socket } from "socket.io";
-import { fileURLToPath } from "url";
+
 import pool from "./config/database.js";
 import { attachUser, requireAuth } from "./middleware/auth.js";
 import authRoutes from "./routes/auth.js";
@@ -276,7 +278,7 @@ io.on("connection", (socket: Socket) => {
     }
   });
 
-  socket.on("make-move", async ({ gameId, tiles, words, scores }) => {
+  socket.on("make-move", async ({ gameId, tiles, words, _scores }) => {
     const game = gameManager.getGame(gameId);
     if (!game) {
       return socket.emit("error", { message: "Game not found" });
@@ -312,10 +314,10 @@ io.on("connection", (socket: Socket) => {
       );
 
       await pool.query(
-        `INSERT INTO scores (game_id, user_id, value)
+        `INSERT INTO _scores (game_id, user_id, value)
          VALUES ($1, $2, $3)
          ON CONFLICT (game_id, user_id) DO UPDATE
-         SET value = scores.value + $3`,
+         SET value = _scores.value + $3`,
         [gameId, userId, calculatedScore],
       );
       // Save tiles to board in DB
@@ -390,7 +392,7 @@ io.on("connection", (socket: Socket) => {
       ]);
 
       io.to(gameId).emit("game-over", {
-        scores: game.scores,
+        _scores: game.scores,
       });
     } else {
       await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [

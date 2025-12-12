@@ -1,7 +1,7 @@
 import { Users } from "./users.js";
 
-export type UserSettings = {
+export interface UserSettings {
   userID?: keyof Users;
   preferences?: JSON;
   updated_at?: Date;
-};
+}

@@ -1,6 +1,7 @@
 import express from "express";
 import { Server } from "socket.io";
 import { z } from "zod";
+
 import pool from "../config/database.js";
 import { requireAuth } from "../middleware/auth.js";
 import { ScrabbleGame } from "../services/scrabbleEngine.js";

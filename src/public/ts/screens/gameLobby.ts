@@ -1,5 +1,10 @@
 console.log("gameLobby.ts script loaded!");
 
+import {
+  GameStartedData,
+  PlayerJoinedLobbyData,
+  PlayerLeftLobbyData,
+} from "../../../types/client/socket-events.js";
 import { api } from "../api.js";
 import { socket } from "../socket.js";
 
@@ -274,7 +279,7 @@ function initLobbyChat() {
     chatInput.value = "";
     socket.emit("send-message", { gameId, message });
   });
-
+  //TODO
   socket.on("new-message", (data: unknown) => {
     const message = data as LobbyChatMessage & { game_id?: string | null };
     if (message && (message.game_id === gameId || String(message.game_id) === String(gameId))) {
@@ -301,18 +306,13 @@ startGameBtn?.addEventListener("click", async () => {
   }
 });
 
-socket.on(
-  "player-joined-lobby",
-  (data: { userId: string; displayName: string; isHost: boolean }) => {
-    void loadGameLobbyData();
-  },
-);
-
-socket.on("player-left-lobby", (data: { userId: string }) => {
+socket.on("player-joined-lobby", (data: PlayerJoinedLobbyData) => {
   void loadGameLobbyData();
 });
-
-socket.on("game-started", (data: { gameId: string }) => {
+socket.on("player-left-lobby", (data: PlayerLeftLobbyData) => {
+  void loadGameLobbyData();
+});
+socket.on("game-started", (data: GameStartedData) => {
   if (data.gameId === gameId) {
     window.location.href = `/game/${gameId}`;
   }

@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+
 import pool from "../config/database.js";
 
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
