@@ -1,5 +1,4 @@
-// Socket.IO global
-export declare const io: any;
+export declare const io: any; --no ignoe // Socket.IO global 
 
 // Window object extensions
 declare global {

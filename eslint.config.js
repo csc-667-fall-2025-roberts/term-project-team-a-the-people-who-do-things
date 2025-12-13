@@ -23,7 +23,7 @@ import jest from "eslint-plugin-jest";
 export default tseslint.config(
   // 1) Ignores
   {
-    ignores: ["**/node_modules/**", "**/dist/**", "**/.git/**"],
+    ignores: ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/types/**", "**/*.config.{js,cjs,mjs}", "eslint.config.js", "vite.config.ts", "jest.config.js", "postcss.config.js", ],
   },
 
   // 2) Base
@@ -157,7 +157,7 @@ export default tseslint.config(
 
   // 6) Disable type-checked linting for config files
   {
-    files: ["**/*.config.{js,cjs,mjs}", "eslint.config.js", "vite.config.ts"],
+    files: ["**/*.config.{js,cjs,mjs}", "eslint.config.js", "vite.config.ts", "jest.config.js", "postcss.config.js"],
     ...tseslint.configs.disableTypeChecked,
   },
 

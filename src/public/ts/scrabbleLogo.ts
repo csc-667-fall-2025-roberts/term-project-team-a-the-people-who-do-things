@@ -1,8 +1,8 @@
 function initScrabbleLogo() {
   const logoWrapper = document.getElementById("scrabble-logo-wrapper");
   const container = document.getElementById("scrabble-logo");
-  const logoLink = document.getElementById("scrabble-logo-link");
-  //TODO use logoLink to navigate on click Unused constant logoLink
+  const _logoLink = document.getElementById("scrabble-logo-link");
+  //TODO use _logoLink to navigate on click Unused constant logoLink
   if (!logoWrapper || !container) {
     console.error("Scrabble logo elements not found");
     return;
