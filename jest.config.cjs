@@ -1,24 +1,28 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} **/
 module.exports = {
-  // 1. Use the ESM preset to ensure basic ESM support
+  // 1. Use the ESM preset
   preset: "ts-jest/presets/default-esm",
   testEnvironment: "node",
   extensionsToTreatAsEsm: [".ts"],
+  
+  // 2. Fix the .js extension imports
+  moduleNameMapper: {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+  },
+  
+  // 3. FORCE the compiler to use modern modules
   transform: {
     "^.+\\.tsx?$": [
       "ts-jest",
       {
-        // 2. Force ts-jest to use ESM mode
         useESM: true,
-        // 3. Explicitly tell TypeScript to output modern code
+        // This is the critical part that fixes TS1343
         tsconfig: {
-          module: "esnext",
-          target: "es2020"
+          module: "es2020", 
+          target: "es2020",
+          esModuleInterop: true
         }
       },
     ],
-  },
-  moduleNameMapper: {
-    "^(\\.{1,2}/.*)\\.js$": "$1",
   },
 };
