@@ -120,11 +120,6 @@ router.get("/me", async (req: express.Request, res: express.Response) => {
 
 export default router;
 
-// Helper interface for Postgres errors
-type DbError = {
-  code?: string;
-} & Error;
-
 router.post("/signup", async (req: express.Request, res: express.Response) => {
   const { email, password, displayName } = req.body;
 

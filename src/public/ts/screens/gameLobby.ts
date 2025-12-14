@@ -145,10 +145,6 @@ async function loadGameLobbyData() {
       isHost,
     });
 
-    // DEBUG: Refetch elements safely. (Fix "0/0" bug if elements were null on load)
-    const safeGameIdDisplay = document.getElementById("game-id-display");
-    const safeMaxPlayersDisplay = document.getElementById("max-players-display");
-
     if (gameIdDisplay) gameIdDisplay.textContent = gameId;
     if (maxPlayersDisplay) maxPlayersDisplay.textContent = game.max_players.toString();
 
