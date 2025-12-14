@@ -1,12 +1,20 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} **/
 module.exports = {
+  // 1. Use the ESM preset to ensure basic ESM support
+  preset: "ts-jest/presets/default-esm",
   testEnvironment: "node",
-  extensionsToTreatAsEsm: [".ts"], // 1. Treat .ts files as ESM
+  extensionsToTreatAsEsm: [".ts"],
   transform: {
-    "^.+.tsx?$": [
+    "^.+\\.tsx?$": [
       "ts-jest",
       {
-        useESM: true, // 2. Tell ts-jest to compile using ESM settings
+        // 2. Force ts-jest to use ESM mode
+        useESM: true,
+        // 3. Explicitly tell TypeScript to output modern code
+        tsconfig: {
+          module: "esnext",
+          target: "es2020"
+        }
       },
     ],
   },
