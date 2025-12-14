@@ -80,7 +80,11 @@ function renderStats(game: GameResultData) {
 document.getElementById("rematch-btn")?.addEventListener("click", async () => {
   try {
     const currentGame = (await api.games.get(gameId)) as GameResultData;
-    const { game: newGame } = (await api.games.create(currentGame.max_players || 2, {})) as {
+    const { game: newGame } = (await api.games.create({
+      maxPlayers: currentGame.max_players || 2,
+      settings: {},
+      title: "Rematch",
+    })) as {
       game: { id: string };
     };
     window.location.href = `/game/${newGame.id}`;

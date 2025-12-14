@@ -1,7 +1,7 @@
 import "express-session";
 
 declare module "express-session" {
-  type SessionData = {
+  interface SessionData {
     userId?: string;
-  };
+  }
 }

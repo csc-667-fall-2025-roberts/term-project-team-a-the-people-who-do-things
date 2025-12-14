@@ -12,14 +12,14 @@ export default function gamesRouter(io: Server) {
   router.get("/lobby", requireAuth, async (_req, res) => {
     try {
       const result = await pool.query(
-        `SELECT g.id, g.game_type, g.status, g.max_players, g.created_at,
+        `SELECT g.id, g.title, g.game_type, g.status, g.max_players, g.created_at,
               u.display_name as creator_name,
               COUNT(gp.user_id) as current_players
        FROM games g
        JOIN users u ON g.created_by = u.id
        LEFT JOIN game_participants gp ON g.id = gp.game_id
        WHERE g.status = 'waiting'
-       GROUP BY g.id, g.game_type, g.status, g.max_players, g.created_at, u.display_name
+       GROUP BY g.id, g.title, g.game_type, g.status, g.max_players, g.created_at, u.display_name
        ORDER BY g.created_at DESC`,
         [],
       );
@@ -33,6 +33,7 @@ export default function gamesRouter(io: Server) {
 
   // Create new game
   const createGameSchema = z.object({
+    title: z.string().min(1).max(50).optional(),
     maxPlayers: z.number().int().min(2).max(4).default(2),
     settings: z.record(z.string(), z.unknown()).optional().default({}),
   });
@@ -42,7 +43,7 @@ export default function gamesRouter(io: Server) {
     if (!validation.success) {
       return res.status(400).json({ error: validation.error.issues });
     }
-    const { maxPlayers, settings } = validation.data;
+    const { title, maxPlayers, settings } = validation.data;
 
     const client = await pool.connect();
 
@@ -50,10 +51,10 @@ export default function gamesRouter(io: Server) {
       await client.query("BEGIN");
 
       const gameResult = await client.query(
-        `INSERT INTO games (game_type, status, max_players, settings_json, created_by)
-       VALUES ('scrabble', 'waiting', $1, $2, $3)
-       RETURNING id, game_type, status, max_players, created_at`,
-        [maxPlayers, JSON.stringify(settings), req.session.userId],
+        `INSERT INTO games (game_type, status, max_players, settings_json, created_by, title)
+       VALUES ('scrabble', 'waiting', $1, $2, $3, $4)
+       RETURNING id, game_type, status, max_players, created_at, title`,
+        [maxPlayers, JSON.stringify(settings), req.session.userId, title || "Scrabble Game"],
       );
 
       const game = gameResult.rows[0];

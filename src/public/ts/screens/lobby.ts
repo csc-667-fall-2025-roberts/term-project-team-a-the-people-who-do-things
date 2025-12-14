@@ -3,6 +3,7 @@ import { socket } from "../socket.js";
 
 type GameSummary = {
   id: string;
+  title: string;
   creator_name: string;
   current_players: number;
   max_players: number;
@@ -192,7 +193,7 @@ function renderGames(games: GameSummary[]) {
     <div class="flex flex-col justify-between p-5 bg-white border border-slate-200 rounded-xl hover:border-blue-400 hover:shadow-md transition-all gap-4 h-full">
       
       <div>
-        <h3 class="font-bold text-slate-800 text-lg truncate">${escapeHtml(game.creator_name)}'s Game</h3>
+        <h3 class="font-bold text-slate-800 text-lg truncate">${escapeHtml(game.title || game.creator_name + "'s Game")}</h3>
         <div class="flex items-center gap-2 mt-1">
             <span class="w-2 h-2 rounded-full ${game.current_players < game.max_players ? "bg-green-500" : "bg-red-500"}"></span>
             <span class="text-sm text-slate-500 font-medium">${game.current_players} / ${game.max_players} Players</span>
@@ -234,19 +235,30 @@ gamesContainer?.addEventListener("click", async (event) => {
 createGameForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
+  // 1. Get all input elements
   const maxPlayersInput = document.getElementById("max-players") as HTMLSelectElement | null;
   const timeLimitInput = document.getElementById("time-limit") as HTMLInputElement | null;
+  const titleInput = document.getElementById("game-title") as HTMLInputElement | null;
+
   if (!maxPlayersInput || !timeLimitInput) return;
 
+  // 2. Read values
   const maxPlayers = parseInt(maxPlayersInput.value, 10);
   const timeLimit = parseInt(timeLimitInput.value, 10);
+  const title = titleInput?.value.trim() || "";
 
   // Disable button to prevent double-clicks
   const submitBtn = createGameForm.querySelector('button[type="submit"]') as HTMLButtonElement;
   if (submitBtn) submitBtn.disabled = true;
 
   try {
-    const { game } = (await api.games.create(maxPlayers, { timeLimit })) as {
+    // 3. Send to Server (Refactored to pass a single object)
+    //
+    const { game } = (await api.games.create({
+      title,
+      maxPlayers,
+      settings: { timeLimit },
+    })) as {
       game: { id: string };
     };
 
@@ -254,6 +266,7 @@ createGameForm?.addEventListener("submit", async (event) => {
   } catch (error) {
     console.error("Failed to create game:", error);
     alert(error instanceof Error ? error.message : "Failed to create game");
+    if (submitBtn) submitBtn.disabled = false;
   }
 });
 
