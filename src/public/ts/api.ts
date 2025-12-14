@@ -52,7 +52,7 @@ export const api = {
       fetch("/api/games/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data), 
+        body: JSON.stringify(data),
       }).then((res) => {
         if (!res.ok) throw new Error("Failed to create game");
         return res.json();

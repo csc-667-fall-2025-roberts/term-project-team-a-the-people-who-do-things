@@ -99,7 +99,7 @@ async function loadGameLobbyData() {
     const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
 
     // DEBUG Validation Check(fixes potential crash if not logged in)
-    if(!user){
+    if (!user) {
       console.error("User not logged in!");
       window.location.href = "/login";
     }
@@ -168,12 +168,10 @@ async function loadGameLobbyData() {
 }
 
 function renderPlayers(participants: GameParticipant[], maxPlayers: number) {
-
   // Re fetch element(Fixes the silent falure)
   const safePlayersList = document.getElementById("players-list");
   const safePlayerCountDisplay = document.getElementById("player-count");
   const safeMaxPlayersDisplay = document.getElementById("max-players-display");
-
 
   console.log("renderPlayers called with:", {
     participants,
@@ -181,22 +179,22 @@ function renderPlayers(participants: GameParticipant[], maxPlayers: number) {
     playersListFound: !!safePlayersList,
   });
 
-  if (!safePlayersList) { 
-    console.error("playersList element NOT found in DOM!"); 
+  if (!safePlayersList) {
+    console.error("playersList element NOT found in DOM!");
     return;
   }
 
-  if (safePlayerCountDisplay) { 
+  if (safePlayerCountDisplay) {
     safePlayerCountDisplay.textContent = participants.length.toString();
   }
 
-  if (safeMaxPlayersDisplay) { 
+  if (safeMaxPlayersDisplay) {
     safeMaxPlayersDisplay.textContent = maxPlayers.toString();
   }
 
   if (participants.length === 0) {
     // console.log("No participants, showing waiting message");
-    safePlayersList.innerHTML = `<p class="text-gray-500 text-center py-4">Waiting for players...</p>`; 
+    safePlayersList.innerHTML = `<p class="text-gray-500 text-center py-4">Waiting for players...</p>`;
     return;
   }
 

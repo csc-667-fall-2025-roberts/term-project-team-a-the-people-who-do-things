@@ -54,12 +54,7 @@ export default function gamesRouter(io: Server) {
         `INSERT INTO games (game_type, status, max_players, settings_json, created_by, title)
        VALUES ('scrabble', 'waiting', $1, $2, $3, $4)
        RETURNING id, game_type, status, max_players, created_at, title`,
-        [
-          maxPlayers, 
-          JSON.stringify(settings), 
-          req.session.userId, 
-          title || "Scrabble Game" 
-        ],
+        [maxPlayers, JSON.stringify(settings), req.session.userId, title || "Scrabble Game"],
       );
 
       const game = gameResult.rows[0];

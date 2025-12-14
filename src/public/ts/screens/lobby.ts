@@ -238,14 +238,14 @@ createGameForm?.addEventListener("submit", async (event) => {
   // 1. Get all input elements
   const maxPlayersInput = document.getElementById("max-players") as HTMLSelectElement | null;
   const timeLimitInput = document.getElementById("time-limit") as HTMLInputElement | null;
-  const titleInput = document.getElementById("game-title") as HTMLInputElement | null; 
+  const titleInput = document.getElementById("game-title") as HTMLInputElement | null;
 
   if (!maxPlayersInput || !timeLimitInput) return;
 
   // 2. Read values
   const maxPlayers = parseInt(maxPlayersInput.value, 10);
   const timeLimit = parseInt(timeLimitInput.value, 10);
-  const title = titleInput?.value.trim() || ""; 
+  const title = titleInput?.value.trim() || "";
 
   // Disable button to prevent double-clicks
   const submitBtn = createGameForm.querySelector('button[type="submit"]') as HTMLButtonElement;
@@ -253,11 +253,11 @@ createGameForm?.addEventListener("submit", async (event) => {
 
   try {
     // 3. Send to Server (Refactored to pass a single object)
-    // 
+    //
     const { game } = (await api.games.create({
       title,
       maxPlayers,
-      settings: { timeLimit }
+      settings: { timeLimit },
     })) as {
       game: { id: string };
     };
