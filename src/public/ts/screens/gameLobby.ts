@@ -22,7 +22,7 @@ type LobbyChatMessage = {
   game_id: string | null;
 };
 
-window = globalThis.Window;
+// window = globalThis.Window;
 
 const gameId = window.GAME_ID;
 console.log("gameLobby.ts: window.GAME_ID =", window.GAME_ID);
@@ -94,11 +94,17 @@ function addChatMessage(message: LobbyChatMessage) {
 
 async function loadGameLobbyData() {
   try {
-    // console.log("Loading game lobby data for gameId:", gameId);
+    console.log("Loading game lobby data for gameId:", gameId);
 
     const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
+
+    // DEBUG Validation Check(fixes potential crash if not logged in)
+    if (!user) {
+      console.error("User not logged in!");
+      window.location.href = "/login";
+    }
     currentUser = user;
-    // console.log("Current user:", currentUser);
+    console.log("Current user:", currentUser);
 
     const response = (await api.games.get(gameId)) as {
       game: { max_players: number; created_by: string };
@@ -110,9 +116,9 @@ async function loadGameLobbyData() {
       }[];
     };
 
-    // console.log("API response:", response);
-    // console.log("Game:", response.game);
-    // console.log("Participants raw:", response.game_participants);
+    console.log("API response:", response);
+    console.log("Game:", response.game);
+    console.log("Participants raw:", response.game_participants);
 
     const { game, game_participants } = response;
 
@@ -158,30 +164,33 @@ async function loadGameLobbyData() {
 }
 
 function renderPlayers(participants: GameParticipant[], maxPlayers: number) {
+  // Re fetch element(Fixes the silent falure)
+  const safePlayersList = document.getElementById("players-list");
+  const safePlayerCountDisplay = document.getElementById("player-count");
+  const safeMaxPlayersDisplay = document.getElementById("max-players-display");
+
   console.log("renderPlayers called with:", {
     participants,
     maxPlayers,
-    playersList: !!playersList,
+    playersListFound: !!safePlayersList,
   });
 
-  if (!playersList) {
-    // console.error("playersList element not found!");
+  if (!safePlayersList) {
+    console.error("playersList element NOT found in DOM!");
     return;
   }
 
-  if (playerCountDisplay) {
-    playerCountDisplay.textContent = participants.length.toString();
-    // console.log("Set player count to:", participants.length);
+  if (safePlayerCountDisplay) {
+    safePlayerCountDisplay.textContent = participants.length.toString();
   }
 
-  if (maxPlayersDisplay) {
-    maxPlayersDisplay.textContent = maxPlayers.toString();
-    // console.log("Set max players to:", maxPlayers);
+  if (safeMaxPlayersDisplay) {
+    safeMaxPlayersDisplay.textContent = maxPlayers.toString();
   }
 
   if (participants.length === 0) {
     // console.log("No participants, showing waiting message");
-    playersList.innerHTML = `<p class="text-gray-500 text-center py-4">Waiting for players...</p>`;
+    safePlayersList.innerHTML = `<p class="text-gray-500 text-center py-4">Waiting for players...</p>`;
     return;
   }
 
@@ -212,7 +221,7 @@ function renderPlayers(participants: GameParticipant[], maxPlayers: number) {
       `,
     )
     .join("");
-  playersList.innerHTML = html;
+  safePlayersList.innerHTML = html;
 }
 
 function updateStartButtonVisibility() {

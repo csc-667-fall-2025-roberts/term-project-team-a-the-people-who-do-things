@@ -2,9 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const WORDS_FILE_PATH = path.join(__dirname, "words.txt");
+// Use single underscores to avoid conflict with global __filename in tests
+const _filename = fileURLToPath(import.meta.url);
+const _dirname = path.dirname(_filename);
+const WORDS_FILE_PATH = path.join(_dirname, "words.txt");
 
 console.log("Loading dictionary...");
 let VALID_WORDS: Set<string>;
