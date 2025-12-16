@@ -11,7 +11,7 @@
  */
 
 import type { Request as ExRequest } from "express-serve-static-core";
-import type { SessionData as ExpressSessionData, Session } from "express-session";
+import type { Session,SessionData as ExpressSessionData } from "express-session";
 
 /**
  * Minimal user snapshot shape used in session / request attachments.
