@@ -1,17 +1,18 @@
 import bcrypt from "bcrypt";
 import express from "express";
 
+import type { AppRequest } from "../../types/app.d";
 import pool from "../config/database.js";
 
 const router = express.Router();
 
-// Helper interface for Postgres errors
 type DbError = {
   code?: string;
 } & Error;
 
 router.post("/signup", async (req: express.Request, res: express.Response) => {
   const { email, password, displayName } = req.body;
+  const r = req as AppRequest;
 
   console.log("Signup attempt:", { email, displayName });
 
@@ -21,7 +22,7 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    if (password.length < 6) {
+    if (typeof password !== "string" || password.length < 6) {
       console.log("Password too short");
       return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
@@ -36,24 +37,29 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
       [email, passwordHash, displayName],
     );
 
-    console.log("User created:", result.rows[0]);
     const user = result.rows[0];
-    req.session.userId = user.id;
 
-    res.json({ success: true, user });
+    if (!r.session) {
+      console.error("Session is not initialized on signup");
+      return res.status(500).json({ error: "Session not available" });
+    }
+
+    r.session.userId = user.id;
+
+    return res.json({ success: true, user });
   } catch (error) {
-    // FIX: Safely cast error to our interface instead of 'any'
     const dbError = error as DbError;
-    if (dbError.code === "23505") {
+    if (dbError && dbError.code === "23505") {
       return res.status(400).json({ error: "Email already exists" });
     }
     console.error("Signup error:", error);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 });
 
 router.post("/login", async (req: express.Request, res: express.Response) => {
   const { email, password } = req.body;
+  const r = req as AppRequest;
 
   try {
     const result = await pool.query(
@@ -72,9 +78,14 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    req.session.userId = user.id;
+    if (!r.session) {
+      console.error("Session is not initialized on login");
+      return res.status(500).json({ error: "Session not available" });
+    }
 
-    res.json({
+    r.session.userId = user.id;
+
+    return res.json({
       success: true,
       user: {
         id: user.id,
@@ -84,41 +95,51 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 });
 
 router.post("/logout", (req: express.Request, res: express.Response) => {
-  req.session.destroy((err) => {
+  const r = req as AppRequest;
+
+  if (!r.session) {
+    return res.json({ success: true });
+  }
+
+  r.session.destroy((err: any) => {
     if (err) {
+      console.error("Error destroying session during logout:", err);
       return res.status(500).json({ error: "Failed to logout" });
     }
-    res.json({ success: true });
+    return res.json({ success: true });
   });
 });
 
 router.get("/me", async (req: express.Request, res: express.Response) => {
-  if (!req.session.userId) {
+  const r = req as AppRequest;
+
+  if (!r.session || !r.session.userId) {
     return res.status(401).json({ error: "Not authenticated" });
   }
 
   try {
     const result = await pool.query("SELECT id, email, display_name FROM users WHERE id = $1", [
-      req.session.userId,
+      r.session.userId,
     ]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.json({ user: result.rows[0] });
+    return res.json({ user: result.rows[0] });
   } catch (error) {
     console.error("Get user error:", error);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 });
 
 export default router;
+<<<<<<< HEAD
 
 router.post("/signup", async (req: express.Request, res: express.Response) => {
   const { email, password, displayName } = req.body;
@@ -229,3 +250,5 @@ router.get("/me", async (req: express.Request, res: express.Response) => {
 });
 
 export {};
+=======
+>>>>>>> f5c5bdecca469d4e34cde9b594a7d5d07151b60a

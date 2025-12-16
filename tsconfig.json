@@ -16,7 +16,7 @@
     "sourceMap": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/server/pii-check.js"],
   "exclude": ["node_modules", "dist"],
   "ts-node": {
     "esm": true,

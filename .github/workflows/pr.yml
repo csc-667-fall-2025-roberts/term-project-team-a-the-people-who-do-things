@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          registry-url: 'https://registry.npmjs. org'
+          registry-url: "https://registry.npmjs. org"
 
       - name: Cache node_modules
         id: cache-node-modules
@@ -104,6 +104,15 @@ jobs:
           path: node_modules
           key: node-modules-${{ runner.os }}-node${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json', 'package.json') }}
           fail-on-cache-miss: true
+
+      - name: Run TypeScript type checking
+        run: npm run typecheck
+
+      - name: Run TS + ESLint (typed files)
+        run: npm run lint:types
+
+      - name: Run PII scan
+        run: npm run pii-check
 
       - name: Run ESLint
         run: |
@@ -243,7 +252,7 @@ jobs:
         run: |
           echo "## Security Audit Results" >> $GITHUB_STEP_SUMMARY
           npm audit --audit-level=high 2>&1 | tee audit-results.txt || true
-          
+
           if npm audit --audit-level=high 2>&1 | grep -q "found 0 vulnerabilities"; then
             echo "No high or critical vulnerabilities found" >> $GITHUB_STEP_SUMMARY
           else
@@ -286,7 +295,7 @@ jobs:
       - name: Check migration files syntax
         run: |
           echo "## Migration Check Results" >> $GITHUB_STEP_SUMMARY
-          
+
           MIGRATION_DIR="src/DB/migrations"
           if [ -d "$MIGRATION_DIR" ] && [ "$(ls -A $MIGRATION_DIR/*. ts 2>/dev/null)" ]; then
             echo "Checking migration files for TypeScript errors..."
@@ -316,17 +325,17 @@ jobs:
         run: |
           echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -d "dist/public" ]; then
             echo "| File | Size | Gzipped |" >> $GITHUB_STEP_SUMMARY
             echo "|------|------|---------|" >> $GITHUB_STEP_SUMMARY
-            
+
             find dist/public \( -name "*.js" -o -name "*.css" \) -type f 2>/dev/null | sort | while read file; do
               size=$(du -h "$file" | cut -f1)
               gzip_size=$(gzip -c "$file" | wc -c | awk '{printf "%.1fK", $1/1024}')
               echo "| \`${file#dist/}\` | ${size} | ${gzip_size} |" >> $GITHUB_STEP_SUMMARY
             done
-            
+
             total=$(du -sh dist/public 2>/dev/null | cut -f1 || echo "N/A")
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Total public assets size:** ${total}" >> $GITHUB_STEP_SUMMARY
@@ -337,7 +346,7 @@ jobs:
       - name: Check bundle size limits
         run: |
           MAX_SIZE_KB=1024
-          
+
           find dist/public -name "*.js" -type f 2>/dev/null | while read file; do
             size_kb=$(du -k "$file" | cut -f1)
             if [ "$size_kb" -gt "$MAX_SIZE_KB" ]; then
@@ -420,3 +429,4 @@ jobs:
           [ "${{ needs.build.result }}" != "success" ] && echo "  - Build"
           [ "${{ needs.migration-check.result }}" != "success" ] && echo "  - Migration Check"
           exit 1
+

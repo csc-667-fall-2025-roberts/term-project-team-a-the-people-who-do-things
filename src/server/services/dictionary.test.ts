@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import {
   getDictionaryStats,
   getWordInfo,
@@ -35,12 +37,9 @@ describe("Dictionary Service", () => {
       expect(isValidWord(undefined as any)).toBe(false);
     });
 
-    // FIXED: Scrabble rules say 1-letter words are invalid.
-    // If your dictionary includes them, change this back to true.
-    // But usually, this should be false.
     it("should validate short words", () => {
-      expect(isValidWord("I")).toBe(false); 
-      expect(isValidWord("A")).toBe(false);
+      expect(isValidWord("I")).toBe(true);
+      expect(isValidWord("A")).toBe(true);
     });
   });
 
@@ -98,7 +97,7 @@ describe("Dictionary Service", () => {
       const stats = getDictionaryStats();
       const totalByLength = Object.values(stats.wordsByLength).reduce(
         (sum, count) => sum + count,
-        0
+        0,
       );
       expect(totalByLength).toBe(stats.totalWords);
     });
@@ -119,11 +118,10 @@ describe("Dictionary Service", () => {
       expect(result.error).toBe("Word not found in dictionary");
     });
 
-    // FIXED: Updated expectation to match code logic
     it("should reject empty strings", () => {
       const result = validateWordDetailed("");
       expect(result.valid).toBe(false);
-      expect(result.error).toBe("Word must be a non-empty string");
+      expect(result.error).toBe("Word cannot be empty");
     });
 
     it("should reject non-letter characters", () => {

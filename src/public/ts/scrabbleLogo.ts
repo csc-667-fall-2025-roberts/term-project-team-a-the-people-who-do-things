@@ -264,7 +264,6 @@ function initScrabbleLogo() {
     "dragstart",
     (e: DragEvent) => {
       const target = e.target as HTMLElement;
-      // Only allow tile drag if draggable is enabled
       const tile = target.closest(".scrabble-tile") as HTMLElement;
       if (!tile || tile.getAttribute("draggable") !== "true") {
         e.preventDefault();

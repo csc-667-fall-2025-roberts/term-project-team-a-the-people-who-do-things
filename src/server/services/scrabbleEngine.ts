@@ -183,7 +183,7 @@ export class ScrabbleGame {
     const formed = this.getFormedWords(tiles);
     let total = 0;
     for (const f of formed) total += this.scoreWord(f.cells);
-    if (tiles.length === 7) total += 50; // bingo
+    if (tiles.length === 7) total += 50;
     return total;
   }
 
