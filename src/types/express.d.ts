@@ -2,7 +2,7 @@
 import "express";
 
 import type { Request as ExRequest } from "express-serve-static-core";
-import type { Session,SessionData as ExpressSessionData } from "express-session";
+import type { SessionData as ExpressSessionData, Session } from "express-session";
 
 import type { ChatMessages } from "./chat";
 import type { Games } from "./games";
