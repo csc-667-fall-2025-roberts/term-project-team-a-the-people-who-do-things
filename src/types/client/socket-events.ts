@@ -1,7 +1,3 @@
-// Socket event data types
-//socket communication contracts between client/server
-// DEFINE TYPES FOR DATA SENT FROM CLIENT TO SERVER
-
 export type JoinGameData = {
   gameId: string;
 };
@@ -17,7 +13,6 @@ export type PassTurnData = {
   gameId: string;
 };
 
-// Game participant interface
 export type GameParticipant = {
   id: string;
   is_host: boolean;
@@ -30,7 +25,6 @@ export type ScoreEntry = {
   value: number;
 };
 
-// Score interface
 export type Scores = {
   userID: string;
   value: number;
@@ -49,7 +43,6 @@ export type PlacedTile = {
   col: number;
 };
 
-//tilesRemaining
 export type SendMessageData = {
   gameId: string;
   message: string;
@@ -60,7 +53,6 @@ export type ExchangeTilesData = {
   tiles: string[];
 };
 
-// Socket event response types
 export type GameStateResponse = {
   board: (Tile | null)[][];
   hand: Tile[];

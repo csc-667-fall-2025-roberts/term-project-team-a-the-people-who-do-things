@@ -405,7 +405,7 @@ function cleanup() {
   socket.off("game-state", handlers.gameState);
   socket.off("move-made", handlers.moveMade);
   socket.off("new-tiles", handlers.newTiles);
-  socket.off("player-joined", handlers.playerJoined);
+  socket.off("player-joined-lobby", handlers.playerJoined);
   socket.off("turn-passed", handlers.turnPassed);
   socket.off("game-over", handlers.gameOver);
   socket.off("error", handlers.error);

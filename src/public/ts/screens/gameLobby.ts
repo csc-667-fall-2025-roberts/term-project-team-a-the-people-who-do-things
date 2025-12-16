@@ -22,8 +22,6 @@ type LobbyChatMessage = {
   game_id: string | null;
 };
 
-window = globalThis.Window;
-
 const gameId = window.GAME_ID;
 console.log("gameLobby.ts: window.GAME_ID =", window.GAME_ID);
 

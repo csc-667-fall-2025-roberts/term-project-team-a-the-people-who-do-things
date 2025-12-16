@@ -86,7 +86,6 @@ export class ScrabbleGame {
     return null;
   }
 
-
   private isPlayersTurn(playerId: string): boolean {
     return this.players[this.currentPlayerIndex] === playerId;
   }
@@ -135,7 +134,6 @@ export class ScrabbleGame {
     return this.board.every((row) => row.every((cell) => !cell));
   }
 
-
   validateMove(playerId: string, tiles: PlacedTile[]): { valid: boolean; error?: string } {
     if (!this.isPlayersTurn(playerId)) return { valid: false, error: "Not your turn" };
     if (!tiles || tiles.length === 0)
@@ -164,7 +162,6 @@ export class ScrabbleGame {
     return { valid: true };
   }
 
-
   private scoreWord(cells: WordCell[]): number {
     let letterSum = 0;
     let wordMul = 1;
@@ -186,10 +183,9 @@ export class ScrabbleGame {
     const formed = this.getFormedWords(tiles);
     let total = 0;
     for (const f of formed) total += this.scoreWord(f.cells);
-    if (tiles.length === 7) total += 50; // bingo
+    if (tiles.length === 7) total += 50;
     return total;
   }
-
 
   private scanMainHorizontal(tiles: PlacedTile[], row: number): FormedWord {
     const cols = tiles.map((t) => t.col);
@@ -282,7 +278,6 @@ export class ScrabbleGame {
     }
     return { word, cells };
   }
-
 
   getFormedWords(tiles: PlacedTile[]): FormedWord[] {
     const result: FormedWord[] = [];

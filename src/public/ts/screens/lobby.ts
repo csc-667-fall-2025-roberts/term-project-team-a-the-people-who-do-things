@@ -28,7 +28,6 @@ const createTab = document.getElementById("create-tab");
 const joinContent = document.getElementById("join-tab-content");
 const createContent = document.getElementById("create-tab-content");
 
-// Escape HTML to prevent XSS
 function escapeHtml(text: string) {
   const div = document.createElement("div");
   div.textContent = text;
@@ -56,18 +55,15 @@ function addChatMessage(message: LobbyChatMessage) {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Load existing lobby messages
 async function loadLobbyMessages() {
   try {
     const { messages } = (await api.chat.getMessages(LOBBY_ID)) as { messages: LobbyChatMessage[] };
-    // console.log("Loaded lobby messages:", messages);
     if (!chatMessages) {
       console.error("chatMessages element not found");
       return;
     }
     chatMessages.innerHTML = "";
     messages.forEach((message) => {
-      // console.log("Adding message:", message);
       addChatMessage({
         ...message,
         game_id: message.game_id ?? null,
@@ -121,14 +117,11 @@ function initLobbyChat() {
 
   console.log("Initializing lobby chat...");
 
-  // Join lobby room
   socket.emit("join-lobby", {});
   console.log("Joined lobby room");
 
-  // Load existing messages
   void loadLobbyMessages();
 
-  // Handle sending messages
   chatForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -158,7 +151,6 @@ function initLobbyChat() {
   });
 }
 
-// Load games
 async function loadGames() {
   try {
     const { games } = (await api.games.getLobby()) as { games: GameSummary[] };
