@@ -120,7 +120,7 @@ async function runScanner() {
 
     console.error(
       `\nReview the above locations. If these are expected (e.g. type definitions or harmless test fixtures), you can ignore them.
-Otherwise: sanitize payloads, avoid sending PII over sockets, and ensure any user-identifiable fields are obfuscated or removed before transmission.`,
+Otherwise: sanitize payloads, avoid sending PII over sockets.`,
     );
     process.exit(2);
   } catch (err) {
