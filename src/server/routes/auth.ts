@@ -139,7 +139,7 @@ router.get("/me", async (req: express.Request, res: express.Response) => {
 });
 
 export default router;
-<<<<<<< HEAD
+
 
 router.post("/signup", async (req: express.Request, res: express.Response) => {
   const { email, password, displayName } = req.body;
@@ -250,5 +250,4 @@ router.get("/me", async (req: express.Request, res: express.Response) => {
 });
 
 export {};
-=======
->>>>>>> f5c5bdecca469d4e34cde9b594a7d5d07151b60a
+
