@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-
 export const PlacedTileSchema = z.object({
   letter: z.string().min(1).max(1), // single letter
   row: z.number().int().min(0),

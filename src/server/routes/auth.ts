@@ -140,7 +140,6 @@ router.get("/me", async (req: express.Request, res: express.Response) => {
 
 export default router;
 
-
 router.post("/signup", async (req: express.Request, res: express.Response) => {
   const { email, password, displayName } = req.body;
 
@@ -248,6 +247,3 @@ router.get("/me", async (req: express.Request, res: express.Response) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
-export {};
-
