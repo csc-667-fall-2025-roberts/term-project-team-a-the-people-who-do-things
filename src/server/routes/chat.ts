@@ -1,11 +1,12 @@
 import express from "express";
 
+import type { AppRequest } from "../../types/app.d";
 import pool from "../config/database.js";
 import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.get("/:gameId", requireAuth, async (req, res) => {
+router.get("/:gameId", requireAuth, async (req: express.Request, res: express.Response) => {
   const { gameId } = req.params;
   const { limit = 50, before } = req.query;
 
@@ -50,7 +51,8 @@ router.get("/:gameId", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/:gameId", requireAuth, async (req, res) => {
+router.post("/:gameId", requireAuth, async (req: express.Request, res: express.Response) => {
+  const r = req as AppRequest;
   const { gameId } = req.params;
   const { message } = req.body;
 
@@ -66,17 +68,21 @@ router.post("/:gameId", requireAuth, async (req, res) => {
     const isLobby = gameId === "lobby";
     const dbGameId = isLobby ? null : gameId;
 
+    if (!r.session || !r.session.userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
     const result = await pool.query(
       `INSERT INTO chat_messages (game_id, user_id, message)
        VALUES ($1, $2, $3)
        RETURNING *, (SELECT display_name FROM users WHERE id = $2) as display_name`,
-      [dbGameId, req.session.userId, message.trim()],
+      [dbGameId, r.session.userId, message.trim()],
     );
 
-    res.json({ message: result.rows[0] });
+    return res.json({ message: result.rows[0] });
   } catch (error) {
     console.error("Post chat message error:", error);
-    res.status(500).json({ error: "Failed to post chat message" });
+    return res.status(500).json({ error: "Failed to post chat message" });
   }
 });
 

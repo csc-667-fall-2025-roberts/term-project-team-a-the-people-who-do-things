@@ -54,7 +54,6 @@ vite.config.js.map
 vite.config.d.ts.map
 *Front/
 
-*dictionary.test.ts
 *DICTIONARY.md
 
 

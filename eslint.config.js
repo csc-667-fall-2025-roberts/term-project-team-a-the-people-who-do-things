@@ -1,4 +1,4 @@
-// eslint.config.js
+// eslint.config.cjs
 import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
@@ -7,98 +7,176 @@ import unusedImports from "eslint-plugin-unused-imports";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
+// Quality + security
+import security from "eslint-plugin-security";
+import sonarjs from "eslint-plugin-sonarjs";
+import regexp from "eslint-plugin-regexp";
+import n from "eslint-plugin-n";
+import promise from "eslint-plugin-promise";
+import noSecrets from "eslint-plugin-no-secrets";
+import noUnsanitized from "eslint-plugin-no-unsanitized";
+import tailwindcss from "eslint-plugin-tailwindcss";
+
+// Tests
+import jest from "eslint-plugin-jest";
+
 export default tseslint.config(
-  // 1. Global Ignores
-  {
-    ignores: [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/public/**",
-      "**/.git/**",
-    ],
-  },
+	// 1) Ignores
+	{
+		ignores: ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/*.config.{js,cjs,mjs}", "eslint.config.js", "vite.config.ts", "jest.config.js", "postcss.config.js"],
+	},
 
-  // 2. Base Configurations
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
-  ...tseslint.configs.stylistic,
+	// 2) Base
+	js.configs.recommended,
+	...tseslint.configs.recommended,
+	...tseslint.configs.stylistic,
 
-  // 3. Main Configuration Block (For your App Code)
-  {
-    files: ["**/*.{ts,tsx,js,jsx,mjs,cjs}"],
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: "module",
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-        ...globals.es2021,
-      },
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-    plugins: {
-      unicorn,
-      "simple-import-sort": simpleImportSort,
-      "unused-imports": unusedImports,
-      "interface-to-type": {
-        "plugins": ["interface-to-type"]
-      }
-    },
-    rules: {
-      // Auto-fixing
-      "simple-import-sort/imports": "error",
-      "simple-import-sort/exports": "error",
-      "@typescript-eslint/no-unused-vars": "off",
-      "unused-imports/no-unused-imports": "error",
-      "unused-imports/no-unused-vars": [
-        "warn",
-        {
-          vars: "all",
-          varsIgnorePattern: "^_",
-          args: "after-used",
-          argsIgnorePattern: "^_",
-        },
-      ],
+	// 3) Server-side TS (Node/Express)
+	{
+		files: ["server/**/*.{ts,tsx}", "src/**/*.{ts,tsx}", "**/*.{ts,tsx}"],
+		languageOptions: {
+			ecmaVersion: 2022,
+			sourceType: "module",
+			globals: { ...globals.node },
+			parserOptions: {
+				projectService: true,
+				tsconfigRootDir: import.meta.dirname,
+			},
+		},
+		plugins: {
+			unicorn,
+			"simple-import-sort": simpleImportSort,
+			"unused-imports": unusedImports,
 
-      // Unicorn Rules (Relaxed)
-      "unicorn/better-regex": "error",
-      "unicorn/prefer-node-protocol": "error",
-      "unicorn/prefer-ternary": "error",
-      // I DISABLED filename-case to stop the renaming errors
-      "unicorn/filename-case": "off", 
-      "unicorn/no-lonely-if": "error",
+			security,
+			sonarjs,
+			regexp,
+			n,
+			promise,
+			"no-secrets": noSecrets,
+		},
+		rules: {
+			// Auto-fixing
+			"simple-import-sort/imports": "error",
+			"simple-import-sort/exports": "error",
+			"@typescript-eslint/no-unused-vars": "off",
+			"unused-imports/no-unused-imports": "error",
+			"unused-imports/no-unused-vars": [
+				"warn",
+				{
+					vars: "all",
+					varsIgnorePattern: "^_",
+					args: "after-used",
+					argsIgnorePattern: "^_",
+				},
+			],
 
-      // Relaxed TS Rules
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-floating-promises": "off",
-      "@typescript-eslint/no-unsafe-argument": "off",
-      "@typescript-eslint/no-unsafe-assignment": "off",
-      "@typescript-eslint/no-unsafe-member-access": "off",
-      "@typescript-eslint/no-unsafe-call": "off",
-      "@typescript-eslint/prefer-nullish-coalescing": "off",
-      // "@typescript-eslint/consistent-type-definitions": ["error", "type",],
-      // "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
-    },
-  },
+			// TS style
+			"@typescript-eslint/consistent-type-definitions": ["error", "type"],
 
-  // 4. DISABLE Type Checking for Config Files (Fixes Parsing Errors)
-  {
-    files: ["**/*.config.{js,cjs,mjs,json}", "**/*.js", "**/*.cjs", "vite.config.ts"],
-    ...tseslint.configs.disableTypeChecked,
-  },
+			"@typescript-eslint/no-explicit-any": "off",
+			"@typescript-eslint/no-floating-promises": "off",
+			"@typescript-eslint/no-unsafe-argument": "off",
+			"@typescript-eslint/no-unsafe-assignment": "off",
+			"@typescript-eslint/no-unsafe-member-access": "off",
+			"@typescript-eslint/no-unsafe-call": "off",
+			"@typescript-eslint/prefer-nullish-coalescing": "off",
 
-  // 5. Migration Exceptions
-  {
-    files: ["src/DB/migrations/*.ts"],
-    rules: {
-      "@typescript-eslint/require-await": "off",
-      "@typescript-eslint/explicit-function-return-type": "off",
-    },
-  },
+			// Quality
+			"sonarjs/no-identical-functions": "warn",
+			"sonarjs/cognitive-complexity": ["warn", 20],
 
-  // 6. Prettier
-  prettier
+			// Regex footguns
+			"regexp/no-super-linear-backtracking": "error",
+
+			// Node correctness
+			"n/no-deprecated-api": "warn",
+
+			// Promises
+			"promise/catch-or-return": "warn",
+
+			// Security heuristics
+			"security/detect-eval-with-expression": "error",
+			"security/detect-child-process": "warn",
+			"security/detect-non-literal-regexp": "warn",
+			"security/detect-non-literal-fs-filename": "warn",
+			"security/detect-object-injection": "off",
+
+			// Secrets
+			"no-secrets/no-secrets": ["warn", { tolerance: 4.2 }],
+		},
+	},
+
+	// 4) Client-side JS
+	{
+		files: ["public/**/*.{js,mjs}", "client/**/*.{js,mjs}", "**/*.browser.{js,mjs}"],
+		languageOptions: {
+			ecmaVersion: 2022,
+			sourceType: "module",
+			globals: { ...globals.browser },
+		},
+		plugins: {
+			unicorn,
+			"simple-import-sort": simpleImportSort,
+			"unused-imports": unusedImports,
+
+			regexp,
+			sonarjs,
+			"no-unsanitized": noUnsanitized,
+			tailwindcss,
+			"no-secrets": noSecrets,
+		},
+		rules: {
+			"simple-import-sort/imports": "error",
+			"simple-import-sort/exports": "error",
+			"unused-imports/no-unused-imports": "error",
+
+			// DOM sink checks
+			"no-unsanitized/method": "warn",
+			"no-unsanitized/property": "warn",
+
+			// Tailwind class linting
+			"tailwindcss/classnames-order": "warn",
+			"tailwindcss/no-custom-classname": "off",
+
+			"no-restricted-syntax": [
+				"warn",
+				{
+					"selector": "CallExpression[callee.property.name='emit'][arguments.0.type='ObjectExpression']",
+					"message": "Avoid emitting raw object literals through socket.emit on the client. Sanitize and remove PII fields (email, password, displayName, password_hash, user_id) before emitting."
+				},
+				{
+					"selector": "CallExpression[callee.property.name='emit'][arguments.1.type='ObjectExpression']",
+					"message": "Avoid emitting raw object literals through socket.emit on the client. Sanitize and remove PII fields (email, password, displayName, password_hash, user_id) before emitting."
+				}
+			],
+
+			// Strengthen no-secrets usage in client code to help catch accidental PII
+			"no-secrets/no-secrets": ["warn", { "tolerance": 2.0 }],
+
+			"sonarjs/no-identical-functions": "warn",
+			"regexp/no-super-linear-backtracking": "error",
+		},
+	},
+
+	// 5) Jest tests (anywhere)
+	{
+		files: ["**/*.{test,spec}.{js,ts}", "**/__tests__/**/*.{js,ts}"],
+		languageOptions: {
+			globals: { ...globals.jest },
+		},
+		plugins: { jest },
+		rules: {
+			...jest.configs.recommended.rules,
+		},
+	},
+
+	// 6) Disable type-checked linting for config files
+	{
+		files: ["**/*.config.{js,cjs,mjs}", "eslint.config.js", "vite.config.ts", "jest.config.js", "postcss.config.js"],
+		...tseslint.configs.disableTypeChecked,
+	},
+
+	// 7) Prettier last
+	prettier
 );

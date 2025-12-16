@@ -6,6 +6,7 @@ import {
   PlayerLeftLobbyData,
 } from "../../../types/client/socket-events.js";
 import { api } from "../api.js";
+// import { Window } from "../../../types/client/globals.js";
 import { socket } from "../socket.js";
 
 type GameParticipant = {
@@ -21,14 +22,8 @@ type LobbyChatMessage = {
   game_id: string | null;
 };
 
-declare global {
-  interface Window {
-    GAME_ID: string;
-  }
-}
-
 const gameId = window.GAME_ID;
-console.log("gameLobby.ts: gameId constant =", gameId);
+console.log("gameLobby.ts: window.GAME_ID =", window.GAME_ID);
 
 if (!gameId) {
   console.error("gameLobby.ts: ERROR - window.GAME_ID is not set!");
@@ -105,12 +100,12 @@ async function loadGameLobbyData() {
 
     const response = (await api.games.get(gameId)) as {
       game: { max_players: number; created_by: string };
-      game_participants: Array<{
+      game_participants: {
         id: string;
         user_id: string;
         display_name: string;
         is_host: boolean;
-      }>;
+      }[];
     };
 
     // console.log("API response:", response);
@@ -306,10 +301,10 @@ startGameBtn?.addEventListener("click", async () => {
   }
 });
 
-socket.on("player-joined-lobby", (data: PlayerJoinedLobbyData) => {
+socket.on("player-joined-lobby", (_data: PlayerJoinedLobbyData) => {
   void loadGameLobbyData();
 });
-socket.on("player-left-lobby", (data: PlayerLeftLobbyData) => {
+socket.on("player-left-lobby", (_data: PlayerLeftLobbyData) => {
   void loadGameLobbyData();
 });
 socket.on("game-started", (data: GameStartedData) => {

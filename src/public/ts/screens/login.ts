@@ -1,4 +1,5 @@
 import "../../styles/main.css";
+
 import { api } from "../api.js";
 
 const form = document.getElementById("login-form") as HTMLFormElement | null;

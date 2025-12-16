@@ -144,6 +144,12 @@ jobs:
       - name: Run TypeScript type checking
         run: npm run typecheck
 
+      - name: Run TS + ESLint (typed files)
+        run: npm run lint:types
+
+      - name: Run PII scan
+        run: npm run pii-check
+
       - name: Install ESLint if not present
         run: |
           if ! npm list eslint > /dev/null 2>&1; then

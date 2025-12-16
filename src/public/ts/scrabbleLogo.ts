@@ -1,8 +1,8 @@
 function initScrabbleLogo() {
   const logoWrapper = document.getElementById("scrabble-logo-wrapper");
   const container = document.getElementById("scrabble-logo");
-  const logoLink = document.getElementById("scrabble-logo-link");
-  //TODO use logoLink to navigate on click Unused constant logoLink
+  const _logoLink = document.getElementById("scrabble-logo-link");
+  //TODO use _logoLink to navigate on click Unused constant logoLink
   if (!logoWrapper || !container) {
     console.error("Scrabble logo elements not found");
     return;
@@ -264,7 +264,6 @@ function initScrabbleLogo() {
     "dragstart",
     (e: DragEvent) => {
       const target = e.target as HTMLElement;
-      // Only allow tile drag if draggable is enabled
       const tile = target.closest(".scrabble-tile") as HTMLElement;
       if (!tile || tile.getAttribute("draggable") !== "true") {
         e.preventDefault();

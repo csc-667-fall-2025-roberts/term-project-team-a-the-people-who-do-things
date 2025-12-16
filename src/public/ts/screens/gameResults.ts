@@ -3,13 +3,13 @@ import { api } from "../api.js";
 
 const gameId = window.GAME_ID;
 
-interface GameResultData {
+type GameResultData = {
   game_participants: GameParticipant[];
   scores: ScoreEntry[];
   started_at?: string | string | number | Date;
   ended_at?: string | string | number | Date;
   max_players?: number;
-}
+};
 
 async function loadResults() {
   try {
