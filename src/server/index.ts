@@ -255,7 +255,7 @@ io.on("connection", (socket: Socket) => {
     }
   });
 
-  // Join game room
+  // Join game room - with full game state restoration from database
   socket.on("join-game", (payload) => {
     const data = validateOrEmitError(socket, JoinGameSchema, payload);
     if (!data) return;
@@ -265,79 +265,85 @@ io.on("connection", (socket: Socket) => {
       socket.join(gameId);
 
       try {
-        const participantsResult = await pool.query(
-          "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
-          [gameId],
-        );
-        const game_participants: string[] = participantsResult.rows.map((r: { user_id: unknown }) =>
-          String(r.user_id),
-        );
+        // Check if game already exists in memory
+        let game = gameManager.getGame(gameId);
+        
+        if (!game) {
+          // Game not in memory - restore from database
+          console.log(`[Game Restore] Loading game ${gameId} from database...`);
+          
+          // 1. Get game info (current turn)
+          const gameInfoResult = await pool.query(
+            "SELECT current_turn_user_id FROM games WHERE id = $1",
+            [gameId]
+          );
+          const currentPlayerId = gameInfoResult.rows[0]?.current_turn_user_id || null;
 
-        const boardResult = await pool.query(
-          "SELECT row, col, letter FROM board_tiles WHERE game_id = $1",
-          [gameId],
-        );
+          // 2. Get participants
+          const participantsResult = await pool.query(
+            "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
+            [gameId],
+          );
+          const players: string[] = participantsResult.rows.map((r: { user_id: unknown }) =>
+            String(r.user_id),
+          );
 
-        let boardState: (string | null)[][] | null = null;
-
-        if (boardResult.rows.length > 0) {
-          boardState = Array(15)
+          // 3. Get board state
+          const boardResult = await pool.query(
+            "SELECT row, col, letter FROM board_tiles WHERE game_id = $1",
+            [gameId],
+          );
+          const boardState: (string | null)[][] = Array(15)
             .fill(null)
             .map(() => Array(15).fill(null));
-
           for (const tile of boardResult.rows) {
             boardState[(tile as any).row][(tile as any).col] = (tile as any).letter;
           }
-        }
 
-        let game = gameManager.getGame(gameId);
-        const uniquePlayers = Array.from(new Set(game_participants.map((id) => String(id))));
-        if (!game) {
-          game = gameManager.createGame(gameId, uniquePlayers, boardState);
-          console.log(`Game ${gameId} loaded from DB with ${boardResult.rows.length} tiles.`);
-        } else {
-          const existingPlayers = game.players ?? [];
-          const equals =
-            existingPlayers.length === uniquePlayers.length &&
-            existingPlayers.every((p, i) => String(p) === String(uniquePlayers[i]));
-
-          if (!equals) {
-            game.players = uniquePlayers;
-            game.players.forEach((id) => {
-              if (typeof game!.scores[id] === "undefined") game!.scores[id] = 0;
-              if (!game!.playerHands[id]) game!.playerHands[id] = [];
-            });
-          }
-        }
-
-        try {
-          const dbHandResult = await pool.query(
-            "SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
-            [gameId, userId],
+          // 4. Get tile bag
+          const tileBagResult = await pool.query(
+            "SELECT letter FROM tile_bag WHERE game_id = $1 ORDER BY id",
+            [gameId],
           );
+          const tileBag: string[] = tileBagResult.rows.map((r: { letter: string }) => r.letter);
 
-          if (dbHandResult.rows.length > 0) {
-            const hand = dbHandResult.rows.map((r: { letter: string }) => r.letter);
-            if (userId) game.playerHands[userId] = hand;
-          } else {
-            console.log(`Player ${userId} has no tiles. Drawing starting hand...`);
-            const newHand = game.drawTiles(7);
-            if (userId) game.playerHands[userId] = newHand;
+          // 5. Get all player hands
+          const playerHands: Record<string, string[]> = {};
+          for (const playerId of players) {
+            const handResult = await pool.query(
+              "SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
+              [gameId, playerId],
+            );
+            playerHands[playerId] = handResult.rows.map((r: { letter: string }) => r.letter);
+          }
 
-            if (newHand.length > 0 && userId) {
-              const handValues = newHand
-                .map((letter) => `('${gameId}', '${userId}', '${letter}')`)
-                .join(",");
-
-              await pool.query(
-                `INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`,
-              );
+          // 6. Get scores
+          const scoresResult = await pool.query(
+            "SELECT user_id, value FROM scores WHERE game_id = $1",
+            [gameId],
+          );
+          const scores: Record<string, number> = {};
+          for (const row of scoresResult.rows) {
+            scores[String(row.user_id)] = row.value;
+          }
+          // Initialize scores for players without entries
+          for (const playerId of players) {
+            if (typeof scores[playerId] === "undefined") {
+              scores[playerId] = 0;
             }
           }
-        } catch (e) {
-          console.error("Error syncing hand:", e);
+
+          // 7. Restore the game
+          game = gameManager.restoreGame(gameId, players, {
+            board: boardState,
+            tileBag,
+            playerHands,
+            scores,
+            currentPlayerId,
+          });
         }
 
+        // Send current game state to the joining player
         const gameState = game.getGameState();
         const playerHand = userId ? game.getPlayerHand(userId) : [];
 

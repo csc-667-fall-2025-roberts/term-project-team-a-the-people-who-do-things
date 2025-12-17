@@ -23,6 +23,15 @@ export type PlacedTile = { letter: string; row: number; col: number };
 export type WordCell = { letter: string; row: number; col: number; isNew: boolean };
 export type FormedWord = { word: string; cells: WordCell[] };
 
+// Data structure for restoring a game from database
+export interface RestoredGameState {
+  board: (string | null)[][];
+  tileBag: string[];
+  playerHands: Record<string, string[]>;
+  scores: Record<string, number>;
+  currentPlayerId: string | null;
+}
+
 export class ScrabbleGame {
   gameId: string;
   board: (string | null)[][];
@@ -47,6 +56,29 @@ export class ScrabbleGame {
       this.scores[p] = 0;
       this.playerHands[p] = this.drawTiles(7);
     }
+  }
+
+  // Restore a game from saved database state
+  static restore(gameId: string, players: string[], state: RestoredGameState): ScrabbleGame {
+    const game = new ScrabbleGame(gameId, players, state.board);
+    
+    // Override with restored state
+    game.tileBag = state.tileBag;
+    game.playerHands = state.playerHands;
+    game.scores = state.scores;
+    
+    // Set current player index based on currentPlayerId
+    if (state.currentPlayerId) {
+      const idx = players.indexOf(state.currentPlayerId);
+      game.currentPlayerIndex = idx >= 0 ? idx : 0;
+    }
+    
+    console.log(`[Game Restore] Restored game ${gameId}:`);
+    console.log(`  - Board tiles: ${state.board.flat().filter(t => t !== null).length}`);
+    console.log(`  - Tile bag: ${state.tileBag.length} tiles`);
+    console.log(`  - Current player: ${players[game.currentPlayerIndex]}`);
+    
+    return game;
   }
 
   createEmptyBoard(): (string | null)[][] {
