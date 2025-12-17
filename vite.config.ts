@@ -1,4 +1,5 @@
 // noinspection JSUnusedGlobalSymbols
+// @ts-nocheck
 
 import { resolve } from "node:path";
 

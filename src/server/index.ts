@@ -250,12 +250,18 @@ io.on("connection", (socket: Socket) => {
         }
 
         let game = gameManager.getGame(gameId);
+        const uniquePlayers = Array.from(new Set(game_participants.map((id) => String(id))));
         if (!game) {
-          game = gameManager.createGame(gameId, game_participants, boardState);
+          game = gameManager.createGame(gameId, uniquePlayers, boardState);
           console.log(`Game ${gameId} loaded from DB with ${boardResult.rows.length} tiles.`);
         } else {
-          if (game.players.length !== game_participants.length) {
-            game.players = game_participants;
+          const existingPlayers = game.players ?? [];
+          const equals =
+            existingPlayers.length === uniquePlayers.length &&
+            existingPlayers.every((p, i) => String(p) === String(uniquePlayers[i]));
+
+          if (!equals) {
+            game.players = uniquePlayers;
             game.players.forEach((id) => {
               if (typeof game!.scores[id] === "undefined") game!.scores[id] = 0;
               if (!game!.playerHands[id]) game!.playerHands[id] = [];

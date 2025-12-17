@@ -1,3 +1,5 @@
+import { io as clientIo } from "socket.io-client";
+
 import type { SocketEvents } from "../../types/client/socket-events.js";
 
 export class SocketManager {
@@ -14,10 +16,7 @@ export class SocketManager {
   listeners: Map<string, ((data: unknown) => void)[]>;
 
   constructor() {
-    if (typeof io === "undefined") {
-      throw new Error("Socket");
-    }
-    this.socket = io() as any;
+    this.socket = clientIo() as any;
     this.listeners = new Map();
   }
 

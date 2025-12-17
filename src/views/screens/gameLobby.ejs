@@ -43,10 +43,7 @@
       </div>
     </main>
 
-    <script src="/socket.io/socket.io.js"></script>
     <script>
-      console.log("Inline script running in gameLobby.ejs");
-      window.io = io;
       window.GAME_ID = "<%= gameId %>";
       console.log("window.GAME_ID set to:", window.GAME_ID);
       console.log("Current pathname:", window.location.pathname);

@@ -44,7 +44,8 @@ export default function gamesRouter(io: Server) {
     if (!validation.success) {
       return res.status(400).json({ error: validation.error.issues });
     }
-    const { _title, maxPlayers, settings } = validation.data;
+    // eslint-disable-next-line unused-imports/no-unused-vars
+    const { title, maxPlayers, settings } = validation.data;
 
     const client = await pool.connect();
 

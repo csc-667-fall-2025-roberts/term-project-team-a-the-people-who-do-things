@@ -1,5 +1,5 @@
 import type { Request as ExRequest } from "express-serve-static-core";
-import type { Session,SessionData as ExpressSessionData } from "express-session";
+import type { Session, SessionData as ExpressSessionData } from "express-session";
 
 export type AppUser = {
   id?: string;

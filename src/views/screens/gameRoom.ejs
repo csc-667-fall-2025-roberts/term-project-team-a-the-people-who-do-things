@@ -91,11 +91,10 @@
       </main>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
     <script>
-      // Make io available globally for socket.js
-      window.io = io;
       window.GAME_ID = "<%= gameId %>";
+      console.log("window.GAME_ID set to:", window.GAME_ID);
+      console.log("Current pathname:", window.location.pathname);
     </script>
 
     <% if (NODE_ENV === 'production') { %>
