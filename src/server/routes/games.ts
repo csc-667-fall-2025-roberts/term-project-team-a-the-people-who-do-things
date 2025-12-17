@@ -193,10 +193,10 @@ export default function gamesRouter(io: Server) {
         [gameId],
       );
 
-      console.log(
-        `[GET /api/games/${gameId}] Found ${participantsResult.rows.length} participants`,
-      );
-      console.log("Participants:", participantsResult.rows);
+      // console.log(
+      //   `[GET /api/games/${gameId}] Found ${participantsResult.rows.length} participants`,
+      // );
+      //console.log("Participants:", participantsResult.rows);
 
       const scoresResult = await pool.query(
         `SELECT s.user_id, s.value, s.recorded_at, u.display_name
@@ -207,16 +207,26 @@ export default function gamesRouter(io: Server) {
         [gameId],
       );
 
+      const movesResult = await pool.query(
+        `SELECT m.user_id, m.turn_number, m.payload, m.created_at, u.display_name
+         FROM moves m
+         JOIN users u ON m.user_id = u.id
+         WHERE m.game_id = $1
+         ORDER BY m.turn_number ASC`,
+        [gameId]
+      );
+
       const response = {
         game: gameResult.rows[0],
         game_participants: participantsResult.rows,
         scores: scoresResult.rows,
+        moves: movesResult.rows,
       };
 
-      console.log(
-        `[GET /api/games/${gameId}] Sending response:`,
-        JSON.stringify(response, null, 2),
-      );
+      // console.log(
+      //   `[GET /api/games/${gameId}] Sending response:`,
+      //   JSON.stringify(response, null, 2),
+      // );
       res.json(response);
     } catch (error) {
       console.error("Get game error:", error);

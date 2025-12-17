@@ -36,7 +36,7 @@ async function init(): Promise<void> {
   renderScores(gameData.scores);
   await loadChatHistory();
 
-  socket.emit("join-game", gameId);
+  socket.emit("join-game", {gameId});
 
   // Initialize timer display
   updateTimerDisplay();

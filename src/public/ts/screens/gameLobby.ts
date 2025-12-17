@@ -161,7 +161,7 @@ if (!gameId) {
       updateStartButtonVisibility();
       initLobbyChat();
 
-      socket.emit("join-game-lobby", gameId);
+      socket.emit("join-game-lobby", {gameId});
     } catch (error) {
       console.error("Failed to load game lobby data:", error);
       console.error("Error details:", error instanceof Error ? error.message : String(error));
