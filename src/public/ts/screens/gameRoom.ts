@@ -53,22 +53,22 @@ init().catch((error) => {
 function mapErrorMessage(serverMessage: string): string {
   // If it's already a readable message, format it nicely
   if (serverMessage.startsWith("Invalid word")) {
-    return `❌ ${serverMessage} - not a valid Scrabble word!`;
+    return `${serverMessage} - not a valid Scrabble word!`;
   }
   if (serverMessage.startsWith("Tiles must be")) {
-    return `❌ ${serverMessage}`;
+    return serverMessage;
   }
   if (serverMessage.startsWith("Not your turn")) {
-    return `⏳ Wait for your turn!`;
+    return "Wait for your turn!";
   }
   if (serverMessage.startsWith("Tile not in hand")) {
-    return `❌ You don't have that tile!`;
+    return "You don't have that tile!";
   }
   if (serverMessage.startsWith("First word must")) {
-    return `❌ First word must cover the center square!`;
+    return "First word must cover the center square!";
   }
   if (serverMessage.startsWith("Must place")) {
-    return `❌ You must place at least one tile!`;
+    return "You must place at least one tile!";
   }
   
   const errorMap: Record<string, string> = {
