@@ -175,38 +175,11 @@ function renderScoreboard(data: GameData) {
   }).join("");
 }
 
-function setupButtons(data: GameData) {
+function setupButtons(_data: GameData) {
   // Back to Lobby
   document.getElementById("back-lobby-btn")?.addEventListener("click", () => {
     window.location.href = "/lobby";
   });
-
-  // Rematch Button
-  const rematchBtn = document.getElementById("rematch-btn");
-  if (rematchBtn) {
-    rematchBtn.addEventListener("click", async () => {
-      try {
-        rematchBtn.textContent = "Creating...";
-        rematchBtn.setAttribute("disabled", "true");
-
-        
-        const response = await api.games.create({
-            title: "Rematch Game",
-            maxPlayers: data.game.max_players,
-            settings: {} 
-        });
-
-        if (response.game) {
-          window.location.href = `/lobby/${response.game.id}`;
-        }
-      } catch (error) {
-        console.error("Rematch failed:", error);
-        alert("Failed to start rematch.");
-        rematchBtn.textContent = "Rematch";
-        rematchBtn.removeAttribute("disabled");
-      }
-    });
-  }
 }
 
 init();

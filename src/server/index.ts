@@ -447,11 +447,40 @@ io.on("connection", (socket: Socket) => {
           );
         }
 
-        // Update turn
-        await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
-          result.currentPlayer,
-          gameId,
-        ]);
+        // Check if game is over (player used all tiles with empty bag)
+        if (result.gameOver) {
+          console.log(`[Game Over] Game ${gameId} ended - player ${userId} used all tiles!`);
+          
+          // Update game status to finished
+          await pool.query("UPDATE games SET status = $1, ended_at = now() WHERE id = $2", [
+            "finished",
+            gameId,
+          ]);
+
+          // Update final scores in database
+          const finalScores = game.getGameState().scores;
+          for (const [odId, finalScore] of Object.entries(finalScores)) {
+            await pool.query(
+              `INSERT INTO scores (game_id, user_id, value)
+               VALUES ($1, $2, $3)
+               ON CONFLICT (game_id, user_id) DO UPDATE SET value = $3`,
+              [gameId, odId, finalScore]
+            );
+          }
+
+          // Emit game over event
+          io.to(gameId).emit("game-over", {
+            winner: userId,
+            reason: "Player used all tiles!",
+            scores: finalScores,
+          });
+        } else {
+          // Update turn for next player
+          await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
+            result.currentPlayer,
+            gameId,
+          ]);
+        }
       } catch (error) {
         console.error("Error saving move:", error);
       }
@@ -475,13 +504,16 @@ io.on("connection", (socket: Socket) => {
       }
 
       if (result.gameOver) {
+        console.log(`[Game Over] Game ${gameId} ended - all players passed!`);
+        
         await pool.query("UPDATE games SET status = $1, ended_at = now() WHERE id = $2", [
           "finished",
           gameId,
         ]);
 
         io.to(gameId).emit("game-over", {
-          _scores: game.scores,
+          reason: "All players passed",
+          scores: game.scores,
         });
       } else {
         await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [

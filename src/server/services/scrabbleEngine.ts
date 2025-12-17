@@ -324,24 +324,64 @@ export class ScrabbleGame {
     playerId: string,
     tiles: PlacedTile[],
     score: number,
-  ): { newTiles: string[]; currentPlayer: string } {
+  ): { newTiles: string[]; currentPlayer: string; gameOver?: boolean } {
+    // Place tiles on the board
     for (const t of tiles) this.board[t.row][t.col] = t.letter;
 
+    // Remove used tiles from player's hand
     const hand = this.playerHands[playerId];
     for (const t of tiles) {
       const idx = hand.indexOf(t.letter);
       if (idx !== -1) hand.splice(idx, 1);
     }
 
+    // Draw new tiles from the bag
     const newTiles = this.drawTiles(tiles.length);
     this.playerHands[playerId].push(...newTiles);
 
+    // Add score
     this.scores[playerId] = (this.scores[playerId] || 0) + score;
 
-    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+    // Reset consecutive passes since a move was made
     this.consecutivePasses = 0;
 
+    // Check if game ends: player has no tiles left AND bag is empty
+    if (this.playerHands[playerId].length === 0 && this.tileBag.length === 0) {
+      // Game over! Apply end-game scoring
+      this.applyEndGameScoring(playerId);
+      return { newTiles, currentPlayer: playerId, gameOver: true };
+    }
+
+    // Move to next player
+    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+
     return { newTiles, currentPlayer: this.players[this.currentPlayerIndex] };
+  }
+
+  // End game scoring: player who went out gets bonus from other players' remaining tiles
+  private applyEndGameScoring(winningPlayerId: string): void {
+    let totalDeducted = 0;
+
+    // Subtract remaining tile values from each player (except winner)
+    for (const playerId of this.players) {
+      if (playerId === winningPlayerId) continue;
+
+      const hand = this.playerHands[playerId];
+      let handValue = 0;
+      for (const letter of hand) {
+        handValue += LETTER_VALUES[letter] || 0;
+      }
+
+      // Deduct from their score
+      this.scores[playerId] = (this.scores[playerId] || 0) - handValue;
+      totalDeducted += handValue;
+
+      console.log(`[End Game] ${playerId} loses ${handValue} points for remaining tiles: ${hand.join(", ")}`);
+    }
+
+    // Winner gets the total deducted points as bonus
+    this.scores[winningPlayerId] = (this.scores[winningPlayerId] || 0) + totalDeducted;
+    console.log(`[End Game] ${winningPlayerId} gains ${totalDeducted} bonus points for going out!`);
   }
 
   pass(playerId: string): {
