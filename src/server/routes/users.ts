@@ -21,7 +21,7 @@ router.put("/update", requireAuth, async (req: express.Request, res: express.Res
        SET display_name = $1, email = $2, updated_at = now()
        WHERE id = $3
        RETURNING id, email, display_name`,
-      [displayName, email, r.session.userId],
+      [displayName, email, r.session.userId], // pii-ignore-next-line
     );
 
     return res.json({ user: result.rows[0] });

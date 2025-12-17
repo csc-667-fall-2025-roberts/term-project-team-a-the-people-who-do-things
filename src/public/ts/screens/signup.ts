@@ -29,7 +29,7 @@ if (
     }
 
     try {
-      await api.auth.signup(email, password, displayName);
+      await api.auth.signup(email, password, displayName); // pii-ignore-next-line
       window.location.href = "/lobby";
     } catch (error) {
       if (error instanceof Error) {

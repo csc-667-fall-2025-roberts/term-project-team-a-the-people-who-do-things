@@ -177,7 +177,7 @@ function updateScores(scores: Record<string, number>) {
   scoresContainer.innerHTML = Object.entries(scores)
     .map(([userId, score]) => {
       const participant = participants.find((p: GameParticipant) => p.user_id === userId); // pii-ignore-next-line
-      const displayName = participant?.display_name || "Unknown";  // pii-ignore-next-line
+      const displayName = participant?.display_name || "Unknown"; // pii-ignore-next-line
 
       return `
         <div class="score-item ${currentUser?.id === userId ? "current-user" : ""}">

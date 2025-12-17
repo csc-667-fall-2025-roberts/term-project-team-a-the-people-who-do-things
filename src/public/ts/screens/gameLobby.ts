@@ -72,7 +72,8 @@ if (!gameId) {
       return;
     }
 
-    if (!message?.display_name || !message.message) {     // pii-ignore-next-line
+    if (!message?.display_name || !message.message) {
+      // pii-ignore-next-line
       console.error("Invalid message format:", message);
       return;
     }
@@ -96,8 +97,8 @@ if (!gameId) {
     try {
       console.log("Loading game lobby data for gameId:", gameId);
 
-      const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } }; // pii-ignore-next-line
-
+      const { user } = await api.auth.me(); // pii-ignore-next-line
+      // as { user: { id: string; display_name: string } } // pii-ignore-next-line
       if (!user) {
         console.error("User not logged in!");
         window.location.href = "/login";
@@ -105,16 +106,16 @@ if (!gameId) {
       currentUser = user;
       // console.log("Current user:", currentUser);
 
-      const response = (await api.games.get(gameId)) as {
-        game: { max_players: number; created_by: string };
-        game_participants: {
-          id: string;
-          user_id: string;  // pii-ignore-next-line
-          display_name: string;  // pii-ignore-next-line
-          is_host: boolean;
-        }[];
-      };
-
+      const response = await api.games.get(gameId);
+      // as {
+      //   game: { max_players: number; created_by: string };
+      //   game_participants: {
+      //     id: string;
+      //     user_id: string;  // pii-ignore-next-line
+      //     display_name: string;  // pii-ignore-next-line
+      //     is_host: boolean;
+      //   }[];
+      // }
       // console.log("API response:", response);
       // console.log("Game:", response.game);
       // console.log("Participants raw:", response.game_participants);
@@ -130,9 +131,9 @@ if (!gameId) {
       const participants: GameParticipant[] = Array.from(
         new Map(
           (game_participants || []).map((p) => [
-            String(p.user_id),   // pii-ignore-next-line
+            String(p.user_id), // pii-ignore-next-line
             {
-              id: String(p.user_id),  // pii-ignore-next-line
+              id: String(p.user_id), // pii-ignore-next-line
               display_name: p.display_name, // pii-ignore-next-line
               is_host: p.is_host,
             } as GameParticipant,

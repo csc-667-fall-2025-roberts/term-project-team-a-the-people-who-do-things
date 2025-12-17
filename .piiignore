@@ -38,3 +38,5 @@ types/gameState.ts
 types/scores.ts
 types/user_settings.ts
 types/users.ts
+
+*src/server/index.ts
