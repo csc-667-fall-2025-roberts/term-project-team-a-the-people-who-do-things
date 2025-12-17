@@ -217,7 +217,7 @@ class ScrabbleBoard {
       this.hand = tiles as Tile[];
     }
 
-    console.log("Board updated hand:", this.hand);
+    //console.log("Board updated hand:", this.hand);
     this.renderHand();
   }
 

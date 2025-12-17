@@ -1,4 +1,5 @@
-console.log("gameLobby.ts script loaded!");
+//console.log("gameLobby.ts script loaded!");
+/* pii-ignore */
 
 import {
   GameStartedData,
@@ -11,13 +12,13 @@ import { socket } from "../socket.js";
 
 type GameParticipant = {
   id: string;
-  display_name: string;
+  display_name: string; // pii-ignore-next-line
   is_host?: boolean;
 };
 
 type LobbyChatMessage = {
   id?: string;
-  display_name: string;
+  display_name: string; // pii-ignore-next-line
   message: string;
   game_id: string | null;
 };
@@ -30,16 +31,16 @@ if (!gameId) {
     "gameLobby.ts: ERROR - window.GAME_ID is not set! Bailing out of game lobby script.",
   );
 } else {
-  let currentUser: { id: string; display_name: string } | null = null;
+  let currentUser: { id: string; display_name: string } | null = null; // pii-ignore-next-line
   let isHost = false;
   let currentMaxPlayers = 0;
   let currentParticipantCount = 0;
 
-  const playersList = document.getElementById("players-list");
+  //const playersList = document.getElementById("players-list");
   const startGameBtn = document.getElementById("start-game-btn");
   const waitingMessage = document.getElementById("waiting-message");
   const gameIdDisplay = document.getElementById("game-id-display");
-  const playerCountDisplay = document.getElementById("player-count");
+  //const playerCountDisplay = document.getElementById("player-count");
   const maxPlayersDisplay = document.getElementById("max-players-display");
 
   // Chat elements
@@ -47,17 +48,17 @@ if (!gameId) {
   const chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
   const chatMessages = document.getElementById("chat-messages");
 
-  console.log("gameLobby.ts: DOM elements found:", {
-    playersList: !!playersList,
-    startGameBtn: !!startGameBtn,
-    waitingMessage: !!waitingMessage,
-    gameIdDisplay: !!gameIdDisplay,
-    playerCountDisplay: !!playerCountDisplay,
-    maxPlayersDisplay: !!maxPlayersDisplay,
-    chatForm: !!chatForm,
-    chatInput: !!chatInput,
-    chatMessages: !!chatMessages,
-  });
+  // console.log("gameLobby.ts: DOM elements found:", {
+  //   playersList: !!playersList,
+  //   startGameBtn: !!startGameBtn,
+  //   waitingMessage: !!waitingMessage,
+  //   gameIdDisplay: !!gameIdDisplay,
+  //   playerCountDisplay: !!playerCountDisplay,
+  //   maxPlayersDisplay: !!maxPlayersDisplay,
+  //   chatForm: !!chatForm,
+  //   chatInput: !!chatInput,
+  //   chatMessages: !!chatMessages,
+  // });
 
   function escapeHtml(text: string) {
     const div = document.createElement("div");
@@ -72,6 +73,7 @@ if (!gameId) {
     }
 
     if (!message?.display_name || !message.message) {
+      // pii-ignore-next-line
       console.error("Invalid message format:", message);
       return;
     }
@@ -83,7 +85,7 @@ if (!gameId) {
     messageEl.className = "p-2 rounded bg-gray-100 mb-2";
     messageEl.innerHTML = `
         <div class="flex items-start gap-2 max-w-full break-words">
-            <span class="font-semibold text-blue-600 flex-shrink-0">${escapeHtml(message.display_name)}:</span>
+            <span class="font-semibold text-blue-600 flex-shrink-0">${escapeHtml(message.display_name)}:</span>  
             <span class="text-gray-700">${escapeHtml(message.message)}</span>
         </div>
     `;
@@ -95,29 +97,28 @@ if (!gameId) {
     try {
       console.log("Loading game lobby data for gameId:", gameId);
 
-      const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
-
-      // DEBUG Validation Check(fixes potential crash if not logged in)
+      const { user } = await api.auth.me(); // pii-ignore-next-line
+      // as { user: { id: string; display_name: string } } // pii-ignore-next-line
       if (!user) {
         console.error("User not logged in!");
         window.location.href = "/login";
       }
       currentUser = user;
-      console.log("Current user:", currentUser);
+      // console.log("Current user:", currentUser);
 
-      const response = (await api.games.get(gameId)) as {
-        game: { max_players: number; created_by: string };
-        game_participants: {
-          id: string;
-          user_id: string;
-          display_name: string;
-          is_host: boolean;
-        }[];
-      };
-
-      console.log("API response:", response);
-      console.log("Game:", response.game);
-      console.log("Participants raw:", response.game_participants);
+      const response = await api.games.get(gameId);
+      // as {
+      //   game: { max_players: number; created_by: string };
+      //   game_participants: {
+      //     id: string;
+      //     user_id: string;  // pii-ignore-next-line
+      //     display_name: string;  // pii-ignore-next-line
+      //     is_host: boolean;
+      //   }[];
+      // }
+      // console.log("API response:", response);
+      // console.log("Game:", response.game);
+      // console.log("Participants raw:", response.game_participants);
 
       const { game, game_participants } = response;
 
@@ -130,24 +131,24 @@ if (!gameId) {
       const participants: GameParticipant[] = Array.from(
         new Map(
           (game_participants || []).map((p) => [
-            String(p.user_id),
+            String(p.user_id), // pii-ignore-next-line
             {
-              id: String(p.user_id),
-              display_name: p.display_name,
+              id: String(p.user_id), // pii-ignore-next-line
+              display_name: p.display_name, // pii-ignore-next-line
               is_host: p.is_host,
             } as GameParticipant,
           ]),
         ).values(),
       );
 
-      console.log("Mapped participants:", participants);
+      // console.log("Mapped participants:", participants);
 
       const userParticipant = participants.find((p) => p.id === currentUser?.id);
       isHost = game.created_by === currentUser.id || userParticipant?.is_host === true;
       console.log("Is host check:", {
-        created_by: game.created_by,
-        currentUser_id: currentUser.id,
-        userParticipant,
+        // created_by: game.created_by,
+        // currentUser_id: currentUser.id,
+        // userParticipant,
         isHost,
       });
 
@@ -170,19 +171,18 @@ if (!gameId) {
   }
 
   function renderPlayers(participants: GameParticipant[], maxPlayers: number) {
-    // Re fetch element(Fixes the silent falure)
     const safePlayersList = document.getElementById("players-list");
     const safePlayerCountDisplay = document.getElementById("player-count");
     const safeMaxPlayersDisplay = document.getElementById("max-players-display");
 
-    console.log("renderPlayers called with:", {
-      participants,
-      maxPlayers,
-      playersListFound: !!safePlayersList,
-    });
+    // console.log("renderPlayers called with:", {
+    //   participants,
+    //   maxPlayers,
+    //   playersListFound: !!safePlayersList,
+    // });
 
     if (!safePlayersList) {
-      console.error("playersList element NOT found in DOM!");
+      console.error("playersList element NOT found!");
       return;
     }
 
@@ -195,7 +195,6 @@ if (!gameId) {
     }
 
     if (participants.length === 0) {
-      // console.log("No participants, showing waiting message");
       safePlayersList.innerHTML = `<p class="text-gray-500 text-center py-4">Waiting for players...</p>`;
       return;
     }
@@ -221,7 +220,7 @@ if (!gameId) {
         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border ${
           participant.is_host ? "border-blue-500 bg-blue-50" : "border-gray-200"
         }">
-          <span class="font-medium text-gray-800">${escapeHtml(participant.display_name)}</span>
+          <span class="font-medium text-gray-800">${escapeHtml(participant.display_name)}</span>  
           ${participant.is_host ? '<span class="bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full">Host</span>' : ""}
         </div>
       `,

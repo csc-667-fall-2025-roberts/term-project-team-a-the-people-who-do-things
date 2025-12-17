@@ -149,7 +149,7 @@ function initLobbyChat() {
       console.log("Adding lobby message to UI");
       addChatMessage({ ...message, game_id: message.game_id ?? null });
     } else {
-      console.log("Ignoring non-lobby message, game_id:", message.game_id);
+      //console.log("Ignoring non-lobby message, game_id:", message.game_id);
     }
   });
 }

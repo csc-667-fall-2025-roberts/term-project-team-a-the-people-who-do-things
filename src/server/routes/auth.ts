@@ -14,22 +14,22 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
   const { email, password, displayName } = req.body;
   const r = req as AppRequest;
 
-  console.log("Signup attempt:", { email, displayName });
+  //console.log("Signup attempt:", { email, displayName });
 
   try {
     if (!email || !password || !displayName) {
-      console.log("Missing fields");
+      //console.log("Missing fields");
       return res.status(400).json({ error: "All fields are required" });
     }
 
     if (typeof password !== "string" || password.length < 6) {
-      console.log("Password too short");
+      //console.log("Password too short");
       return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    console.log("Inserting user into database...");
+    //console.log("Inserting user into database...");
     const result = await pool.query(
       `INSERT INTO users (email, password_hash, display_name)
        VALUES ($1, $2, $3)
@@ -143,22 +143,22 @@ export default router;
 router.post("/signup", async (req: express.Request, res: express.Response) => {
   const { email, password, displayName } = req.body;
 
-  console.log("Signup attempt:", { email, displayName });
+  //console.log("Signup attempt:", { email, displayName });
 
   try {
     if (!email || !password || !displayName) {
-      console.log("Missing fields");
+      //console.log("Missing fields");
       return res.status(400).json({ error: "All fields are required" });
     }
 
     if (password.length < 6) {
-      console.log("Password too short");
+      //console.log("Password too short");
       return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    console.log("Inserting user into database...");
+    //console.log("Inserting user into database...");
     const result = await pool.query(
       `INSERT INTO users (email, password_hash, display_name)
        VALUES ($1, $2, $3)
@@ -166,7 +166,7 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
       [email, passwordHash, displayName],
     );
 
-    console.log("User created:", result.rows[0]);
+    //console.log("User created:", result.rows[0]);
     const user = result.rows[0];
     req.session.userId = user.id;
 

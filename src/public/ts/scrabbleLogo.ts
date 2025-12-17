@@ -30,7 +30,7 @@ function initScrabbleLogo() {
       tile.setAttribute("draggable", "true");
       tile.style.opacity = "0.7";
       tile.style.transform = "scale(1.1)";
-      console.log("Tile is now draggable:", tile);
+      //console.log("Tile is now draggable:", tile);
     }, PRESS_DURATION);
   });
 

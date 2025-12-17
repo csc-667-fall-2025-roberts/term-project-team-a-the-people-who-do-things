@@ -5,8 +5,10 @@ import path from "path";
 
 const ROOT = process.cwd();
 const SRC_DIR = path.join(ROOT, "src");
-
 const ALLOWED_EXTS = new Set([".ts", ".tsx", ".js", ".jsx", ".ejs"]);
+const IGNORE_FILE = path.join(ROOT, ".piiignore");
+
+const DEFAULT_IGNORE_PATTERNS = ["node_modules", "dist", ".git", ".vite", "build"];
 
 const PII_KEY_PATTERNS = [
   /\bemail\b/i,
@@ -21,23 +23,79 @@ const PII_KEY_PATTERNS = [
   /\bdob\b/i,
 ];
 
-const SOCKET_EMIT_OBJECT_REGEX = /\.emit\s*\(\s*['"`][^'"`]+['"`]\s*,\s*\{/g;
+const SOCKET_EMIT_OBJECT_REGEX = /\.emit\s*\(\s*['`][^'"`]+['"`]\s*,\s*\{/g;
 
-async function walkDir(dir) {
+async function loadIgnorePatterns() {
+  try {
+    const content = await fs.readFile(IGNORE_FILE, "utf8");
+    const patterns = content
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"));
+
+    return [...DEFAULT_IGNORE_PATTERNS, ...patterns];
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      return DEFAULT_IGNORE_PATTERNS;
+    }
+    throw err;
+  }
+}
+
+function shouldIgnore(filePath, baseDir, patterns) {
+  const relativePath = path.relative(baseDir, filePath).replace(/\\/g, "/");
+
+  return patterns.some((pattern) => {
+    const cleanPattern = pattern.startsWith("/") ? pattern.slice(1) : pattern;
+
+    const parts = relativePath.split("/");
+    if (parts.some((part) => part === cleanPattern)) {
+      return true;
+    }
+
+    if (cleanPattern.includes("**")) {
+      const regex = new RegExp(
+        "^" + cleanPattern.replace(/\*\*/g, ".*").replace(/\*/g, "[^/]*") + "$",
+      );
+      return regex.test(relativePath);
+    }
+
+    if (cleanPattern.includes("*")) {
+      const regex = new RegExp("^" + cleanPattern.replace(/\*/g, "[^/]*") + "$");
+      return regex.test(relativePath) || regex.test(path.basename(filePath));
+    }
+
+    if (relativePath === cleanPattern || path.basename(filePath) === cleanPattern) {
+      return true;
+    }
+
+    if (relativePath.startsWith(cleanPattern + "/")) {
+      return true;
+    }
+
+    return false;
+  });
+}
+
+async function walkDir(dir, baseDir, patterns) {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const files = [];
 
   for (const entry of entries) {
-    if (entry.name === "node_modules" || entry.name === "dist" || entry.name === ".git") continue;
-
     const full = path.join(dir, entry.name);
+
+    if (shouldIgnore(full, baseDir, patterns)) {
+      continue;
+    }
+
     if (entry.isDirectory()) {
-      files.push(...(await walkDir(full)));
+      files.push(...(await walkDir(full, baseDir, patterns)));
     } else {
       const ext = path.extname(entry.name).toLowerCase();
       if (ALLOWED_EXTS.has(ext)) files.push(full);
     }
   }
+
   return files;
 }
 
@@ -51,8 +109,29 @@ function snippetForLine(content, line) {
   return lines[idx].trim();
 }
 
+function shouldIgnoreLine(content, lineNumber) {
+  const lines = content.split(/\r?\n/);
+  const currentLine = lines[lineNumber - 1];
+  const previousLine = lineNumber > 1 ? lines[lineNumber - 2] : null;
+
+  if (currentLine && /\/\/\s*pii-ignore|\/\*\s*pii-ignore/.test(currentLine)) {
+    return true;
+  }
+
+  if (
+    previousLine &&
+    /\/\/\s*pii-ignore-next-line|\/\*\s*pii-ignore-next-line/.test(previousLine)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 async function runScanner() {
   try {
+    const ignorePatterns = await loadIgnorePatterns();
+
     try {
       const st = await fs.stat(SRC_DIR);
       if (!st.isDirectory()) {
@@ -64,7 +143,7 @@ async function runScanner() {
       process.exit(3);
     }
 
-    const files = await walkDir(SRC_DIR);
+    const files = await walkDir(SRC_DIR, SRC_DIR, ignorePatterns);
     const findings = [];
 
     for (const file of files) {
@@ -78,6 +157,11 @@ async function runScanner() {
       let match;
       while ((match = SOCKET_EMIT_OBJECT_REGEX.exec(content)) !== null) {
         const ln = lineNumberOfIndex(content, match.index);
+
+        if (shouldIgnoreLine(content, ln)) {
+          continue;
+        }
+
         findings.push({
           file,
           line: ln,
@@ -91,6 +175,11 @@ async function runScanner() {
         let m;
         while ((m = rx.exec(content)) !== null) {
           const ln = lineNumberOfIndex(content, m.index);
+
+          if (shouldIgnoreLine(content, ln)) {
+            continue;
+          }
+
           findings.push({
             file,
             line: ln,

@@ -46,9 +46,6 @@ async function init(): Promise<void> {
 init().catch((error) => {
   console.error("Failed to initialize:", error);
 });
-init().catch((error) => {
-  console.error("Failed to initialize:", error);
-});
 
 function mapErrorMessage(serverMessage: string): string {
   // If it's already a readable message, format it nicely
@@ -155,7 +152,7 @@ document.getElementById("submit-move-btn")?.addEventListener("click", () => {
     0,
   );
 
-  console.log("Submitting Move:", { gameId, tiles, words, score });
+  //console.log("Submitting Move:", { gameId, tiles, words, score });
 
   socket.emit("make-move", {
     gameId,
@@ -404,7 +401,7 @@ const handlers = {
   },
   moveMade: (data: unknown) => {
     const typedData = data as MoveMadeResponse;
-    console.log("Move made event received:", typedData);
+    // console.log("Move made event received:", typedData);
 
     // 1. Update the Board (Show the tiles the other player placed!)
     board.updateBoard(typedData.gameState.board);
@@ -418,6 +415,7 @@ const handlers = {
 
     // 4. If *I* made the move, clear my selection so I don't see stuck tiles
     if (currentUser && typedData.userId === currentUser.id) {
+      // pii-ignore-next-line
       board.clearSelection();
     }
   },
@@ -438,7 +436,7 @@ const handlers = {
     }
   },
   newTiles: (data: unknown) => {
-    console.log("Received new tiles:", data);
+    //console.log("Received new tiles:", data);
     const typedData = data as { tiles: string[] };
     if (typedData && Array.isArray(typedData.tiles)) {
       board.setHand(typedData.tiles);

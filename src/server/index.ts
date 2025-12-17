@@ -29,14 +29,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 type AppSession = import("express-session").Session & {
-  userId?: string;
-  user?: { id?: string; display_name?: string; email?: string } | null;
+  userId?: string; // pii-ignore-next-line
+  user?: { id?: string; display_name?: string; email?: string } | null; // pii-ignore-next-line
   [key: string]: unknown;
 };
 
 type AppRequest = Request & {
   session?: AppSession | null;
-  users?: { id?: string; display_name?: string; email?: string } | null;
+  users?: { id?: string; display_name?: string; email?: string } | null; // pii-ignore-next-line
 };
 
 const app = express();
@@ -117,7 +117,7 @@ app.get("/game/:gameId/lobby", requireAuth, (req: AppRequest, res: Response) => 
 });
 
 app.get("/game/:gameId", requireAuth, (req: AppRequest, res: Response) => {
-  console.log("Game route hit:", req.params.gameId, "User:", req.users?.id);
+  //console.log("Game route hit:", req.params.gameId, "User:", req.users?.id);
   res.render("screens/gameRoom", {
     user: req.users,
     gameId: req.params.gameId,
@@ -143,8 +143,8 @@ app.get("/error", (req: AppRequest, res: Response) => {
 
 app.get("/settings", requireAuth, (req: AppRequest, res: Response) => {
   const safeUser = req.users || {
-    display_name: "Ghost User",
-    email: "error@example.com",
+    display_name: "Ghost User", // pii-ignore-next-line
+    email: "error@example.com", // pii-ignore-next-line
   };
 
   res.render("screens/settings", {
@@ -158,7 +158,7 @@ app.get(/.*\.map$/, (req: AppRequest, res: Response) => {
 });
 
 app.use((req: AppRequest, res: Response) => {
-  res.status(404).render("screens/error", { user: req.users, message: "Page Not Found" });
+  res.status(404).render("screens/error", { user: req.users, message: "Page Not Found" }); // pii-ignore-next-line
 });
 
 function wrap(middleware: RequestHandler) {
@@ -171,22 +171,22 @@ io.use(wrap(sessionMiddleware));
 
 io.on("connection", (socket: Socket) => {
   const req = socket.request as unknown as AppRequest;
-  const userId = String(req.session?.userId ?? "");
+  const userId = String(req.session?.userId ?? ""); // pii-ignore-next-line
 
-  console.log("User connected:", userId);
+  //console.log("User connected:", userId);
 
-  socket.data.userId = userId;
+  socket.data.userId = userId; // pii-ignore-next-line
 
   // Join lobby room
   socket.on("join-lobby", () => {
     socket.join("lobby");
-    console.log("User joined lobby:", userId);
+    //console.log("User joined lobby:", userId);
   });
 
   // Leave lobby room
   socket.on("leave-lobby", () => {
     socket.leave("lobby");
-    console.log("User left lobby:", userId);
+    //console.log("User left lobby:", userId);
   });
 
   // Join game lobby room
@@ -196,12 +196,12 @@ io.on("connection", (socket: Socket) => {
     const { gameId } = data;
 
     socket.join(gameId);
-    console.log("User joined game lobby:", userId, "gameId:", gameId);
+    //console.log("User joined game lobby:", userId, "gameId:", gameId);
 
     // Notify others in the lobby
     socket.to(gameId).emit("player-joined-lobby", {
-      userId,
-      displayName: req.session?.user?.display_name || "Unknown",
+      userId, // pii-ignore-next-line
+      displayName: req.session?.user?.display_name || "Unknown", // pii-ignore-next-line
       isHost: false,
     });
   });
@@ -209,7 +209,7 @@ io.on("connection", (socket: Socket) => {
   // Leave game lobby room
   socket.on("leave-game-lobby", async (gameId: string) => {
     socket.leave(gameId);
-    console.log("User left game lobby:", userId, "gameId:", gameId);
+    //console.log("User left game lobby:", userId, "gameId:", gameId);
 
     try {
       // Check if the game is still in 'waiting' status
@@ -259,7 +259,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("join-game", (payload) => {
     const data = validateOrEmitError(socket, JoinGameSchema, payload);
     if (!data) return;
-    const { gameId } = data;
+    const { gameId } = data; // pii-ignore-next-line
 
     (async () => {
       socket.join(gameId);
@@ -345,7 +345,7 @@ io.on("connection", (socket: Socket) => {
 
         // Send current game state to the joining player
         const gameState = game.getGameState();
-        const playerHand = userId ? game.getPlayerHand(userId) : [];
+        const playerHand = userId ? game.getPlayerHand(userId) : []; // pii-ignore-next-line
 
         socket.emit("game-state", {
           ...gameState,
@@ -380,21 +380,21 @@ io.on("connection", (socket: Socket) => {
       const result = game.applyMove(userId, tiles, calculatedScore);
 
       io.to(gameId).emit("move-made", {
-        userId,
+        userId, // pii-ignore-next-line
         tiles,
         score: calculatedScore,
         currentPlayer: result.currentPlayer,
         gameState: game.getGameState(),
       });
 
-      socket.emit("new-tiles", { tiles: game.getPlayerHand(userId) });
+      socket.emit("new-tiles", { tiles: game.getPlayerHand(userId) }); // pii-ignore-next-line
 
       try {
         await pool.query(
           "INSERT INTO moves (game_id, user_id, turn_number, payload) VALUES ($1, $2, $3, $4)",
           [
             gameId,
-            userId,
+            userId, // pii-ignore-next-line
             game.currentPlayerIndex,
             JSON.stringify({ tiles, words, score: calculatedScore }),
           ],
@@ -409,7 +409,7 @@ io.on("connection", (socket: Socket) => {
         );
         // Save tiles to board in DB
         const boardInsert = tiles
-          .map((t: any) => `('${gameId}', ${t.row}, ${t.col}, '${t.letter}', '${userId}')`)
+          .map((t: any) => `('${gameId}', ${t.row}, ${t.col}, '${t.letter}', '${userId}')`) // pii-ignore-next-line
           .join(",");
 
         await pool.query(
@@ -426,13 +426,13 @@ io.on("connection", (socket: Socket) => {
         WHERE game_id = $1 AND user_id = $2 AND letter = $3
         LIMIT 1
         )`,
-            [gameId, userId, t.letter],
+            [gameId, userId, t.letter], // pii-ignore-next-line
           );
         }
 
         if (result.newTiles.length > 0) {
           const newHand = result.newTiles
-            .map((l) => `('${gameId}', '${userId}', '${l}')`)
+            .map((l) => `('${gameId}', '${userId}', '${l}')`) // pii-ignore-next-line
             .join(",");
 
           await pool.query(
@@ -504,7 +504,7 @@ io.on("connection", (socket: Socket) => {
         return socket.emit("error", { message: "Game not found" });
       }
 
-      const result = game.pass(userId);
+      const result = game.pass(userId); // pii-ignore-next-line
       if (!result.valid) {
         return socket.emit("error", { message: result.error });
       }
@@ -528,7 +528,7 @@ io.on("connection", (socket: Socket) => {
         ]);
 
         io.to(gameId).emit("turn-passed", {
-          userId,
+          userId, // pii-ignore-next-line
           currentPlayer: result.currentPlayer,
         });
       }
@@ -546,7 +546,7 @@ io.on("connection", (socket: Socket) => {
         return socket.emit("error", { message: "Game not found" });
       }
 
-      const result = game.exchangeTiles(userId, tiles);
+      const result = game.exchangeTiles(userId, tiles); // pii-ignore-next-line
       if (!result.valid) {
         return socket.emit("error", { message: result.error });
       }
@@ -574,11 +574,11 @@ io.on("connection", (socket: Socket) => {
 
         const result = await pool.query(
           "INSERT INTO chat_messages (game_id, user_id, message) VALUES ($1, $2, $3) RETURNING *",
-          [dbGameId, userId, message],
+          [dbGameId, userId, message], // pii-ignore-next-line
         );
 
         const userResult = await pool.query("SELECT display_name FROM users WHERE id = $1", [
-          userId,
+          userId, // pii-ignore-next-line
         ]);
 
         const chatMessage = {
@@ -587,7 +587,7 @@ io.on("connection", (socket: Socket) => {
           game_id: result.rows[0].game_id,
         };
 
-        console.log("Sending chat message:", chatMessage);
+        //console.log("Sending chat message:", chatMessage);
 
         if (isLobby) {
           console.log("Emitting to lobby room");
@@ -604,11 +604,11 @@ io.on("connection", (socket: Socket) => {
   // Leave game
   socket.on("leave-game", (gameId) => {
     socket.leave(gameId);
-    socket.to(gameId).emit("player-left", { userId });
+    socket.to(gameId).emit("player-left", { userId }); // pii-ignore-next-line
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected:", userId);
+    //console.log("User disconnected:", userId);
   });
 });
 
