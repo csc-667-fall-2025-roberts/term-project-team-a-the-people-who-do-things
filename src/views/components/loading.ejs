@@ -1,0 +1,53 @@
+<!-- Loading Overlay - Uses INLINE styles so it works before CSS loads -->
+<style>
+  #page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9fafb;
+    transition: opacity 0.3s ease;
+  }
+  #page-loader .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #bfdbfe;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  #page-loader .text {
+    margin-top: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+
+<div id="page-loader">
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div class="spinner"></div>
+    <span class="text">Loading...</span>
+  </div>
+</div>
+
+<script>
+  // Hide loader once page is fully loaded
+  window.addEventListener('load', function() {
+    var loader = document.getElementById('page-loader');
+    if (loader) {
+      loader.style.opacity = '0';
+      setTimeout(function() { loader.remove(); }, 300);
+    }
+  });
+</script>
+
