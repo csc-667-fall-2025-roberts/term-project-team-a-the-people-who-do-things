@@ -207,11 +207,52 @@ io.on("connection", (socket: Socket) => {
   });
 
   // Leave game lobby room
-  socket.on("leave-game-lobby", (gameId: string) => {
+  socket.on("leave-game-lobby", async (gameId: string) => {
     socket.leave(gameId);
     console.log("User left game lobby:", userId, "gameId:", gameId);
 
-    socket.to(gameId).emit("player-left-lobby", { userId });
+    try {
+      // Check if the game is still in 'waiting' status
+      // Only remove player if they're abandoning a waiting game, not starting one
+      const gameResult = await pool.query(
+        "SELECT status FROM games WHERE id = $1",
+        [gameId]
+      );
+
+      // If game doesn't exist or is already started, don't remove player
+      if (gameResult.rows.length === 0 || gameResult.rows[0].status !== 'waiting') {
+        console.log("Game already started or doesn't exist, not removing player");
+        return;
+      }
+
+      // Remove player from the waiting game in database
+      await pool.query(
+        "DELETE FROM game_participants WHERE game_id = $1 AND user_id = $2",
+        [gameId, userId]
+      );
+      console.log("Removed player from game_participants:", userId, "gameId:", gameId);
+
+      // Get updated player count
+      const countResult = await pool.query(
+        "SELECT COUNT(*) as count FROM game_participants WHERE game_id = $1",
+        [gameId]
+      );
+      const playerCount = parseInt(countResult.rows[0].count);
+
+      // Notify others in the game lobby
+      socket.to(gameId).emit("player-left-lobby", { userId, playerCount });
+
+      // Notify the main lobby to refresh the games list
+      io.to("lobby").emit("lobby-updated");
+
+      // If no players left, delete the game
+      if (playerCount === 0) {
+        await pool.query("DELETE FROM games WHERE id = $1", [gameId]);
+        console.log("Deleted empty game:", gameId);
+      }
+    } catch (error) {
+      console.error("Error removing player from game:", error);
+    }
   });
 
   // Join game room

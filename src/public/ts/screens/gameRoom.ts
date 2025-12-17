@@ -51,22 +51,94 @@ init().catch((error) => {
 });
 
 function mapErrorMessage(serverMessage: string): string {
+  // If it's already a readable message, format it nicely
+  if (serverMessage.startsWith("Invalid word")) {
+    return `❌ ${serverMessage} - not a valid Scrabble word!`;
+  }
+  if (serverMessage.startsWith("Tiles must be")) {
+    return `❌ ${serverMessage}`;
+  }
+  if (serverMessage.startsWith("Not your turn")) {
+    return `⏳ Wait for your turn!`;
+  }
+  if (serverMessage.startsWith("Tile not in hand")) {
+    return `❌ You don't have that tile!`;
+  }
+  if (serverMessage.startsWith("First word must")) {
+    return `❌ First word must cover the center square!`;
+  }
+  if (serverMessage.startsWith("Must place")) {
+    return `❌ You must place at least one tile!`;
+  }
+  
   const errorMap: Record<string, string> = {
     invalid_move: "That move is not allowed",
     tiles_already_placed: "Tiles are already placed this turn",
     insufficient_tiles: "Not enough tiles available",
   };
 
-  return errorMap[serverMessage] || "An error occurred. Please try again.";
+  return errorMap[serverMessage] || serverMessage || "An error occurred. Please try again.";
 }
 
-function alert(message: string) {
+function showNotification(message: string, type: "error" | "success" | "info" = "error") {
+  // Remove any existing notifications
+  document.querySelectorAll(".game-notification").forEach(el => el.remove());
+  
   const notification = document.createElement("div");
-  notification.className = "error-notification";
+  
+  // Style based on type using inline styles (works without Tailwind loading)
+  const colors = {
+    error: { bg: "#ef4444", text: "#ffffff" },
+    success: { bg: "#22c55e", text: "#ffffff" },
+    info: { bg: "#3b82f6", text: "#ffffff" }
+  };
+  const color = colors[type];
+  
+  notification.className = "game-notification";
+  notification.style.cssText = `
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: ${color.bg};
+    color: ${color.text};
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 9999;
+    font-weight: 600;
+    font-size: 16px;
+    text-align: center;
+    animation: slideDown 0.3s ease-out;
+  `;
   notification.textContent = message;
+  
+  // Add animation keyframes
+  if (!document.getElementById("notification-styles")) {
+    const style = document.createElement("style");
+    style.id = "notification-styles";
+    style.textContent = `
+      @keyframes slideDown {
+        from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
   document.body.appendChild(notification);
 
-  setTimeout(() => notification.remove(), 5000);
+  // Fade out after 4 seconds
+  setTimeout(() => {
+    notification.style.transition = "opacity 0.5s";
+    notification.style.opacity = "0";
+    setTimeout(() => notification.remove(), 500);
+  }, 4000);
+}
+
+// Keep alert as alias for backward compatibility
+function alert(message: string) {
+  showNotification(message, "error");
 }
 
 document.getElementById("submit-move-btn")?.addEventListener("click", () => {

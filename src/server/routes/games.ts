@@ -10,8 +10,50 @@ import { ScrabbleGame } from "../services/scrabbleEngine.js";
 export default function gamesRouter(io: Server) {
   const router = express.Router();
 
+  // Cleanup old/inactive games from the database
+  async function cleanupGames() {
+    try {
+      // Delete games that are:
+      // 1. Finished (completed games)
+      // 2. Inactive for more than 2 hours
+      // 3. Waiting games with no participants
+      const result = await pool.query(`
+        DELETE FROM games
+        WHERE id IN (
+          -- Finished games older than 1 hour
+          SELECT id FROM games 
+          WHERE status = 'finished' AND ended_at < NOW() - INTERVAL '1 hour'
+          
+          UNION
+          
+          -- Waiting games older than 2 hours (abandoned lobbies)
+          SELECT id FROM games 
+          WHERE status = 'waiting' AND created_at < NOW() - INTERVAL '2 hours'
+          
+          UNION
+          
+          -- Games with no participants
+          SELECT g.id FROM games g
+          LEFT JOIN game_participants gp ON g.id = gp.game_id
+          GROUP BY g.id
+          HAVING COUNT(gp.user_id) = 0
+        )
+        RETURNING id
+      `);
+      
+      if (result.rowCount && result.rowCount > 0) {
+        console.log(`[Cleanup] Deleted ${result.rowCount} old/inactive games`);
+      }
+    } catch (error) {
+      console.error("[Cleanup] Error cleaning up games:", error);
+    }
+  }
+
   router.get("/lobby", requireAuth, async (_req: AppRequest, res: express.Response) => {
     try {
+      // Run cleanup before fetching lobby games
+      await cleanupGames();
+      
       const result = await pool.query(
         `SELECT g.id, g.title, g.game_type, g.status, g.max_players, g.created_at,
               u.display_name as creator_name,
@@ -20,7 +62,9 @@ export default function gamesRouter(io: Server) {
        JOIN users u ON g.created_by = u.id
        LEFT JOIN game_participants gp ON g.id = gp.game_id
        WHERE g.status = 'waiting'
+         AND g.created_at > NOW() - INTERVAL '2 hours'
        GROUP BY g.id, g.title, g.game_type, g.status, g.max_players, g.created_at, u.display_name
+       HAVING COUNT(gp.user_id) > 0
        ORDER BY g.created_at DESC`,
         [],
       );

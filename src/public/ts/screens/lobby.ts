@@ -271,6 +271,11 @@ socket.on("game-started", () => {
   void loadGames();
 });
 
+// Refresh lobby when a player leaves a game (player count changed)
+socket.on("lobby-updated", () => {
+  void loadGames();
+});
+
 // Wait for DOM to be ready
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
