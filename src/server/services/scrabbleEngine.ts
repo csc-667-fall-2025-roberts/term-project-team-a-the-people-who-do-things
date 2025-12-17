@@ -142,10 +142,14 @@ export class ScrabbleGame {
       return { valid: false, error: "Tile not in hand" };
 
     const line = this.singleLine(tiles);
+    console.log("[Move Validation] Tiles placed:", tiles.map(t => `${t.letter}@(${t.row},${t.col})`).join(", "));
+    console.log("[Move Validation] Single line check:", line);
     if (!line.ok) return { valid: false, error: "Tiles must be in a single row or column" };
     const horizontal = !!line.horizontal;
 
-    if (!this.continuity(tiles, horizontal))
+    const contResult = this.continuity(tiles, horizontal);
+    console.log("[Move Validation] Continuity check:", contResult, "(horizontal:", horizontal, ")");
+    if (!contResult)
       return { valid: false, error: "Tiles must be continuous" };
 
     if (this.boardIsEmpty()) {
@@ -155,8 +159,11 @@ export class ScrabbleGame {
     }
 
     const formed = this.getFormedWords(tiles);
+    console.log("[Move Validation] Words formed:", formed.map(f => `"${f.word}"`).join(", "));
     for (const f of formed) {
-      if (!isValidWord(f.word)) return { valid: false, error: `Invalid word: ${f.word}` };
+      const valid = isValidWord(f.word);
+      console.log(`[Move Validation] Checking "${f.word}": ${valid ? "✓ VALID" : "✗ INVALID"}`);
+      if (!valid) return { valid: false, error: `Invalid word: ${f.word}` };
     }
 
     return { valid: true };
@@ -197,15 +204,19 @@ export class ScrabbleGame {
     let end = maxCol;
     while (end < BOARD_SIZE - 1 && this.board[row][end + 1]) end++;
 
+    console.log(`[Word Scan] Horizontal scan: row=${row}, cols ${start} to ${end}`);
+
     let word = "";
     const cells: WordCell[] = [];
     for (let c = start; c <= end; c++) {
       const boardLetter = this.board[row][c];
       const tile = tiles.find((t) => t.row === row && t.col === c);
       const letter = boardLetter ?? tile?.letter ?? "";
+      console.log(`  Col ${c}: board="${boardLetter || '-'}", tile="${tile?.letter || '-'}", using="${letter}"`);
       word += letter;
       cells.push({ letter, row, col: c, isNew: !!tile });
     }
+    console.log(`[Word Scan] Horizontal word formed: "${word}"`);
     return { word, cells };
   }
 
@@ -219,15 +230,19 @@ export class ScrabbleGame {
     let end = maxRow;
     while (end < BOARD_SIZE - 1 && this.board[end + 1][col]) end++;
 
+    console.log(`[Word Scan] Vertical scan: col=${col}, rows ${start} to ${end}`);
+
     let word = "";
     const cells: WordCell[] = [];
     for (let r = start; r <= end; r++) {
       const boardLetter = this.board[r][col];
       const tile = tiles.find((t) => t.row === r && t.col === col);
       const letter = boardLetter ?? tile?.letter ?? "";
+      console.log(`  Row ${r}: board="${boardLetter || '-'}", tile="${tile?.letter || '-'}", using="${letter}"`);
       word += letter;
       cells.push({ letter, row: r, col, isNew: !!tile });
     }
+    console.log(`[Word Scan] Vertical word formed: "${word}"`);
     return { word, cells };
   }
 

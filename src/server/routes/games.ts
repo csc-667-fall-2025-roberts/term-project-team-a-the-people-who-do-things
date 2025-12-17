@@ -33,15 +33,18 @@ export default function gamesRouter(io: Server) {
   });
 
   const createGameSchema = z.object({
-    title: z.string().min(1).max(50).optional(),
+    // Title is optional - empty string is allowed and will become undefined
+    title: z.string().max(50).optional().transform(val => val?.trim() || undefined),
     maxPlayers: z.number().int().min(2).max(4).default(2),
     settings: z.record(z.string(), z.unknown()).optional().default({}),
   });
 
   router.post("/create", requireAuth, async (req: express.Request, res: express.Response) => {
     const r = req as AppRequest;
+    console.log("[Create Game] Request body:", req.body);
     const validation = createGameSchema.safeParse(req.body);
     if (!validation.success) {
+      console.log("[Create Game] Validation failed:", validation.error.issues);
       return res.status(400).json({ error: validation.error.issues });
     }
     // eslint-disable-next-line unused-imports/no-unused-vars
