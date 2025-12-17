@@ -31,8 +31,8 @@ export type GameState = {
 // API response wrappers
 export type ApiResponse<T = any> = {
   success: boolean;
-  data?: T;
-  error?: string;
+  data?: T;                   // data - present if success is true. Is a wrapper around the actual data type T.
+  error?: string;          // error - present if success is false. Contains error message from the server.
   message?: string;
 };
 
