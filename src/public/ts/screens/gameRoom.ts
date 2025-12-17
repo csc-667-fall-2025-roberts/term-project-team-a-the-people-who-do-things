@@ -341,7 +341,8 @@ const handlers = {
     updateScores(typedData.gameState.scores);
 
     // 4. If *I* made the move, clear my selection so I don't see stuck tiles
-    if (currentUser && typedData.userId === currentUser.id) { // pii-ignore-next-line
+    if (currentUser && typedData.userId === currentUser.id) {
+      // pii-ignore-next-line
       board.clearSelection();
     }
   },
