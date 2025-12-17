@@ -82,7 +82,7 @@ document.getElementById("submit-move-btn")?.addEventListener("click", () => {
     0,
   );
 
-  console.log("Submitting Move:", { gameId, tiles, words, score });
+  //console.log("Submitting Move:", { gameId, tiles, words, score });
 
   socket.emit("make-move", {
     gameId,
@@ -142,7 +142,7 @@ function renderPlayers(participants: GameParticipant[]) {
 
   playersList.innerHTML = participants
     .map((participant) => {
-      const isMe = currentUser && participant.user_id === currentUser.id;
+      const isMe = currentUser && participant.user_id === currentUser.id; // pii-ignore-next-line
       const containerClass = isMe ? "bg-blue-50 border-blue-200" : "bg-white border-slate-200";
 
       return `
@@ -164,7 +164,7 @@ function renderPlayers(participants: GameParticipant[]) {
 
 function renderScores(scores: ScoreEntry[]) {
   const aggregated = scores.reduce<Record<string, number>>((acc, scoreEntry) => {
-    acc[scoreEntry.user_id] = scoreEntry.value;
+    acc[scoreEntry.user_id] = scoreEntry.value; // pii-ignore-next-line
     return acc;
   }, {});
   updateScores(aggregated);
@@ -176,8 +176,8 @@ function updateScores(scores: Record<string, number>) {
 
   scoresContainer.innerHTML = Object.entries(scores)
     .map(([userId, score]) => {
-      const participant = participants.find((p: GameParticipant) => p.user_id === userId);
-      const displayName = participant?.display_name || "Unknown";
+      const participant = participants.find((p: GameParticipant) => p.user_id === userId); // pii-ignore-next-line
+      const displayName = participant?.display_name || "Unknown";  // pii-ignore-next-line
 
       return `
         <div class="score-item ${currentUser?.id === userId ? "current-user" : ""}">
@@ -328,7 +328,7 @@ const handlers = {
   },
   moveMade: (data: unknown) => {
     const typedData = data as MoveMadeResponse;
-    console.log("Move made event received:", typedData);
+    // console.log("Move made event received:", typedData);
 
     // 1. Update the Board (Show the tiles the other player placed!)
     board.updateBoard(typedData.gameState.board);
@@ -341,7 +341,7 @@ const handlers = {
     updateScores(typedData.gameState.scores);
 
     // 4. If *I* made the move, clear my selection so I don't see stuck tiles
-    if (currentUser && typedData.userId === currentUser.id) {
+    if (currentUser && typedData.userId === currentUser.id) { // pii-ignore-next-line
       board.clearSelection();
     }
   },
@@ -362,7 +362,7 @@ const handlers = {
     }
   },
   newTiles: (data: unknown) => {
-    console.log("Received new tiles:", data);
+    //console.log("Received new tiles:", data);
     const typedData = data as { tiles: string[] };
     if (typedData && Array.isArray(typedData.tiles)) {
       board.setHand(typedData.tiles);

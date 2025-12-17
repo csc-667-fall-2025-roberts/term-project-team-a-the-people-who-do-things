@@ -117,7 +117,7 @@ app.get("/game/:gameId/lobby", requireAuth, (req: AppRequest, res: Response) => 
 });
 
 app.get("/game/:gameId", requireAuth, (req: AppRequest, res: Response) => {
-  console.log("Game route hit:", req.params.gameId, "User:", req.users?.id);
+  //console.log("Game route hit:", req.params.gameId, "User:", req.users?.id);
   res.render("screens/gameRoom", {
     user: req.users,
     gameId: req.params.gameId,
@@ -173,20 +173,20 @@ io.on("connection", (socket: Socket) => {
   const req = socket.request as unknown as AppRequest;
   const userId = String(req.session?.userId ?? "");
 
-  console.log("User connected:", userId);
+  //console.log("User connected:", userId);
 
   socket.data.userId = userId;
 
   // Join lobby room
   socket.on("join-lobby", () => {
     socket.join("lobby");
-    console.log("User joined lobby:", userId);
+    //console.log("User joined lobby:", userId);
   });
 
   // Leave lobby room
   socket.on("leave-lobby", () => {
     socket.leave("lobby");
-    console.log("User left lobby:", userId);
+    //console.log("User left lobby:", userId);
   });
 
   // Join game lobby room
@@ -196,7 +196,7 @@ io.on("connection", (socket: Socket) => {
     const { gameId } = data;
 
     socket.join(gameId);
-    console.log("User joined game lobby:", userId, "gameId:", gameId);
+    //console.log("User joined game lobby:", userId, "gameId:", gameId);
 
     // Notify others in the lobby
     socket.to(gameId).emit("player-joined-lobby", {
@@ -209,7 +209,7 @@ io.on("connection", (socket: Socket) => {
   // Leave game lobby room
   socket.on("leave-game-lobby", (gameId: string) => {
     socket.leave(gameId);
-    console.log("User left game lobby:", userId, "gameId:", gameId);
+    //console.log("User left game lobby:", userId, "gameId:", gameId);
 
     socket.to(gameId).emit("player-left-lobby", { userId });
   });
@@ -253,7 +253,7 @@ io.on("connection", (socket: Socket) => {
         const uniquePlayers = Array.from(new Set(game_participants.map((id) => String(id))));
         if (!game) {
           game = gameManager.createGame(gameId, uniquePlayers, boardState);
-          console.log(`Game ${gameId} loaded from DB with ${boardResult.rows.length} tiles.`);
+          //console.log(`Game ${gameId} loaded from DB with ${boardResult.rows.length} tiles.`);
         } else {
           const existingPlayers = game.players ?? [];
           const equals =
@@ -279,7 +279,7 @@ io.on("connection", (socket: Socket) => {
             const hand = dbHandResult.rows.map((r: { letter: string }) => r.letter);
             if (userId) game.playerHands[userId] = hand;
           } else {
-            console.log(`Player ${userId} has no tiles. Drawing starting hand...`);
+            //console.log(`Player ${userId} has no tiles. Drawing starting hand...`);
             const newHand = game.drawTiles(7);
             if (userId) game.playerHands[userId] = newHand;
 
@@ -508,7 +508,7 @@ io.on("connection", (socket: Socket) => {
           game_id: result.rows[0].game_id,
         };
 
-        console.log("Sending chat message:", chatMessage);
+        //console.log("Sending chat message:", chatMessage);
 
         if (isLobby) {
           console.log("Emitting to lobby room");
@@ -529,7 +529,7 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected:", userId);
+    //console.log("User disconnected:", userId);
   });
 });
 

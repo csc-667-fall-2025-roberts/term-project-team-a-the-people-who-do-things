@@ -27,7 +27,7 @@ function renderScores(scores: ScoreEntry[], participants: GameParticipant[]) {
   const scoresList = document.getElementById("scores-list");
   if (!scoresList) return;
 
-  const participantMap = new Map(participants.map((p) => [p.user_id, p.display_name]));
+  const participantMap = new Map(participants.map((p) => [p.user_id, p.display_name]));  // pii-ignore-next-line
 
   const sortedScores = [...scores].sort((a, b) => b.value - a.value);
 

@@ -7,7 +7,7 @@ const _filename = fileURLToPath(import.meta.url);
 const _dirname = path.dirname(_filename);
 const WORDS_FILE_PATH = path.join(_dirname, "words.txt");
 
-console.log("Loading dictionary...");
+//console.log("Loading dictionary...");
 let VALID_WORDS: Set<string>;
 let WORD_LIST: string[] = [];
 

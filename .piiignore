@@ -1,0 +1,40 @@
+# .piiignore
+
+node_modules
+dist
+.git
+.vite
+build
+DB
+
+# Test files
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+**/__tests__/**
+**/tests/**
+
+**/*.d.ts
+types
+
+# Config files
+*.config.ts
+*.config.js
+
+public/ts/api.ts
+
+views/screens
+views/components
+
+server/migrations
+
+server/socket-validators.ts
+
+# Type definitions
+types/client/dom.ts
+types/client/socket-events.ts
+types/gameState.ts
+types/scores.ts
+types/user_settings.ts
+types/users.ts
