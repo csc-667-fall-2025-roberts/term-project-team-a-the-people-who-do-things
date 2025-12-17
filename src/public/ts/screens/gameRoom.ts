@@ -18,6 +18,7 @@ const gameId = window.GAME_ID;
 const board = new ScrabbleBoard("scrabble-board");
 let currentUser: { id: string; display_name: string } | null = null;
 let participants: GameParticipant[] = [];
+let playerScores: Record<string, number> = {}; // Track scores for each player
 let currentPlayerId: string | null = null;
 let turnTimer: number | null = null;
 let timeLeft = 60;
@@ -136,26 +137,39 @@ function addChatMessage(message: ChatMessage) {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function renderPlayers(participants: GameParticipant[]) {
+function renderPlayers(participantsList: GameParticipant[]) {
   const playersList = document.getElementById("players-list");
   if (!playersList) return;
 
-  playersList.innerHTML = participants
-    .map((participant) => {
+  // Sort players by score (highest first)
+  const sorted = [...participantsList].sort((a, b) => {
+    const scoreA = playerScores[a.user_id] || 0;
+    const scoreB = playerScores[b.user_id] || 0;
+    return scoreB - scoreA;
+  });
+
+  playersList.innerHTML = sorted
+    .map((participant, index) => {
       const isMe = currentUser && participant.user_id === currentUser.id;
-      const containerClass = isMe ? "bg-blue-50 border-blue-200" : "bg-white border-slate-200";
+      const score = playerScores[participant.user_id] || 0;
+      const isLeader = index === 0 && score > 0;
+      
+      // Highlight current user and leader
+      let containerClass = "bg-white border-slate-200";
+      if (isMe) containerClass = "bg-blue-50 border-blue-300";
+      if (isLeader && !isMe) containerClass = "bg-yellow-50 border-yellow-300";
+      if (isLeader && isMe) containerClass = "bg-gradient-to-r from-blue-50 to-yellow-50 border-yellow-300";
 
       return `
         <div class="flex items-center justify-between p-3 border rounded-lg shadow-sm ${containerClass}">
+          <div class="flex items-center gap-2 min-w-0">
+            ${isLeader ? '<span class="text-yellow-500">👑</span>' : ''}
             <span class="text-sm font-bold text-slate-700 truncate">
               ${escapeHtml(participant.display_name)}
             </span>
-          
-          ${
-            participant.is_host
-              ? '<span class="px-2 py-0.5 text-[10px] font-bold text-gray-100 bg-gray-800 rounded uppercase tracking-wider">HOST</span>'
-              : ""
-          }
+            ${isMe ? '<span class="text-xs text-blue-500">(you)</span>' : ''}
+          </div>
+          <span class="text-lg font-bold text-blue-600 ml-2">${score}</span>
         </div>
       `;
     })
@@ -163,30 +177,20 @@ function renderPlayers(participants: GameParticipant[]) {
 }
 
 function renderScores(scores: ScoreEntry[]) {
-  const aggregated = scores.reduce<Record<string, number>>((acc, scoreEntry) => {
+  // Convert array of score entries to a simple object
+  playerScores = scores.reduce<Record<string, number>>((acc, scoreEntry) => {
     acc[scoreEntry.user_id] = scoreEntry.value;
     return acc;
   }, {});
-  updateScores(aggregated);
+  // Re-render players with updated scores
+  renderPlayers(participants);
 }
 
 function updateScores(scores: Record<string, number>) {
-  const scoresContainer = document.getElementById("scores-list");
-  if (!scoresContainer) return;
-
-  scoresContainer.innerHTML = Object.entries(scores)
-    .map(([userId, score]) => {
-      const participant = participants.find((p: GameParticipant) => p.user_id === userId);
-      const displayName = participant?.display_name || "Unknown";
-
-      return `
-        <div class="score-item ${currentUser?.id === userId ? "current-user" : ""}">
-          <span class="player-name">${displayName}</span>
-          <span class="score-value">${score}</span>
-        </div>
-      `;
-    })
-    .join("");
+  // Update the global scores object
+  playerScores = { ...playerScores, ...scores };
+  // Re-render players with updated scores
+  renderPlayers(participants);
 }
 
 function updateGameInfo(state: GameStateResponse) {

@@ -354,10 +354,10 @@ io.on("connection", (socket: Socket) => {
         );
 
         await pool.query(
-          `INSERT INTO _scores (game_id, user_id, value)
+          `INSERT INTO scores (game_id, user_id, value)
          VALUES ($1, $2, $3)
          ON CONFLICT (game_id, user_id) DO UPDATE
-         SET value = _scores.value + $3`,
+         SET value = scores.value + $3`,
           [gameId, userId, calculatedScore],
         );
         // Save tiles to board in DB
