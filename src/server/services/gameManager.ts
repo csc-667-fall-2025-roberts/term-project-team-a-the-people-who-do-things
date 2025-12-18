@@ -11,11 +11,12 @@ class GameManager {
     gameId: string,
     players: string[],
     boardState?: (string | null)[][] | null,
+    settings: Record<string, unknown> = {}
   ): ScrabbleGame {
     if (this.games.has(gameId)) {
       throw new Error(`Game ${gameId} already exists`);
     }
-    const game = new ScrabbleGame(gameId, players, boardState);
+    const game = new ScrabbleGame(gameId, players, boardState, settings);
     this.games.set(gameId, game);
     return game;
   }
@@ -25,8 +26,9 @@ class GameManager {
     if (existing) {
       return existing;
     }
-
-    const game = ScrabbleGame.restore(gameId, players, state);
+    
+    // Restore from database state
+    const game = ScrabbleGame.restore(gameId, players, state, settings);
     this.games.set(gameId, game);
     return game;
   }

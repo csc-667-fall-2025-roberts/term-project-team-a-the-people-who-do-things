@@ -205,8 +205,7 @@ io.on("connection", (socket: Socket) => {
     //console.log("User left game lobby:", userId, "gameId:", gameId);
 
     try {
-      // Check if the game is still in 'waiting' status
-      // Only remove player if they're abandoning a waiting game, not starting one
+    
       const gameResult = await pool.query("SELECT status FROM games WHERE id = $1", [gameId]);
 
       // If game doesn't exist or is already started, don't remove player
@@ -220,9 +219,49 @@ io.on("connection", (socket: Socket) => {
         gameId,
         userId,
       ]);
+      // 2. HOST MIGRATION LOGIC
+      // Check if the leaving user is the host
+      const participantResult = await pool.query(
+        "SELECT is_host FROM game_participants WHERE game_id = $1 AND user_id = $2",
+        [gameId, userId]
+      );
+
+      const isHost = participantResult.rows.length > 0 && participantResult.rows[0].is_host;
+
+      // 3. Remove the player
+      await pool.query(
+        "DELETE FROM game_participants WHERE game_id = $1 AND user_id = $2",
+        [gameId, userId]
+      );
       console.log("Removed player from game_participants:", userId, "gameId:", gameId);
 
-      // Get updated player count
+      // 4. If they were host, promote the next oldest player
+      if (isHost) {
+        // Find the oldest remaining player
+        const nextHostResult = await pool.query(
+          "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at ASC LIMIT 1",
+          [gameId]
+        );
+
+        if (nextHostResult.rows.length > 0) {
+          const newHostId = nextHostResult.rows[0].user_id;
+          console.log(`Host left. Promoting user ${newHostId} to host.`);
+
+          // Set is_host = true for the new person
+          await pool.query(
+            "UPDATE game_participants SET is_host = true WHERE game_id = $1 AND user_id = $2",
+            [gameId, newHostId]
+          );
+
+          // Update the game's creator (so the lobby logic recognizes them as owner)
+          await pool.query(
+            "UPDATE games SET created_by = $1 WHERE id = $2",
+            [newHostId, gameId]
+          );
+        }
+      }
+
+      // 5. Get updated player count for notification
       const countResult = await pool.query(
         "SELECT COUNT(*) as count FROM game_participants WHERE game_id = $1",
         [gameId],
@@ -268,6 +307,7 @@ io.on("connection", (socket: Socket) => {
             [gameId],
           );
           const currentPlayerId = gameInfoResult.rows[0]?.current_turn_user_id || null;
+          const settings = gameInfoResult.rows[0]?.settings_json || {};
 
           // 2. Get participants
           const participantsResult = await pool.query(
@@ -330,7 +370,9 @@ io.on("connection", (socket: Socket) => {
             playerHands,
             scores,
             currentPlayerId,
-          });
+          },
+          settings
+        );
         }
 
         // Send current game state to the joining player
