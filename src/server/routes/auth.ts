@@ -1,9 +1,10 @@
+import "express-session"
+
 import bcrypt from "bcrypt";
 import express from "express";
 
 import type { AppRequest } from "../../types/app.d";
 import pool from "../config/database.js";
-import "express-session"
 
 const router = express.Router();
 
@@ -169,7 +170,9 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
 
     //console.log("User created:", result.rows[0]);
     const user = result.rows[0];
-    req.session.userId = user.id;
+    if (req.session) {
+      req.session.userId = user.id;
+    }
 
     res.json({ success: true, user });
   } catch (error) {
@@ -203,7 +206,9 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    req.session.userId = user.id;
+    if (req.session) {
+      req.session.userId = user.id;
+    }
 
     res.json({
       success: true,

@@ -130,19 +130,19 @@ if (!gameId) {
 
       const participants: GameParticipant[] = Array.from(
         new Map(
-          (game_participants || []).map((p) => [
-            String(p.user_id), // pii-ignore-next-line
-            {
-              id: String(p.user_id), // pii-ignore-next-line
-              display_name: p.display_name, // pii-ignore-next-line
-              is_host: p.is_host,
-            } as GameParticipant,
-          ]),
+          (game_participants || [])
+            .filter((p) => p && p.user_id && p.display_name)
+            .map((p) => [
+              String(p.user_id),
+              {
+                id: String(p.user_id),
+                display_name: p.display_name,
+                is_host: p.is_host,
+              } as GameParticipant,
+            ]),
         ).values(),
       );
-
-      // console.log("Mapped participants:", participants);
-
+      
       const userParticipant = participants.find((p) => p.id === currentUser?.id);
       isHost = game.created_by === currentUser.id || userParticipant?.is_host === true;
       console.log("Is host check:", {
