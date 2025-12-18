@@ -3,6 +3,7 @@ import express from "express";
 
 import type { AppRequest } from "../../types/app.d";
 import pool from "../config/database.js";
+import "express-session"
 
 const router = express.Router();
 
