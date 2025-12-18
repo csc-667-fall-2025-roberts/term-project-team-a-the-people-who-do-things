@@ -1,22 +1,8 @@
+/* eslint-disable simple-import-sort/imports */
 import { api } from "../api.js";
 import { socket } from "../socket.js";
+import type { NewMessageResponse } from "../../../types/client/socket-events.js";
 
-type GameSummary = {
-  id: string;
-  title: string;
-  creator_name: string;
-  current_players: number;
-  max_players: number;
-  status: string;
-  is_my_game: boolean;
-};
-
-type LobbyChatMessage = {
-  id?: string;
-  display_name: string;
-  message: string;
-  game_id: string | null;
-};
 
 const gamesContainer = document.getElementById("games-container");
 const createGameForm = document.getElementById("create-game-form") as HTMLFormElement | null;
@@ -31,46 +17,69 @@ const createTab = document.getElementById("create-tab");
 const joinContent = document.getElementById("join-tab-content");
 const createContent = document.getElementById("create-tab-content");
 
-function escapeHtml(text: string) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
+function clearElement(el: Element | null) {
+  if (!el) return;
+  while (el.firstChild) el.removeChild(el.firstChild);
 }
 
-function addChatMessage(message: LobbyChatMessage) {
+function createTextElement<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  text: string,
+  className?: string
+): HTMLElementTagNameMap[K] {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  el.textContent = text;
+  return el;
+}
+
+function addChatMessage(message: NewMessageResponse & { game_id?: string | null }) {
   if (!chatMessages) {
     console.error("chatMessages element not found in addChatMessage");
     return;
   }
 
-  if (!message?.display_name || !message.message) {
+  const displayName = message.display_name ?? (message as any).displayName;
+  const text = message.message ?? "";
+
+  if (!displayName || !text) {
     console.error("Invalid message format:", message);
     return;
   }
 
   const messageEl = document.createElement("div");
-  messageEl.className = "chat-message";
-  messageEl.innerHTML = `
-        <strong>${escapeHtml(message.display_name)}:</strong>
-        <span>${escapeHtml(message.message)}</span>
-    `;
+  messageEl.className = "chat-message p-2";
+
+  const nameEl = document.createElement("strong");
+  nameEl.className = "pr-2";
+  nameEl.textContent = `${displayName}:`;
+
+  const textEl = document.createElement("span");
+  textEl.textContent = text;
+
+  messageEl.appendChild(nameEl);
+  messageEl.appendChild(textEl);
+
   chatMessages.appendChild(messageEl);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 async function loadLobbyMessages() {
+  if (!chatMessages) {
+    console.error("chatMessages element not found");
+    return;
+  }
+
   try {
-    const { messages } = (await api.chat.getMessages(LOBBY_ID)) as { messages: LobbyChatMessage[] };
-    if (!chatMessages) {
-      console.error("chatMessages element not found");
-      return;
-    }
-    chatMessages.innerHTML = "";
+    const { messages } = (await api.chat.getMessages(LOBBY_ID)) as { messages: NewMessageResponse[] };
+    clearElement(chatMessages);
     messages.forEach((message) => {
-      addChatMessage({
+      const normalized = {
         ...message,
-        game_id: message.game_id ?? null,
-      });
+        game_id: (message as any).game_ID ?? (message as any).game_id ?? null,
+      } as NewMessageResponse & { game_id?: string | null };
+
+      addChatMessage(normalized);
     });
   } catch (error) {
     console.error("Failed to load lobby messages:", error);
@@ -118,108 +127,133 @@ function initLobbyChat() {
     return;
   }
 
-  console.log("Initializing lobby chat...");
-
   socket.emit("join-lobby", {});
-  console.log("Joined lobby room");
-
   void loadLobbyMessages();
 
   chatForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
+    event.preventDefault();
+    const message = chatInput.value.trim();
+    if (!message) return;
+    chatInput.value = "";
+    socket.emit("send-message", { game_ID: LOBBY_ID, message });
+  });
 
-  const message = chatInput.value.trim();
-  if (!message) return;
-
-  chatInput.value = "";
-  socket.emit("send-message", { game_ID: LOBBY_ID, message });
-});
-
+  //only one listener active for new-message to avoid duplicates
   socket.removeAllListeners("new-message");
   socket.on("new-message", (data: unknown) => {
     const message = data as LobbyChatMessage;
-
-    // console.log("Received new-message event:", message);
-    // console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
-
     const isLobbyMessage =
       message.game_id === null || message.game_id === undefined || String(message.game_id) === LOBBY_ID;
 
     if (isLobbyMessage) {
-      console.log("Adding lobby message to UI");
       addChatMessage({ ...message, game_id: message.game_id ?? null });
-    } else {
-      //console.log("Ignoring non-lobby message, game_id:", message.game_id);
     }
   });
 }
 
+function makeGameCard(game: GameSummary): HTMLElement {
+  const container = document.createElement("div");
+  container.className =
+    "flex flex-col justify-between p-5 bg-white border rounded-xl hover:border-blue-400 hover:shadow-md transition-all gap-4 h-full";
+
+  if (game.status === "in_progress" && game.is_my_game) {
+    container.classList.add("border-green-400");
+    container.classList.add("ring-2");
+    container.classList.add("ring-green-200");
+  } else {
+    container.classList.add("border-slate-200");
+  }
+
+  const top = document.createElement("div");
+
+  const header = document.createElement("div");
+  header.className = "flex items-center justify-between gap-2";
+
+  const title = document.createElement("h3");
+  title.className = "font-bold text-slate-800 text-lg truncate";
+  title.textContent = game.title || `${game.creator_name ?? "Player"}'s Game`;
+  header.appendChild(title);
+
+  if (game.status === "in_progress" && game.is_my_game) {
+    const badge = document.createElement("span");
+    badge.className = "px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full";
+    badge.textContent = "In Progress";
+    header.appendChild(badge);
+  }
+
+  top.appendChild(header);
+
+  const meta = document.createElement("div");
+  meta.className = "flex items-center gap-2 mt-1";
+
+  const statusDot = document.createElement("span");
+  statusDot.className = `w-2 h-2 rounded-full ${game.current_players < game.max_players ? "bg-green-500" : "bg-red-500"}`;
+  meta.appendChild(statusDot);
+
+  const counts = document.createElement("span");
+  counts.className = "text-sm text-slate-500 font-medium";
+  counts.textContent = `${game.current_players} / ${game.max_players} Players`;
+  meta.appendChild(counts);
+
+  top.appendChild(meta);
+
+  container.appendChild(top);
+
+  const btn = document.createElement("button");
+  const isRejoin = game.status === "in_progress" && game.is_my_game;
+  btn.className = isRejoin
+    ? "rejoin-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-green-600 border-none rounded-md cursor-pointer hover:bg-green-700 hover:-translate-y-px hover:shadow-lg"
+    : "join-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-blue-600 border-none rounded-md cursor-pointer hover:bg-blue-700 hover:-translate-y-px hover:shadow-lg";
+
+  btn.setAttribute("data-game-id", game.id);
+  btn.setAttribute("data-game-status", game.status);
+  btn.type = "button";
+  btn.textContent = isRejoin ? "Rejoin Game" : "Join Game";
+
+  container.appendChild(btn);
+
+  return container;
+}
+
 async function loadGames() {
+  if (!gamesContainer) return;
   try {
     const { games } = (await api.games.getLobby()) as { games: GameSummary[] };
     renderGames(games);
   } catch (error) {
     console.error("Failed to load games:", error);
-    if (gamesContainer) {
-      gamesContainer.innerHTML =
-        '<p class="text-red-500 text-center py-8">Failed to load games. Please refresh.</p>';
-    }
+    clearElement(gamesContainer);
+    const p = createTextElement("p", "Failed to load games. Please refresh.", "text-red-500 text-center py-8");
+    gamesContainer.appendChild(p);
   }
 }
 
-function renderGames(games: GameSummary[]) {
+function renderGames(games: any[]) {
   if (!gamesContainer) return;
 
+  clearElement(gamesContainer);
   gamesContainer.className = "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3";
+
   if (games.length === 0) {
-    gamesContainer.innerHTML = `
-      <div class="text-center py-12">
-        <p class="text-gray-600 text-lg mb-4">No games available</p>
-        <p class="text-gray-500">Create a new game to get started!</p>
-      </div>
-    `;
+    const wrapper = document.createElement("div");
+    wrapper.className = "text-center py-12";
+
+    const title = createTextElement("p", "No games available", "text-gray-600 text-lg mb-4");
+    const subtitle = createTextElement("p", "Create a new game to get started!", "text-gray-500");
+
+    wrapper.appendChild(title);
+    wrapper.appendChild(subtitle);
+    gamesContainer.appendChild(wrapper);
     return;
   }
 
-  gamesContainer.innerHTML = games
-    .map((game) => {
-      // Check if this is an in-progress game the user is part of
-      const isRejoin = game.status === "in_progress" && game.is_my_game;
+  const fragment = document.createDocumentFragment();
+  for (const game of games) {
+    const card = makeGameCard(game);
+    fragment.appendChild(card);
+  }
 
-      // Style differences for rejoin vs join
-      const buttonText = isRejoin ? "Rejoin Game" : "Join Game";
-      const buttonClass = isRejoin
-        ? "rejoin-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-green-600 border-none rounded-md cursor-pointer hover:bg-green-700 hover:-translate-y-px hover:shadow-lg"
-        : "join-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-blue-600 border-none rounded-md cursor-pointer hover:bg-blue-700 hover:-translate-y-px hover:shadow-lg";
-      const statusBadge = isRejoin
-        ? `<span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">In Progress</span>`
-        : "";
-
-      return `
-    <div class="flex flex-col justify-between p-5 bg-white border ${isRejoin ? "border-green-400 ring-2 ring-green-200" : "border-slate-200"} rounded-xl hover:border-blue-400 hover:shadow-md transition-all gap-4 h-full">
-
-      <div>
-        <div class="flex items-center justify-between gap-2">
-          <h3 class="font-bold text-slate-800 text-lg truncate">${escapeHtml(game.title || `${game.creator_name  }'s Game`)}</h3>
-          ${statusBadge}
-        </div>
-        <div class="flex items-center gap-2 mt-1">
-            <span class="w-2 h-2 rounded-full ${game.current_players < game.max_players ? "bg-green-500" : "bg-red-500"}"></span>
-            <span class="text-sm text-slate-500 font-medium">${game.current_players} / ${game.max_players} Players</span>
-        </div>
-      </div>
-
-      <button
-        class="${buttonClass}"
-        data-game-id="${game.id}"
-        data-game-status="${game.status}"
-      >
-        ${buttonText}
-      </button>
-    </div>
-  `;
-    })
-    .join("");
+  gamesContainer.appendChild(fragment);
 }
 
 gamesContainer?.addEventListener("click", async (event) => {
@@ -232,12 +266,10 @@ gamesContainer?.addEventListener("click", async (event) => {
   const isRejoin = button.classList.contains("rejoin-game-btn");
 
   try {
-    // For rejoin, we skip the join API call (user is already a participant)
     if (!isRejoin) {
       await api.games.join(gameId);
       window.location.href = `/game/${gameId}/lobby`;
     } else {
-      // Go directly to the game room for in-progress games
       window.location.href = `/game/${gameId}`;
     }
   } catch (error) {
@@ -252,65 +284,33 @@ gamesContainer?.addEventListener("click", async (event) => {
 createGameForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  // 1. Get all input elements
   const maxPlayersInput = document.getElementById("max-players") as HTMLSelectElement | null;
   const timeLimitInput = document.getElementById("time-limit") as HTMLInputElement | null;
 
   if (!maxPlayersInput || !timeLimitInput) return;
 
-  // 2. Read values
-  const maxPlayers = parseInt(maxPlayersInput.value, 10);
-  const timeLimit = parseInt(timeLimitInput.value, 10);
-
-  // Disable button to prevent double-clicks
-  const submitBtn = createGameForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
-  if (submitBtn) submitBtn.disabled = true;
+  const maxPlayers = parseInt(maxPlayersInput.value, 10) || 2;
+  const timeLimit = parseInt(timeLimitInput.value, 10) || 60;
 
   try {
-    // 3. Send to Server
-    const { game } = (await api.games.create({
-      maxPlayers,
-      settings: { timeLimit },
-    })) as {
-      game: { id: string };
-    };
-
-    window.location.href = `/game/${game.id}/lobby`;
+    await api.games.create({ maxPlayers, settings: { timeLimit } });
+    await loadGames();
+    switchTab("join");
   } catch (error) {
-  console.error("Failed to create game:", error);
-  alert(error instanceof Error ? error.message : "Failed to create game");
-  if (submitBtn) submitBtn.disabled = false;
+    console.error("Failed to create game:", error);
+    alert("Failed to create game. Please try again.");
+  }
+});
+
+function initLobby() {
+  initLobbyChat();
+  void loadGames();
 }
-});
 
-// Socket events
-socket.on("game-created", () => {
-  void loadGames();
-});
-
-socket.on("game-started", () => {
-  void loadGames();
-});
-
-// Refresh lobby when a player leaves a game (player count changed)
-socket.on("lobby-updated", () => {
-  void loadGames();
-});
-
-// Wait for DOM to be ready
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
-    void loadGames();
-    initLobbyChat();
-    switchTab("join");
+    initLobby();
   });
 } else {
-  void loadGames();
-  initLobbyChat();
-  switchTab("join");
+  initLobby();
 }
-
-// Refresh every 5 seconds
-setInterval(() => {
-  void loadGames();
-}, 5000);

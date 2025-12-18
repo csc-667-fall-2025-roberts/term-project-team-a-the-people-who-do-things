@@ -1,4 +1,5 @@
 import io from "socket.io-client";
+
 import type { SocketEvents } from "../../types/client/socket-events.js";
 
 export class SocketManager {

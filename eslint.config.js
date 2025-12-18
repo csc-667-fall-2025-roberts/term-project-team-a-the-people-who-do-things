@@ -26,7 +26,6 @@ export default tseslint.config(
 			"**/node_modules/**",
 			"**/dist/**",
 			"**/.git/**",
-			"**/.git/**",
 			"**/coverage/**",
 			"**/.vitest/**",
 			"**/.idea/**",
@@ -34,9 +33,8 @@ export default tseslint.config(
 			"vite.config.ts",
 			"vitest.config.ts",
 			"vitest.browser.config.ts",
-			"vite.config.ts",
 			"tailwind.config.js",
-			"tailwind.config.cjs"
+			"tailwind.config.cjs",
 			"jest.config.js",
 			"postcss.config.js",
 			"**/.gitignore",
@@ -55,7 +53,7 @@ export default tseslint.config(
 			"**/src/DB/migrations/**",
 			"**/src/server/pii-check.ts",
 			"**/src/server/socket-validators.ts",
-			"**/src/public/ts/main.ts"
+			"**/src/public/ts/main.ts",
 		],
 	},
 
@@ -85,16 +83,14 @@ export default tseslint.config(
 	// 4) TypeScript files
 	{
 		files: ["**/*.ts", "**/*.tsx"],
-		extends: [
-			...tseslint.configs.recommended,
-		],
+		extends: [...tseslint.configs.recommended],
 		languageOptions: {
 			ecmaVersion: 2022,
 			sourceType: "module",
 			globals: { ...globals.node },
 			parserOptions: {
 				projectService: true,
-				tsconfigRootDir: import.meta.dirname,
+				tsconfigRootDir: import.meta?.dirname,
 			},
 		},
 		plugins: {
@@ -159,20 +155,19 @@ export default tseslint.config(
 			"security/detect-object-injection": "off",
 
 			// Secrets - Higher tolerance to reduce false positives
-			"no-secrets/no-secrets": ["warn", { 
-				tolerance: 5.0,
-				additionalDelimiters: ["-", "_", "."]
-			}],
+			"no-secrets/no-secrets": [
+				"warn",
+				{
+					tolerance: 5.0,
+					additionalDelimiters: ["-", "_", "."],
+				},
+			],
 		},
 	},
 
 	// 5) Client-side
 	{
-		files: [
-			"src/public/**/*.{js,mjs,ts}",
-			"public/**/*.{js,mjs}",
-			"client/**/*.{js,mjs}",
-		],
+		files: ["src/public/**/*.{js,mjs,ts}", "public/**/*.{js,mjs}", "client/**/*.{js,mjs}"],
 		languageOptions: {
 			ecmaVersion: 2022,
 			sourceType: "module",
@@ -201,10 +196,13 @@ export default tseslint.config(
 			"tailwindcss/no-custom-classname": "off",
 
 			// Secrets - Higher tolerance for client code
-			"no-secrets/no-secrets": ["warn", { 
-				tolerance: 4.5,
-				additionalDelimiters: ["-", "_", "."]
-			}],
+			"no-secrets/no-secrets": [
+				"warn",
+				{
+					tolerance: 4.5,
+					additionalDelimiters: ["-", "_", "."],
+				},
+			],
 
 			"sonarjs/no-identical-functions": "warn",
 			"regexp/no-super-linear-backtracking": "error",
@@ -232,7 +230,7 @@ export default tseslint.config(
 			"/src/server/pii-check.ts",
 			"/src/DB/migrations/",
 			"**/src/server/socket-validators.ts",
-			"**/src/public/ts/main.ts"
+			"**/src/public/ts/main.ts",
 		],
 		...tseslint.configs.disableTypeChecked,
 	},

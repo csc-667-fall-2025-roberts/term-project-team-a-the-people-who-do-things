@@ -1,6 +1,7 @@
 import express from "express";
 import type { Server } from "socket.io";
 import { z } from "zod";
+
 import type { AppRequest } from "../../types/app.d";
 import pool from "../config/database.js";
 import { requireAuth } from "../middleware/auth.js";

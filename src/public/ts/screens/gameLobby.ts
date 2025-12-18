@@ -1,3 +1,4 @@
+/* eslint-disable simple-import-sort/imports */
 //console.log("gameLobby.ts script loaded!");
 /* pii-ignore */
 
@@ -9,7 +10,6 @@ import {
   NewMessageResponse
 } from "../../../types/client/socket-events.js";
 import { api } from "../api.js";
-// import { Window } from "../../../types/client/globals.js";
 import { socket } from "../socket.js";
 
 const gameID = window.GAME_ID;
@@ -216,7 +216,8 @@ if (!gameID) {
           game_ID: gameID,
         });
       });
-    } catch {
+    } catch (err) {
+      console.warn("Failed to load chat messages:", err);
     }
   }
 
