@@ -126,14 +126,14 @@ function initLobbyChat() {
   void loadLobbyMessages();
 
   chatForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    const message = chatInput.value.trim();
-    if (!message) return;
+  const message = chatInput.value.trim();
+  if (!message) return;
 
-    chatInput.value = "";
-    socket.emit("send-message", { gameId: LOBBY_ID, message });
-  });
+  chatInput.value = "";
+  socket.emit("send-message", { game_ID: LOBBY_ID, message });
+});
 
   socket.removeAllListeners("new-message");
   socket.on("new-message", (data: unknown) => {
@@ -143,7 +143,7 @@ function initLobbyChat() {
     // console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
 
     const isLobbyMessage =
-      message.game_id === null || message.game_id === string || message.game_id === LOBBY_ID;
+      message.game_id === null || message.game_id === undefined || String(message.game_id) === LOBBY_ID;
 
     if (isLobbyMessage) {
       console.log("Adding lobby message to UI");
@@ -185,19 +185,19 @@ function renderGames(games: GameSummary[]) {
     .map((game) => {
       // Check if this is an in-progress game the user is part of
       const isRejoin = game.status === "in_progress" && game.is_my_game;
-      
+
       // Style differences for rejoin vs join
       const buttonText = isRejoin ? "Rejoin Game" : "Join Game";
-      const buttonClass = isRejoin 
+      const buttonClass = isRejoin
         ? "rejoin-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-green-600 border-none rounded-md cursor-pointer hover:bg-green-700 hover:-translate-y-px hover:shadow-lg"
         : "join-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-blue-600 border-none rounded-md cursor-pointer hover:bg-blue-700 hover:-translate-y-px hover:shadow-lg";
-      const statusBadge = isRejoin 
+      const statusBadge = isRejoin
         ? `<span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">In Progress</span>`
         : "";
 
       return `
     <div class="flex flex-col justify-between p-5 bg-white border ${isRejoin ? "border-green-400 ring-2 ring-green-200" : "border-slate-200"} rounded-xl hover:border-blue-400 hover:shadow-md transition-all gap-4 h-full">
-      
+
       <div>
         <div class="flex items-center justify-between gap-2">
           <h3 class="font-bold text-slate-800 text-lg truncate">${escapeHtml(game.title || `${game.creator_name  }'s Game`)}</h3>
@@ -209,8 +209,8 @@ function renderGames(games: GameSummary[]) {
         </div>
       </div>
 
-      <button 
-        class="${buttonClass}" 
+      <button
+        class="${buttonClass}"
         data-game-id="${game.id}"
         data-game-status="${game.status}"
       >
@@ -224,9 +224,9 @@ function renderGames(games: GameSummary[]) {
 
 gamesContainer?.addEventListener("click", async (event) => {
   const target = event.target as HTMLElement;
-  const button = target.closest(".join-game-btn, .rejoin-game-btn");
+  const button = target.closest(".join-game-btn, .rejoin-game-btn") as HTMLElement | null;
 
-  if (!button?.dataset.gameId) return;
+  if (!button || !button.dataset.gameId) return;
 
   const gameId = button.dataset.gameId;
   const isRejoin = button.classList.contains("rejoin-game-btn");
@@ -263,7 +263,7 @@ createGameForm?.addEventListener("submit", async (event) => {
   const timeLimit = parseInt(timeLimitInput.value, 10);
 
   // Disable button to prevent double-clicks
-  const submitBtn = createGameForm.querySelector('button[type="submit"]')!;
+  const submitBtn = createGameForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
   if (submitBtn) submitBtn.disabled = true;
 
   try {
@@ -277,10 +277,10 @@ createGameForm?.addEventListener("submit", async (event) => {
 
     window.location.href = `/game/${game.id}/lobby`;
   } catch (error) {
-    console.error("Failed to create game:", error);
-    alert(error instanceof Error ? error.message : "Failed to create game");
-    if (submitBtn) submitBtn.disabled = false;
-  }
+  console.error("Failed to create game:", error);
+  alert(error instanceof Error ? error.message : "Failed to create game");
+  if (submitBtn) submitBtn.disabled = false;
+}
 });
 
 // Socket events

@@ -21,6 +21,7 @@ export type CurrentPlayerData = {
 };
 
 export type GameParticipant = {
+  id?: string;
   game_ID?: string;
   is_host?: boolean;
   user_ID?: string;
@@ -31,6 +32,7 @@ export type ScoreEntry = {
   game_ID: string;
   user_ID: string;
   value: number;
+  display_name?: string;
 };
 
 export type Scores = {
@@ -121,6 +123,7 @@ export type GameData = {
       words: string[];
       score: number;
     };
+    display_name?: string;
   }[];
   participants: GameParticipant[];
   scores: ScoreEntry[];

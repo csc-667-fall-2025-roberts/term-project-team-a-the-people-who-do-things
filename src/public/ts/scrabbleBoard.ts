@@ -217,46 +217,35 @@ class ScrabbleBoard {
       this.hand = tiles as Tile[];
     }
 
-    //console.log("Board updated hand:", this.hand);
     this.renderHand();
   }
 
   updateBoard(boardState: (string | Tile | null)[][] | (Tile | null)[][]): void {
-    // Before updating, check if any of our staged tiles were overwritten
-    // and return them to our hand
     const tilesToReturn: Tile[] = [];
     const remainingSelected: SelectedTile[] = [];
 
     for (const staged of this.selectedTiles) {
       const newCell = boardState[staged.row][staged.col];
       if (newCell) {
-        // This spot is now occupied by opponent's tile - return our tile to hand
         tilesToReturn.push({
           letter: staged.letter,
           value: LETTER_VALUES[staged.letter] || 0,
         });
       } else {
-        // Spot is still empty - keep our staged tile there
         remainingSelected.push(staged);
       }
     }
-
-    // Return overwritten tiles to hand
     if (tilesToReturn.length > 0) {
       this.hand.push(...tilesToReturn);
       console.log("Returned tiles to hand:", tilesToReturn.map(t => t.letter).join(", "));
     }
 
-    // Update selected tiles list
     this.selectedTiles = remainingSelected;
 
-    // Update the board with new state
     this.board = boardState.map((row, rowIdx) =>
       row.map((cell, colIdx) => {
-        // Check if we have a staged tile here that wasn't overwritten
         const staged = remainingSelected.find(s => s.row === rowIdx && s.col === colIdx);
         if (staged) {
-          // Keep our staged tile (not locked)
           return { letter: staged.letter, value: LETTER_VALUES[staged.letter] || 0, locked: false };
         }
         

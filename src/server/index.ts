@@ -269,11 +269,11 @@ io.on("connection", (socket: Socket) => {
       try {
         // Check if game already exists in memory
         let game = gameManager.getGame(gameId);
-        
+
         if (!game) {
           // Game not in memory - restore from database
           console.log(`[Game Restore] Loading game ${gameId} from database...`);
-          
+
           // 1. Get game info (current turn)
           const gameInfoResult = await pool.query(
             "SELECT current_turn_user_id FROM games WHERE id = $1",
@@ -363,7 +363,8 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("make-move", (payload) => {
-    const data = validateOrEmitError(socket, MakeMoveSchema, payload);
+    const normalizedPayload = { ...(payload as any), gameId: (payload as any).gameId ?? (payload as any).game_ID };
+    const data = validateOrEmitError(socket, MakeMoveSchema, normalizedPayload);
     if (!data) return;
 
     (async () => {
@@ -373,17 +374,29 @@ io.on("connection", (socket: Socket) => {
         return socket.emit("error", { message: "Game not found" });
       }
 
-      const validation = game.validateMove(userId, tiles);
+      // Map incoming tiles to PlacedTile[] expected by game logic.
+      // Accept both { row, col } or { x, y } coordinates.
+      const placedTiles = (tiles || []).map((t: any) => ({
+        letter: t.letter,
+        row: typeof t.row === "number" ? t.row : typeof t.x === "number" ? t.x : undefined,
+        col: typeof t.col === "number" ? t.col : typeof t.y === "number" ? t.y : undefined,
+      }));
+
+      if (placedTiles.some((p: any) => typeof p.row !== "number" || typeof p.col !== "number")) {
+        return socket.emit("error", { message: "Invalid tile coordinates" });
+      }
+
+      const validation = game.validateMove(userId, placedTiles);
       if (!validation.valid) {
         return socket.emit("error", { message: validation.error });
       }
 
-      const calculatedScore = game.calculateScore(tiles);
-      const result = game.applyMove(userId, tiles, calculatedScore);
+      const calculatedScore = game.calculateScore(placedTiles);
+      const result = game.applyMove(userId, placedTiles, calculatedScore);
 
       io.to(gameId).emit("move-made", {
         userId, // pii-ignore-next-line
-        tiles,
+        tiles: placedTiles,
         score: calculatedScore,
         currentPlayer: result.currentPlayer,
         gameState: game.getGameState(),
@@ -398,7 +411,7 @@ io.on("connection", (socket: Socket) => {
             gameId,
             userId, // pii-ignore-next-line
             game.currentPlayerIndex,
-            JSON.stringify({ tiles, words, score: calculatedScore }),
+            JSON.stringify({ tiles: placedTiles, words, score: calculatedScore }),
           ],
         );
 
@@ -409,18 +422,20 @@ io.on("connection", (socket: Socket) => {
          SET value = scores.value + $3`,
           [gameId, userId, calculatedScore],
         );
-        // Save tiles to board in DB
-        const boardInsert = tiles
-          .map((t: any) => `('${gameId}', ${t.row}, ${t.col}, '${t.letter}', '${userId}')`) // pii-ignore-next-line
+
+        const boardInsert = placedTiles
+          .map((t: any) => `('${gameId}', ${t.row}, ${t.col}, '${t.letter}', '${userId}')`)
           .join(",");
 
-        await pool.query(
-          `INSERT INTO board_tiles (game_id, row, col, letter, placed_by)
+        if (boardInsert.length > 0) {
+          await pool.query(
+            `INSERT INTO board_tiles (game_id, row, col, letter, placed_by)
         VALUES ${boardInsert}
         ON CONFLICT (game_id, row, col) DO NOTHING`,
-        );
+          );
+        }
 
-        for (const t of tiles) {
+        for (const t of placedTiles) {
           await pool.query(
             `DELETE FROM player_tiles
         WHERE id IN (
@@ -458,7 +473,7 @@ io.on("connection", (socket: Socket) => {
         // Check if game is over (player used all tiles with empty bag)
         if (result.gameOver) {
           console.log(`[Game Over] Game ${gameId} ended - player ${userId} used all tiles!`);
-          
+
           // Update game status to finished
           await pool.query("UPDATE games SET status = $1, ended_at = now() WHERE id = $2", [
             "finished",
@@ -513,7 +528,7 @@ io.on("connection", (socket: Socket) => {
 
       if (result.gameOver) {
         console.log(`[Game Over] Game ${gameId} ended - all players passed!`);
-        
+
         await pool.query("UPDATE games SET status = $1, ended_at = now() WHERE id = $2", [
           "finished",
           gameId,
@@ -594,8 +609,10 @@ io.on("connection", (socket: Socket) => {
         if (isLobby) {
           console.log("Emitting to lobby room");
           io.to("lobby").emit("new-message", chatMessage);
-        } else {
+        } else if (typeof gameId === "string" && gameId) {
           io.to(gameId).emit("new-message", chatMessage);
+        } else {
+          console.warn("send-message: no target game id; dropping message:", chatMessage);
         }
       } catch (error) {
         console.error("Error sending message:", error);

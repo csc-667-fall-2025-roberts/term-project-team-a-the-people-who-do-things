@@ -31,25 +31,26 @@ async function init(): Promise<void> {
 
   const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
 
-
   participants = gameData.game_participants;
 
   renderPlayers(gameData.game_participants);
   renderScores(gameData.scores);
   await loadChatHistory();
 
-  socket.emit("join-game", {gameId});
+  socket.emit("join-game", { game_ID: gameId });
 
-  // Initialize timer display
   updateTimerDisplay();
 }
 
-init().catch((error) => {
-  console.error("Failed to initialize:", error);
-});
+if (!gameId) {
+  console.error("gameRoom.ts: Missing GAME_ID; aborting initialization.");
+} else {
+  init().catch((error) => {
+    console.error("Failed to initialize:", error);
+  });
+}
 
 function mapErrorMessage(serverMessage: string): string {
-  // If it's already a readable message, format it nicely
   if (serverMessage.startsWith("Invalid word")) {
     return `${serverMessage} - not a valid Scrabble word!`;
   }
@@ -68,7 +69,7 @@ function mapErrorMessage(serverMessage: string): string {
   if (serverMessage.startsWith("Must place")) {
     return "You must place at least one tile!";
   }
-  
+
   const errorMap: Record<string, string> = {
     invalid_move: "That move is not allowed",
     tiles_already_placed: "Tiles are already placed this turn",
@@ -79,12 +80,8 @@ function mapErrorMessage(serverMessage: string): string {
 }
 
 function showNotification(message: string, type: "error" | "success" | "info" = "error") {
-  document.querySelectorAll(".game-notification").forEach(el => el.remove());
-  const notificationElement = document.createElement("div");
-  notificationElement.className = "game-notification";
-  notificationElement.textContent = message;
-  document.body.appendChild(notificationElement);
-}  
+  document.querySelectorAll(".game-notification").forEach((el) => el.remove());
+
   if (!document.getElementById("notification-styles")) {
     const style = document.createElement("style");
     style.id = "notification-styles";
@@ -96,17 +93,21 @@ function showNotification(message: string, type: "error" | "success" | "info" = 
     `;
     document.head.appendChild(style);
   }
-  
+
+  const notificationElement = document.createElement("div");
+  notificationElement.className = `game-notification ${type}`;
+  notificationElement.textContent = message;
   document.body.appendChild(notificationElement);
 
-  // Fade out after 4 seconds
-  setTimeout(() => {
+  window.setTimeout(() => {
     notificationElement.style.transition = "opacity 0.5s";
     notificationElement.style.opacity = "0";
-    setTimeout(() => notificationElement.remove(), 500);
+    window.setTimeout(() => {
+      if (notificationElement.parentElement) notificationElement.remove();
+    }, 500);
   }, 4000);
+}
 
-// Keep alert as alias for backward compatibility
 function alert(message: string) {
   showNotification(message, "error");
 }
@@ -125,10 +126,8 @@ document.getElementById("submit-move-btn")?.addEventListener("click", () => {
     0,
   );
 
-  //console.log("Submitting Move:", { gameId, tiles, words, score });
-
   socket.emit("make-move", {
-    gameId,
+    game_ID: gameId,
     tiles,
     words,
     score,
@@ -137,7 +136,7 @@ document.getElementById("submit-move-btn")?.addEventListener("click", () => {
 
 document.getElementById("pass-btn")?.addEventListener("click", () => {
   if (confirm("Are you sure you want to pass your turn?")) {
-    socket.emit("pass-turn", { gameId });
+    socket.emit("pass-turn", { game_ID: gameId });
   }
 });
 
@@ -163,7 +162,7 @@ chatForm?.addEventListener("submit", (event) => {
   const message = chatInput.value.trim();
   if (!message) return;
 
-  socket.emit("send-message", { gameId, message });
+  socket.emit("send-message", { game_ID: gameId, message });
   chatInput.value = "";
 });
 
@@ -183,20 +182,18 @@ function renderPlayers(participantsList: GameParticipant[]) {
   const playersList = document.getElementById("players-list");
   if (!playersList) return;
 
-  // Sort players by score (highest first)
   const sorted = [...participantsList].sort((a, b) => {
-    const scoreA = playerScores[a.user_ID] || 0;
-    const scoreB = playerScores[b.user_ID] || 0;
+    const scoreA = a.user_ID ? (playerScores[a.user_ID as string] || 0) : 0;
+    const scoreB = b.user_ID ? (playerScores[b.user_ID as string] || 0) : 0;
     return scoreB - scoreA;
   });
 
   playersList.innerHTML = sorted
     .map((participant, index) => {
       const isMe = currentUser && participant.user_ID === currentUser.id;
-      const score = playerScores[participant.user_ID] || 0;
+      const score = participant.user_ID ? (playerScores[participant.user_ID as string] || 0) : 0;
       const isLeader = index === 0 && score > 0;
-      
-      // Highlight current user and leader
+
       let containerClass = "bg-white border-slate-200";
       if (isMe) containerClass = "bg-blue-50 border-blue-300";
       if (isLeader && !isMe) containerClass = "bg-yellow-50 border-yellow-300";
@@ -207,7 +204,7 @@ function renderPlayers(participantsList: GameParticipant[]) {
           <div class="flex items-center gap-2 min-w-0">
             ${isLeader ? '<span class="text-yellow-500">👑</span>' : ''}
             <span class="text-sm font-bold text-slate-700 truncate">
-              ${escapeHtml(participant.display_name)}
+              ${escapeHtml(participant.display_name ?? "")}
             </span>
             ${isMe ? '<span class="text-xs text-blue-500">(you)</span>' : ''}
           </div>
@@ -219,19 +216,15 @@ function renderPlayers(participantsList: GameParticipant[]) {
 }
 
 function renderScores(scores: ScoreEntry[]) {
-  // Convert array of score entries to a simple object
   playerScores = scores.reduce<Record<string, number>>((acc, scoreEntry) => {
     acc[scoreEntry.user_ID] = scoreEntry.value;
     return acc;
   }, {});
-  // Re-render players with updated scores
   renderPlayers(participants);
 }
 
 function updateScores(scores: Record<string, number>) {
-  // Update the global scores object
   playerScores = { ...playerScores, ...scores };
-  // Re-render players with updated scores
   renderPlayers(participants);
 }
 
@@ -265,7 +258,6 @@ function updateCurrentTurn(playerId: string) {
   const isCurrentUser = playerId === currentUser.id;
   currentTurnEl.textContent = isCurrentUser ? "Your turn" : "Opponent's turn";
 
-  // Enable/disable submit button based on turn
   const submitBtn = document.getElementById("submit-move-btn") as HTMLButtonElement | null;
   const passBtn = document.getElementById("pass-btn") as HTMLButtonElement | null;
 
@@ -281,12 +273,10 @@ function updateCurrentTurn(playerId: string) {
     passBtn.classList.toggle("cursor-not-allowed", !isCurrentUser);
   }
 
-  // Reset and start timer
   resetTurnTimer();
   if (isCurrentUser) {
     startTurnTimer();
   } else {
-    // Update timer display to show "Waiting..." when not your turn
     updateTimerDisplay();
   }
 }
@@ -310,7 +300,6 @@ function startTurnTimer() {
     if (timeLeft <= 0) {
       clearInterval(turnTimer!);
       turnTimer = null;
-      // Auto-pass the turn
       if (currentPlayerId === currentUser?.id) {
         console.log("Time's up! Auto-passing turn...");
         socket.emit("pass-turn", { gameId });
@@ -326,9 +315,7 @@ function updateTimerDisplay() {
     return;
   }
 
-  // Always show the timer, even when it's not your turn
   if (currentPlayerId === currentUser?.id) {
-    // It's your turn - show countdown
     if (timeLeft <= 10) {
       timerEl.classList.remove("text-slate-600", "text-blue-600");
       timerEl.classList.add("text-red-600", "font-bold");
@@ -341,7 +328,6 @@ function updateTimerDisplay() {
     }
     timerEl.textContent = `${timeLeft}s`;
   } else {
-    // Not your turn - show waiting message
     timerEl.classList.remove("text-red-600", "text-blue-600", "font-bold");
     timerEl.classList.add("text-slate-400");
     timerEl.textContent = "Waiting...";
@@ -374,21 +360,14 @@ const handlers = {
   },
   moveMade: (data: unknown) => {
     const typedData = data as MoveMadeResponse;
-    // console.log("Move made event received:", typedData);
 
-    // 1. Update the Board (Show the tiles the other player placed!)
     board.updateBoard(typedData.gameState.board);
 
-    // 2. Update Gae Info (Tiles Remaining and Current turn)
-    //updateCurrentTurn(typedData.currentPlayer);
     updateGameInfo(typedData.gameState);
 
-    // 3. Update the Scores
     updateScores(typedData.gameState.scores);
 
-    // 4. If *I* made the move, clear my selection so I don't see stuck tiles
     if (currentUser && typedData.user_ID === currentUser.id) {
-      // pii-ignore-next-line
       board.clearSelection();
     }
   },
@@ -409,7 +388,6 @@ const handlers = {
     }
   },
   newTiles: (data: unknown) => {
-    //console.log("Received new tiles:", data);
     const typedData = data as { tiles: string[] };
     if (typedData && Array.isArray(typedData.tiles)) {
       board.setHand(typedData.tiles);
