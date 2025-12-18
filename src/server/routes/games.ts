@@ -10,19 +10,86 @@ import { ScrabbleGame } from "../services/scrabbleEngine.js";
 export default function gamesRouter(io: Server) {
   const router = express.Router();
 
-  router.get("/lobby", requireAuth, async (_req: AppRequest, res: express.Response) => {
+  // Cleanup old/inactive games from the database
+  async function cleanupGames() {
     try {
+      // Delete games that are:
+      // 1. Finished games (delete immediately)
+      // 2. Waiting games older than 15 minutes (abandoned lobbies)
+      // 3. In-progress games older than 15 minutes (abandoned games)
+      // 4. Games with no participants
+      const result = await pool.query(`
+        DELETE FROM games
+        WHERE id IN (
+          -- Finished games (delete immediately)
+          SELECT id FROM games 
+          WHERE status = 'finished'
+          
+          UNION
+          
+          -- Waiting games older than 15 minutes (abandoned lobbies)
+          SELECT id FROM games 
+          WHERE status = 'waiting' AND created_at < NOW() - INTERVAL '15 minutes'
+          
+          UNION
+          
+          -- In-progress games older than 15 minutes (abandoned games)
+          SELECT id FROM games 
+          WHERE status = 'in_progress' AND created_at < NOW() - INTERVAL '15 minutes'
+          
+          UNION
+          
+          -- Games with no participants
+          SELECT g.id FROM games g
+          LEFT JOIN game_participants gp ON g.id = gp.game_id
+          GROUP BY g.id
+          HAVING COUNT(gp.user_id) = 0
+        )
+        RETURNING id
+      `);
+      
+      if (result.rowCount && result.rowCount > 0) {
+        console.log(`[Cleanup] Deleted ${result.rowCount} old/inactive games`);
+      }
+    } catch (error) {
+      console.error("[Cleanup] Error cleaning up games:", error);
+    }
+  }
+
+  router.get("/lobby", requireAuth, async (req: AppRequest, res: express.Response) => {
+    try {
+      // Run cleanup before fetching lobby games
+      await cleanupGames();
+      
+      const userId = req.session?.userId;
+      
       const result = await pool.query(
         `SELECT g.id, g.title, g.game_type, g.status, g.max_players, g.created_at,
               u.display_name as creator_name,
-              COUNT(gp.user_id) as current_players
+              COUNT(gp.user_id) as current_players,
+              -- Check if current user is in this game (for rejoin)
+              BOOL_OR(gp.user_id = $1) as is_my_game
        FROM games g
        JOIN users u ON g.created_by = u.id
        LEFT JOIN game_participants gp ON g.id = gp.game_id
-       WHERE g.status = 'waiting'
+       WHERE 
+         -- Show waiting games (lobbies open for joining)
+         (g.status = 'waiting' AND g.created_at > NOW() - INTERVAL '15 minutes')
+         OR
+         -- Show in-progress games where user is a participant (rejoin), max 15 min old
+         (g.status = 'in_progress' 
+           AND g.created_at > NOW() - INTERVAL '15 minutes'
+           AND EXISTS (
+             SELECT 1 FROM game_participants 
+             WHERE game_id = g.id AND user_id = $1
+           ))
        GROUP BY g.id, g.title, g.game_type, g.status, g.max_players, g.created_at, u.display_name
-       ORDER BY g.created_at DESC`,
-        [],
+       HAVING COUNT(gp.user_id) > 0
+       -- Sort: user's in-progress games first, then by creation date
+       ORDER BY 
+         CASE WHEN g.status = 'in_progress' AND BOOL_OR(gp.user_id = $1) THEN 0 ELSE 1 END,
+         g.created_at DESC`,
+        [userId],
       );
 
       res.json({ games: result.rows });
@@ -33,19 +100,19 @@ export default function gamesRouter(io: Server) {
   });
 
   const createGameSchema = z.object({
-    title: z.string().min(1).max(50).optional(),
     maxPlayers: z.number().int().min(2).max(4).default(2),
     settings: z.record(z.string(), z.unknown()).optional().default({}),
   });
 
   router.post("/create", requireAuth, async (req: express.Request, res: express.Response) => {
     const r = req as AppRequest;
+    console.log("[Create Game] Request body:", req.body);
     const validation = createGameSchema.safeParse(req.body);
     if (!validation.success) {
+      console.log("[Create Game] Validation failed:", validation.error.issues);
       return res.status(400).json({ error: validation.error.issues });
     }
-    // eslint-disable-next-line unused-imports/no-unused-vars
-    const { title, maxPlayers, settings } = validation.data;
+    const { maxPlayers, settings } = validation.data;
 
     const client = await pool.connect();
 
@@ -56,11 +123,21 @@ export default function gamesRouter(io: Server) {
 
       await client.query("BEGIN");
 
+      // Get user's display name for the game title
+      const userResult = await client.query(
+        "SELECT display_name FROM users WHERE id = $1",
+        [r.session.userId]
+      );
+      const userName = userResult.rows[0]?.display_name || "Player";
+      
+      // Always use "[User's Name]'s Game" as the title
+      const gameTitle = `${userName}'s Game`;
+
       const gameResult = await client.query(
-        `INSERT INTO games (game_type, status, max_players, settings_json, created_by)
-       VALUES ('scrabble', 'waiting', $1, $2, $3)
-       RETURNING id, game_type, status, max_players, created_at`,
-        [maxPlayers, JSON.stringify(settings), r.session.userId],
+        `INSERT INTO games (title, game_type, status, max_players, settings_json, created_by)
+       VALUES ($1, 'scrabble', 'waiting', $2, $3, $4)
+       RETURNING id, title, game_type, status, max_players, created_at`,
+        [gameTitle, maxPlayers, JSON.stringify(settings), r.session.userId],
       );
 
       const game = gameResult.rows[0];
@@ -193,10 +270,10 @@ export default function gamesRouter(io: Server) {
         [gameId],
       );
 
-      console.log(
-        `[GET /api/games/${gameId}] Found ${participantsResult.rows.length} participants`,
-      );
-      console.log("Participants:", participantsResult.rows);
+      // console.log(
+      //   `[GET /api/games/${gameId}] Found ${participantsResult.rows.length} participants`,
+      // );
+      //console.log("Participants:", participantsResult.rows);
 
       const scoresResult = await pool.query(
         `SELECT s.user_id, s.value, s.recorded_at, u.display_name
@@ -207,16 +284,26 @@ export default function gamesRouter(io: Server) {
         [gameId],
       );
 
+      const movesResult = await pool.query(
+        `SELECT m.user_id, m.turn_number, m.payload, m.created_at, u.display_name
+         FROM moves m
+         JOIN users u ON m.user_id = u.id
+         WHERE m.game_id = $1
+         ORDER BY m.turn_number ASC`,
+        [gameId]
+      );
+
       const response = {
         game: gameResult.rows[0],
         game_participants: participantsResult.rows,
         scores: scoresResult.rows,
+        moves: movesResult.rows,
       };
 
-      console.log(
-        `[GET /api/games/${gameId}] Sending response:`,
-        JSON.stringify(response, null, 2),
-      );
+      // console.log(
+      //   `[GET /api/games/${gameId}] Sending response:`,
+      //   JSON.stringify(response, null, 2),
+      // );
       res.json(response);
     } catch (error) {
       console.error("Get game error:", error);

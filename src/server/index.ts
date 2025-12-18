@@ -207,14 +207,55 @@ io.on("connection", (socket: Socket) => {
   });
 
   // Leave game lobby room
-  socket.on("leave-game-lobby", (gameId: string) => {
+  socket.on("leave-game-lobby", async (gameId: string) => {
     socket.leave(gameId);
     //console.log("User left game lobby:", userId, "gameId:", gameId);
 
-    socket.to(gameId).emit("player-left-lobby", { userId }); // pii-ignore-next-line
+    try {
+      // Check if the game is still in 'waiting' status
+      // Only remove player if they're abandoning a waiting game, not starting one
+      const gameResult = await pool.query(
+        "SELECT status FROM games WHERE id = $1",
+        [gameId]
+      );
+
+      // If game doesn't exist or is already started, don't remove player
+      if (gameResult.rows.length === 0 || gameResult.rows[0].status !== 'waiting') {
+        console.log("Game already started or doesn't exist, not removing player");
+        return;
+      }
+
+      // Remove player from the waiting game in database
+      await pool.query(
+        "DELETE FROM game_participants WHERE game_id = $1 AND user_id = $2",
+        [gameId, userId]
+      );
+      console.log("Removed player from game_participants:", userId, "gameId:", gameId);
+
+      // Get updated player count
+      const countResult = await pool.query(
+        "SELECT COUNT(*) as count FROM game_participants WHERE game_id = $1",
+        [gameId]
+      );
+      const playerCount = parseInt(countResult.rows[0].count);
+
+      // Notify others in the game lobby
+      socket.to(gameId).emit("player-left-lobby", { userId, playerCount });
+
+      // Notify the main lobby to refresh the games list
+      io.to("lobby").emit("lobby-updated");
+
+      // If no players left, delete the game
+      if (playerCount === 0) {
+        await pool.query("DELETE FROM games WHERE id = $1", [gameId]);
+        console.log("Deleted empty game:", gameId);
+      }
+    } catch (error) {
+      console.error("Error removing player from game:", error);
+    }
   });
 
-  // Join game room
+  // Join game room - with full game state restoration from database
   socket.on("join-game", (payload) => {
     const data = validateOrEmitError(socket, JoinGameSchema, payload);
     if (!data) return;
@@ -224,81 +265,85 @@ io.on("connection", (socket: Socket) => {
       socket.join(gameId);
 
       try {
-        const participantsResult = await pool.query(
-          "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
-          [gameId],
-        );
-        const game_participants: string[] = participantsResult.rows.map(
-          (
-            r: { user_id: unknown }, // pii-ignore-next-line
-          ) => String(r.user_id), // pii-ignore-next-line
-        );
+        // Check if game already exists in memory
+        let game = gameManager.getGame(gameId);
+        
+        if (!game) {
+          // Game not in memory - restore from database
+          console.log(`[Game Restore] Loading game ${gameId} from database...`);
+          
+          // 1. Get game info (current turn)
+          const gameInfoResult = await pool.query(
+            "SELECT current_turn_user_id FROM games WHERE id = $1",
+            [gameId]
+          );
+          const currentPlayerId = gameInfoResult.rows[0]?.current_turn_user_id || null;
 
-        const boardResult = await pool.query(
-          "SELECT row, col, letter FROM board_tiles WHERE game_id = $1",
-          [gameId],
-        );
+          // 2. Get participants
+          const participantsResult = await pool.query(
+            "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
+            [gameId],
+          );
+          const players: string[] = participantsResult.rows.map((r: { user_id: unknown }) =>
+            String(r.user_id),
+          );
 
-        let boardState: (string | null)[][] | null = null;
-
-        if (boardResult.rows.length > 0) {
-          boardState = Array(15)
+          // 3. Get board state
+          const boardResult = await pool.query(
+            "SELECT row, col, letter FROM board_tiles WHERE game_id = $1",
+            [gameId],
+          );
+          const boardState: (string | null)[][] = Array(15)
             .fill(null)
             .map(() => Array(15).fill(null));
-
           for (const tile of boardResult.rows) {
             boardState[(tile as any).row][(tile as any).col] = (tile as any).letter;
           }
-        }
 
-        let game = gameManager.getGame(gameId);
-        const uniquePlayers = Array.from(new Set(game_participants.map((id) => String(id))));
-        if (!game) {
-          game = gameManager.createGame(gameId, uniquePlayers, boardState);
-          //console.log(`Game ${gameId} loaded from DB with ${boardResult.rows.length} tiles.`);
-        } else {
-          const existingPlayers = game.players ?? [];
-          const equals =
-            existingPlayers.length === uniquePlayers.length &&
-            existingPlayers.every((p, i) => String(p) === String(uniquePlayers[i]));
-
-          if (!equals) {
-            game.players = uniquePlayers;
-            game.players.forEach((id) => {
-              if (typeof game!.scores[id] === "undefined") game!.scores[id] = 0;
-              if (!game!.playerHands[id]) game!.playerHands[id] = [];
-            });
-          }
-        }
-
-        try {
-          const dbHandResult = await pool.query(
-            "SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
-            [gameId, userId],
+          // 4. Get tile bag
+          const tileBagResult = await pool.query(
+            "SELECT letter FROM tile_bag WHERE game_id = $1 ORDER BY id",
+            [gameId],
           );
+          const tileBag: string[] = tileBagResult.rows.map((r: { letter: string }) => r.letter);
 
-          if (dbHandResult.rows.length > 0) {
-            const hand = dbHandResult.rows.map((r: { letter: string }) => r.letter);
-            if (userId) game.playerHands[userId] = hand;
-          } else {
-            //console.log(`Player ${userId} has no tiles. Drawing starting hand...`);
-            const newHand = game.drawTiles(7);
-            if (userId) game.playerHands[userId] = newHand;
+          // 5. Get all player hands
+          const playerHands: Record<string, string[]> = {};
+          for (const playerId of players) {
+            const handResult = await pool.query(
+              "SELECT letter FROM player_tiles WHERE game_id = $1 AND user_id = $2",
+              [gameId, playerId],
+            );
+            playerHands[playerId] = handResult.rows.map((r: { letter: string }) => r.letter);
+          }
 
-            if (newHand.length > 0 && userId) {
-              const handValues = newHand
-                .map((letter) => `('${gameId}', '${userId}', '${letter}')`) // pii-ignore-next-line
-                .join(",");
-
-              await pool.query(
-                `INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`, // pii-ignore-next-line
-              );
+          // 6. Get scores
+          const scoresResult = await pool.query(
+            "SELECT user_id, value FROM scores WHERE game_id = $1",
+            [gameId],
+          );
+          const scores: Record<string, number> = {};
+          for (const row of scoresResult.rows) {
+            scores[String(row.user_id)] = row.value;
+          }
+          // Initialize scores for players without entries
+          for (const playerId of players) {
+            if (typeof scores[playerId] === "undefined") {
+              scores[playerId] = 0;
             }
           }
-        } catch (e) {
-          console.error("Error syncing hand:", e);
+
+          // 7. Restore the game
+          game = gameManager.restoreGame(gameId, players, {
+            board: boardState,
+            tileBag,
+            playerHands,
+            scores,
+            currentPlayerId,
+          });
         }
 
+        // Send current game state to the joining player
         const gameState = game.getGameState();
         const playerHand = userId ? game.getPlayerHand(userId) : []; // pii-ignore-next-line
 
@@ -356,11 +401,11 @@ io.on("connection", (socket: Socket) => {
         );
 
         await pool.query(
-          `INSERT INTO _scores (game_id, user_id, value)
+          `INSERT INTO scores (game_id, user_id, value)
          VALUES ($1, $2, $3)
-         ON CONFLICT (game_id, user_id) DO UPDATE   
-         SET value = _scores.value + $3`,
-          [gameId, userId, calculatedScore], // pii-ignore-next-line
+         ON CONFLICT (game_id, user_id) DO UPDATE
+         SET value = scores.value + $3`,
+          [gameId, userId, calculatedScore],
         );
         // Save tiles to board in DB
         const boardInsert = tiles
@@ -408,11 +453,40 @@ io.on("connection", (socket: Socket) => {
           );
         }
 
-        // Update turn
-        await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
-          result.currentPlayer,
-          gameId,
-        ]);
+        // Check if game is over (player used all tiles with empty bag)
+        if (result.gameOver) {
+          console.log(`[Game Over] Game ${gameId} ended - player ${userId} used all tiles!`);
+          
+          // Update game status to finished
+          await pool.query("UPDATE games SET status = $1, ended_at = now() WHERE id = $2", [
+            "finished",
+            gameId,
+          ]);
+
+          // Update final scores in database
+          const finalScores = game.getGameState().scores;
+          for (const [odId, finalScore] of Object.entries(finalScores)) {
+            await pool.query(
+              `INSERT INTO scores (game_id, user_id, value)
+               VALUES ($1, $2, $3)
+               ON CONFLICT (game_id, user_id) DO UPDATE SET value = $3`,
+              [gameId, odId, finalScore]
+            );
+          }
+
+          // Emit game over event
+          io.to(gameId).emit("game-over", {
+            winner: userId,
+            reason: "Player used all tiles!",
+            scores: finalScores,
+          });
+        } else {
+          // Update turn for next player
+          await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
+            result.currentPlayer,
+            gameId,
+          ]);
+        }
       } catch (error) {
         console.error("Error saving move:", error);
       }
@@ -436,13 +510,16 @@ io.on("connection", (socket: Socket) => {
       }
 
       if (result.gameOver) {
+        console.log(`[Game Over] Game ${gameId} ended - all players passed!`);
+        
         await pool.query("UPDATE games SET status = $1, ended_at = now() WHERE id = $2", [
           "finished",
           gameId,
         ]);
 
         io.to(gameId).emit("game-over", {
-          _scores: game.scores,
+          reason: "All players passed",
+          scores: game.scores,
         });
       } else {
         await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [

@@ -48,7 +48,7 @@ export const api = {
       return api.request("/api/games/lobby");
     },
 
-    create: (data: { title?: string; maxPlayers: number; settings: any }) =>
+    create: (data: { maxPlayers: number; settings: any }) =>
       fetch("/api/games/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
