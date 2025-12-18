@@ -1,4 +1,3 @@
-// scripts/seed_finished_game.ts
 import dotenv from "dotenv";
 import pg from "pg";
 
