@@ -22,13 +22,20 @@ let playerScores: Record<string, number> = {}; // Track scores for each player
 let currentPlayerId: string | null = null;
 let turnTimer: number | null = null;
 let timeLeft = 60;
-const TURN_DURATION = 60; // 60 seconds per turn
+let turnDuration = 60;
 
 async function init(): Promise<void> {
   const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
   currentUser = user;
 
   const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
+  // Read time limit from settings (default to 60 if missing)
+  const settings = (gameData.game as any).settings;
+  if (settings && settings.timeLimit) {
+    turnDuration = Number(settings.timeLimit);
+    timeLeft = turnDuration; // Initialize timeLeft with the correct value
+    console.log("Timer set to:", turnDuration);
+  }
 
   // Save the participants so 'updateScores' knows thier names
   participants = gameData.game_participants;
@@ -323,7 +330,7 @@ function resetTurnTimer() {
     clearInterval(turnTimer);
     turnTimer = null;
   }
-  timeLeft = TURN_DURATION;
+  timeLeft = turnDuration;
   updateTimerDisplay();
 }
 
@@ -392,6 +399,9 @@ function escapeHtml(text: string) {
 const handlers = {
   gameState: (state: unknown) => {
     const typedState = state as GameStateResponse;
+    if (typedState.settings && (typedState.settings as any).timeLimit) {
+       turnDuration = Number((typedState.settings as any).timeLimit);
+    }
     board.updateBoard(typedState.board);
     board.setHand(typedState.hand);
     updateGameInfo(typedState);

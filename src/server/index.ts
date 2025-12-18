@@ -308,10 +308,11 @@ io.on("connection", (socket: Socket) => {
           
           // 1. Get game info (current turn)
           const gameInfoResult = await pool.query(
-            "SELECT current_turn_user_id FROM games WHERE id = $1",
+            "SELECT current_turn_user_id, settings_json FROM games WHERE id = $1",
             [gameId]
           );
           const currentPlayerId = gameInfoResult.rows[0]?.current_turn_user_id || null;
+          const settings = gameInfoResult.rows[0]?.settings_json || {};
 
           // 2. Get participants
           const participantsResult = await pool.query(
@@ -374,7 +375,9 @@ io.on("connection", (socket: Socket) => {
             playerHands,
             scores,
             currentPlayerId,
-          });
+          },
+          settings
+        );
         }
 
         // Send current game state to the joining player

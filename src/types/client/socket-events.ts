@@ -61,6 +61,7 @@ export type GameStateResponse = {
   scores: Record<string, number>;
   gameOver?: boolean;
   winner?: string;
+  settings?: Record<string, unknown>;
 };
 
 export type MoveMadeResponse = {
@@ -112,6 +113,17 @@ export type ErrorResponse = {
 };
 
 export type GameSummaryResponse = {
+  game: {
+    id: string;
+    game_type: string;
+    status: string;
+    max_players: number;
+    settings: Record<string, unknown>;
+    created_at: string;
+    started_at?: string;
+    ended_at?: string;
+    created_by: string;
+  }; 
   game_participants: GameParticipant[];
   scores: ScoreEntry[];
 };
