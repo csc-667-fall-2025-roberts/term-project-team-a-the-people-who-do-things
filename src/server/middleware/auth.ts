@@ -1,18 +1,16 @@
-import type { NextFunction, Request, Response } from "express";
-import type { Session } from "express-session";
-
+/* eslint-disable simple-import-sort/imports */
+import type { NextFunction, Response } from "express";
+//import type { Session, SessionData } from "express-session";
+import type { AppRequest } from "../../types/app.d";
 import pool from "../config/database.js";
 
-type AppSession = Session & {
-  userId?: string;
-  user?: { id?: string; display_name?: string; email?: string } | null;
-  [key: string]: unknown;
-};
-
-type AppRequest = Request & {
-  session?: AppSession | null;
-  users?: { id?: string; display_name?: string; email?: string } | null;
-};
+/**
+ * Middleware helpers
+ *
+ * This file intentionally uses the project's shared `AppRequest` definition
+ * (from `src/types/app.d.ts`) so session augmentation is centralized and
+ * we don't duplicate or conflict with external `express-session` types.
+ */
 
 export const requireAuth = (req: AppRequest, res: Response, next: NextFunction) => {
   if (!req.session?.userId) {

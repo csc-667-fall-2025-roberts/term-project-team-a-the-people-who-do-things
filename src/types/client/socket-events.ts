@@ -69,6 +69,7 @@ export type ExchangeTilesData = {
 };
 
 export type GameStateResponse = {
+  id: string;
   board: (Tile | null)[][];
   hand: Tile[];
   currentPlayer: string;
@@ -157,6 +158,16 @@ export type GameSummaryResponse = {
   game_ID: string;
   game_participants: GameParticipant[];
   scores: ScoreEntry[];
+};
+
+export type GameSummary = {
+  id: string;
+  title?: string;
+  creator_name?: string;
+  current_players: number;
+  max_players: number;
+  status: string;
+  is_my_game?: boolean;
 };
 
 export type PlayerJoinedLobbyData = {

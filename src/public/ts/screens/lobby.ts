@@ -1,7 +1,7 @@
 /* eslint-disable simple-import-sort/imports */
 import { api } from "../api.js";
 import { socket } from "../socket.js";
-import type { NewMessageResponse } from "../../../types/client/socket-events.js";
+import type { NewMessageResponse, GameSummary } from "../../../types/client/socket-events.js";
 
 
 const gamesContainer = document.getElementById("games-container");
@@ -33,7 +33,7 @@ function createTextElement<K extends keyof HTMLElementTagNameMap>(
   return el;
 }
 
-function addChatMessage(message: NewMessageResponse & { game_id?: string | null }) {
+function addChatMessage(message: NewMessageResponse & { game_ID?: string | null }) {
   if (!chatMessages) {
     console.error("chatMessages element not found in addChatMessage");
     return;
@@ -76,8 +76,8 @@ async function loadLobbyMessages() {
     messages.forEach((message) => {
       const normalized = {
         ...message,
-        game_id: (message as any).game_ID ?? (message as any).game_id ?? null,
-      } as NewMessageResponse & { game_id?: string | null };
+        game_ID: (message as any).game_ID ?? (message as any).game_ID ?? null,
+      } as NewMessageResponse & { game_ID?: string | null };
 
       addChatMessage(normalized);
     });
@@ -141,12 +141,12 @@ function initLobbyChat() {
   //only one listener active for new-message to avoid duplicates
   socket.removeAllListeners("new-message");
   socket.on("new-message", (data: unknown) => {
-    const message = data as LobbyChatMessage;
+    const message = data as NewMessageResponse;
     const isLobbyMessage =
-      message.game_id === null || message.game_id === undefined || String(message.game_id) === LOBBY_ID;
+      message.game_ID === null || message.game_ID === undefined || String(message.game_ID) === LOBBY_ID;
 
     if (isLobbyMessage) {
-      addChatMessage({ ...message, game_id: message.game_id ?? null });
+      addChatMessage({ ...message, game_ID: message.game_ID ?? null });
     }
   });
 }

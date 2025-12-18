@@ -9,6 +9,7 @@ import session from "express-session";
 import type { Socket } from "socket.io";
 import { Server } from "socket.io";
 
+import type { AppRequest } from "../types/app.d";
 import pool from "./config/database.js";
 import { attachUser, requireAuth } from "./middleware/auth.js";
 import authRoutes from "./routes/auth.js";
@@ -30,16 +31,7 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-type AppSession = import("express-session").Session & {
-  userId?: string; // pii-ignore-next-line
-  user?: { id?: string; display_name?: string; email?: string } | null; // pii-ignore-next-line
-  [key: string]: unknown;
-};
 
-type AppRequest = Request & {
-  session?: AppSession | null;
-  users?: { id?: string; display_name?: string; email?: string } | null; // pii-ignore-next-line
-};
 
 const app = express();
 const httpServer = createServer(app);
@@ -61,8 +53,9 @@ if (process.env.NODE_ENV === "production") {
 }
 
 // Session config
-const PgSession = pgSession(session);
-const sessionMiddleware = session({
+
+const PgSession = (pgSession as any)(session);
+const sessionMiddleware = (session as any)({
   store: new PgSession({
     pool,
     tableName: "user_sessions",
