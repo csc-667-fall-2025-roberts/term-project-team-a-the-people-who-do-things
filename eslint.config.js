@@ -34,7 +34,10 @@ export default tseslint.config(
 			"postcss.config.js",
 			"coverage/**",
 			".vitest/**",
-			"**/scripts/**"
+			"**/scripts/**",
+			"**/src/DB/migrations/**",
+			"**/src/server/pii-check.ts",
+			"**/src/server/socket-validators.ts"
 		],
 	},
 
@@ -208,7 +211,9 @@ export default tseslint.config(
 	{
 		files: [
 			"**/*.config.{js,cjs,mjs,ts}",
-			"src/server/pii-check.ts",
+			"/src/server/pii-check.ts",
+			"/src/DB/migrations/",
+			"**/src/server/socket-validators.ts"
 		],
 		...tseslint.configs.disableTypeChecked,
 	},

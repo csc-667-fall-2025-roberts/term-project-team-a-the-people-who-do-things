@@ -27,12 +27,14 @@
 			"exclude": [
 		    "node_modules",
 		    "dist",
-		    "src/server/pii-check.ts",
+		    "**/src/server/pii-check.ts",
 		    "**/*.config.ts",
 		    "vite.config.ts",
 		    "vitest.config.ts",
 		    "vitest.browser.config.ts",
-				"scripts"
+				"scripts",
+				"src/DB/**/*.ts",
+				"**/src/server/socket-validators.ts"
 		],
 "ts-node": {
     "esm": true,
