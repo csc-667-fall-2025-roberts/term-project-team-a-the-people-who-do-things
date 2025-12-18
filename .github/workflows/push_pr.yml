@@ -5,6 +5,8 @@ on:
     branches:
       - "Stella"
       - "safetybranch"
+      - "development"
+      - "unfuck"
   pull_request:
     branches: [main, development]
     types: [opened, synchronize, reopened]
