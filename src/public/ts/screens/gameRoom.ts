@@ -79,39 +79,12 @@ function mapErrorMessage(serverMessage: string): string {
 }
 
 function showNotification(message: string, type: "error" | "success" | "info" = "error") {
-  // Remove any existing notifications
   document.querySelectorAll(".game-notification").forEach(el => el.remove());
-  
-  // const notification = document.createElement("div");
-  
-  // // Style based on type using inline styles (works without Tailwind loading)
-  // const colors = {
-  //   error: { bg: "#ef4444", text: "#ffffff" },
-  //   success: { bg: "#22c55e", text: "#ffffff" },
-  //   info: { bg: "#3b82f6", text: "#ffffff" }
-  // };
-  // const color = colors[type];
-  
-  // notification.className = "game-notification";
-  // notification.style.cssText = `
-  //   position: fixed;
-  //   top: 80px;
-  //   left: 50%;
-  //   transform: translateX(-50%);
-  //   background-color: ${color.bg};
-  //   color: ${color.text};
-  //   padding: 12px 24px;
-  //   border-radius: 8px;
-  //   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  //   z-index: 9999;
-  //   font-weight: 600;
-  //   font-size: 16px;
-  //   text-align: center;
-  //   animation: slideDown 0.3s ease-out;
-  // `;
+  const notification = document.createElement("div");
+  notification.className = "game-notification";
   notification.textContent = message;
-  
-  // Add animation keyframes
+  document.body.appendChild(notification);
+}  
   if (!document.getElementById("notification-styles")) {
     const style = document.createElement("style");
     style.id = "notification-styles";
@@ -132,7 +105,6 @@ function showNotification(message: string, type: "error" | "success" | "info" = 
     notification.style.opacity = "0";
     setTimeout(() => notification.remove(), 500);
   }, 4000);
-}
 
 // Keep alert as alias for backward compatibility
 function alert(message: string) {

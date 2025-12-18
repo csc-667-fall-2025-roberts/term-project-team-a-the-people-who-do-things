@@ -107,7 +107,7 @@ function initScrabbleLogo() {
     e.dataTransfer!.dropEffect = "move";
 
     const target = e.target as HTMLElement;
-    const targetTile = target?.closest(".scrabble-tile")!;
+    const targetTile = target?.closest(".scrabble-tile");
 
     container.querySelectorAll(".scrabble-tile").forEach((t) => {
       const tile = t as HTMLElement;

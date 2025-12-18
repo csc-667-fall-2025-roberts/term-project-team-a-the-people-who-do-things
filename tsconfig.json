@@ -34,7 +34,8 @@
 		    "vitest.browser.config.ts",
 				"scripts",
 				"src/DB/**/*.ts",
-				"**/src/server/socket-validators.ts"
+				"**/src/server/socket-validators.ts",
+				"**/src/public/ts/main.ts",
 		],
 "ts-node": {
     "esm": true,

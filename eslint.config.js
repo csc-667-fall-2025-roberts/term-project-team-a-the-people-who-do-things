@@ -37,7 +37,8 @@ export default tseslint.config(
 			"**/scripts/**",
 			"**/src/DB/migrations/**",
 			"**/src/server/pii-check.ts",
-			"**/src/server/socket-validators.ts"
+			"**/src/server/socket-validators.ts",
+			"**/src/public/ts/main.ts"
 		],
 	},
 
@@ -213,7 +214,8 @@ export default tseslint.config(
 			"**/*.config.{js,cjs,mjs,ts}",
 			"/src/server/pii-check.ts",
 			"/src/DB/migrations/",
-			"**/src/server/socket-validators.ts"
+			"**/src/server/socket-validators.ts",
+			"**/src/public/ts/main.ts"
 		],
 		...tseslint.configs.disableTypeChecked,
 	},
