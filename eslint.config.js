@@ -90,7 +90,7 @@ export default tseslint.config(
 			globals: { ...globals.node },
 			parserOptions: {
 				projectService: true,
-				tsconfigRootDir: import.meta?.dirname,
+				tsconfigRootDir: import.meta.dirname,
 			},
 		},
 		plugins: {
