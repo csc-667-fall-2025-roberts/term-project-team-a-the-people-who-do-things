@@ -57,7 +57,18 @@ function renderHeader() {
 
 function renderWinner(data: GameData) {
   const container = document.getElementById("winner-container");
-  if (!container || data.scores.length === 0) return;
+  if (!container) return;
+  console.log(data.scores)
+
+  if (!data.scores || data.scores.length === 0 || data.scores.every(s => s.value === 0)) {
+    container.innerHTML = `
+      <div class="text-center animate-bounce-in">
+        <h2 class="text-4xl font-extrabold text-slate-800 mb-2">No Winner</h2>
+        <p class="text-xl text-slate-600">The game ended without any scoring moves.</p>
+      </div>
+    `;
+    return;
+  }
 
   // Sort scores high to low
   const sortedScores = [...data.scores].sort((a, b) => b.value - a.value);
@@ -86,9 +97,10 @@ function renderWinner(data: GameData) {
 
 function renderStats(data: GameData) {
   const container = document.getElementById("stats-grid");
+  if (!container) return;
 
   // Safety check: if no moves exist (e.g. empty game), show specific message
-  if (!container || !data.moves || data.moves.length === 0) {
+  if (!data.moves || data.moves.length === 0) {
     if (container)
       container.innerHTML =
         "<p class='col-span-3 text-center text-gray-500'>No moves were played this game.</p>";

@@ -1,3 +1,4 @@
+import { date } from "zod";
 import * as ScrabbleConstants from "../../../server/services/scrabbleConstants.js";
 import { ChatMessage } from "../../../types/client/dom.js";
 import type {
@@ -19,9 +20,8 @@ let participants: GameParticipant[] = [];
 let playerScores: Record<string, number> = {};
 let currentPlayerId: string | null = null;
 let turnTimer: number | null = null;
-let timeLeft = 60;
-let turnDuration = 60;
-
+let timeLeft = 0;
+let turnDuration = 0;
 async function init(): Promise<void> {
   const { user } = (await api.auth.me()) as { user: { id: string; display_name: string } };
   currentUser = user;
@@ -31,7 +31,6 @@ async function init(): Promise<void> {
   const settings = (gameData.game as any).settings;
   if (settings && settings.timeLimit) {
     turnDuration = Number(settings.timeLimit);
-    timeLeft = turnDuration; // Initialize timeLeft with the correct value
     console.log("Timer set to:", turnDuration);
   }
 
@@ -281,7 +280,7 @@ function updateGameInfo(state: GameStateResponse) {
   if (tilesRemainingEl) {
     tilesRemainingEl.textContent = state.tilesRemaining.toString();
   }
-  updateCurrentTurn(state.currentPlayer);
+  updateCurrentTurn(state.currentPlayer, state.turnEndsAt);
 }
 
 async function loadChatHistory() {
@@ -297,7 +296,8 @@ async function loadChatHistory() {
   }
 }
 
-function updateCurrentTurn(playerId: string) {
+function updateCurrentTurn(playerId: string, turnEndsAt: number) {
+//   console.log("DEBUG: updateCurrentTurn called with:", { playerId, turnEndsAt });
   if (!currentUser) return;
   const currentTurnEl = document.getElementById("current-turn");
   if (!currentTurnEl) return;
@@ -321,40 +321,31 @@ function updateCurrentTurn(playerId: string) {
     passBtn.classList.toggle("cursor-not-allowed", !isCurrentUser);
   }
 
-  resetTurnTimer();
-  if (isCurrentUser) {
-    startTurnTimer();
+  if (turnEndsAt) {
+    startTimer(turnEndsAt);
   } else {
-    updateTimerDisplay();
-  }
-}
-
-function resetTurnTimer() {
-  if (turnTimer !== null) {
-    clearInterval(turnTimer);
-    turnTimer = null;
-  }
-  timeLeft = turnDuration;
-  updateTimerDisplay();
-}
-
-function startTurnTimer() {
-  resetTurnTimer();
-
-  turnTimer = window.setInterval(() => {
-    timeLeft--;
-    updateTimerDisplay();
-
-    if (timeLeft <= 0) {
-      clearInterval(turnTimer!);
+    if (turnTimer !== null) {
+      clearInterval(turnTimer);
       turnTimer = null;
-      // Auto-pass the turn
-      if (currentPlayerId === currentUser?.id) {
-        console.log("Time's up! Auto-passing turn...");
-        socket.emit("pass-turn", { gameId });
-      }
     }
-  }, 1000);
+    timeLeft = 0; 
+    updateTimerDisplay();
+  }
+}
+
+function startTimer(endTime: number) {
+    if (turnTimer !== null) clearInterval(turnTimer);
+
+    turnTimer = window.setInterval(() => {
+        timeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+    
+        updateTimerDisplay();
+
+        if (timeLeft <= 0) {
+            clearInterval(turnTimer!);
+            turnTimer = null;
+        }
+    }, 1000);
 }
 
 function updateTimerDisplay() {
@@ -364,24 +355,19 @@ function updateTimerDisplay() {
     return;
   }
 
-  if (currentPlayerId === currentUser?.id) {
-    if (timeLeft <= 10) {
-      timerEl.classList.remove("text-slate-600", "text-blue-600");
-      timerEl.classList.add("text-red-600", "font-bold");
-    } else if (timeLeft <= 30) {
-      timerEl.classList.remove("text-red-600", "text-blue-600");
-      timerEl.classList.add("text-slate-600", "font-bold");
-    } else {
-      timerEl.classList.remove("text-red-600", "text-slate-600");
-      timerEl.classList.add("text-blue-600", "font-bold");
-    }
-    timerEl.textContent = `${timeLeft}s`;
+  const isMyTurn = currentPlayerId === currentUser?.id;
+
+  timerEl.classList.remove("text-red-600", "text-blue-600", "text-slate-600", "text-slate-400");
+
+  if (timeLeft <= 10) {
+    timerEl.classList.add("text-red-600", "font-bold");
   } else {
-    timerEl.classList.remove("text-red-600", "text-blue-600", "font-bold");
-    timerEl.classList.add("text-slate-400");
-    timerEl.textContent = "Waiting...";
+    timerEl.classList.add(isMyTurn ? "text-blue-600" : "text-slate-400");
   }
+
+  timerEl.textContent = `${timeLeft}s`;
 }
+
 function shuffleArray<T>(array: T[]) {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -401,13 +387,11 @@ const handlers = {
     const typedState = state as GameStateResponse;
     if (typedState.settings && (typedState.settings as any).timeLimit) {
       turnDuration = Number((typedState.settings as any).timeLimit);
+    //   console.log("Updated turnDuration from settings:", turnDuration);
     }
     board.updateBoard(typedState.board);
     board.setHand(typedState.hand);
     updateGameInfo(typedState);
-    if (typedState.currentPlayer) {
-      updateCurrentTurn(typedState.currentPlayer);
-    }
   },
   moveMade: (data: unknown) => {
     const typedData = data as MoveMadeResponse;
@@ -418,6 +402,7 @@ const handlers = {
     updateGameInfo(typedData.gameState);
 
     updateScores(typedData.gameState.scores);
+    updateCurrentTurn(typedData.currentPlayer, typedData.turnEndsAt);
 
     if (currentUser && typedData.userId === currentUser.id) {
       board.clearSelection();
@@ -452,12 +437,13 @@ const handlers = {
     }
   },
   turnPassed: (data: unknown) => {
-    const typedData = data as { currentPlayer: string };
-    updateCurrentTurn(typedData.currentPlayer);
+    const typedData = data as { currentPlayer: string, turnEndsAt: number };
+    updateCurrentTurn(typedData.currentPlayer, typedData.turnEndsAt);
   },
+
   turnChanged: (data: unknown) => {
-    const typedData = data as { currentPlayer: string };
-    updateCurrentTurn(typedData.currentPlayer);
+    const typedData = data as { currentPlayer: string,  turnEndsAt: number};
+    updateCurrentTurn(typedData.currentPlayer, typedData.turnEndsAt);
   },
   gameOver: () => {
     window.location.href = `/game/${gameId}/results`;
