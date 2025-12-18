@@ -70,6 +70,11 @@ app.use(attachUser);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "../views"));
 
+app.use((req, res, next) => {
+  res.locals.NODE_ENV = process.env.NODE_ENV;
+  next();
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/dictionary", dictionaryRoutes);
 app.use("/api/games", gameRoutes(io));
@@ -98,7 +103,6 @@ app.get("/game/:gameId/lobby", requireAuth, (req: AppRequest, res: Response) => 
   res.render("screens/gameLobby", {
     user: req.users,
     gameId: req.params.gameId,
-    NODE_ENV: process.env.NODE_ENV,
   });
 });
 
@@ -128,7 +132,6 @@ app.get("/settings", requireAuth, (req: AppRequest, res: Response) => {
 
   res.render("screens/settings", {
     user: safeUser,
-    NODE_ENV: process.env.NODE_ENV,
   });
 });
 
