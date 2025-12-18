@@ -112,7 +112,7 @@ class ScrabbleBoard {
   private setupCellEvents(cell: HTMLElement, row: number, col: number): void {
     cell.addEventListener("click", () => this.handleCellClick(row, col));
     cell.addEventListener("dragover", (e) => e.preventDefault());
-    cell.addEventListener("drop", (e) => this.handleDrop(e as DragEvent, row, col));
+    cell.addEventListener("drop", (e) => this.handleDrop(e, row, col));
   }
 
   private renderTileInCell(cell: HTMLElement, tileData: Tile, row: number, col: number): void {
@@ -210,7 +210,7 @@ class ScrabbleBoard {
 
     if (typeof tiles[0] === "string") {
       this.hand = (tiles as string[]).map((letter) => ({
-        letter: letter,
+        letter,
         value: LETTER_VALUES && LETTER_VALUES[letter] ? LETTER_VALUES[letter] : 0,
       }));
     } else {
@@ -285,7 +285,7 @@ class ScrabbleBoard {
       "flex flex-wrap justify-center gap-2 p-4 bg-slate-200/50 rounded-xl shadow-inner min-h-[4rem] items-center w-fit mx-auto";
 
     this.hand.forEach((tile) => {
-      if (!tile || !tile.letter) return;
+      if (!tile?.letter) return;
 
       const tileElement = document.createElement("div");
 

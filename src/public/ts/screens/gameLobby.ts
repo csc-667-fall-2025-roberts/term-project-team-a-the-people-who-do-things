@@ -1,7 +1,7 @@
 //console.log("gameLobby.ts script loaded!");
 /* pii-ignore */
 
-import {
+import type {
   GameStartedData,
   PlayerJoinedLobbyData,
   PlayerLeftLobbyData,
@@ -131,7 +131,7 @@ if (!gameId) {
       const participants: GameParticipant[] = Array.from(
         new Map(
           (game_participants || [])
-            .filter((p) => p && p.user_id && p.display_name)
+            .filter((p) => p?.user_id && p.display_name)
             .map((p) => [
               String(p.user_id),
               {

@@ -1,36 +1,8 @@
-import "../../styles/main.css";
+/* eslint-disable no-unsanitized/property */
+import type { GameData } from "../../types/client/socket-events.js"
 import { api } from "../api.js";
 
-// Types matching the new API response structure
-interface MovePayload {
-  words: string[];
-  score: number;
-  tiles: { letter: string }[];
-}
 
-interface Move {
-  user_id: string;
-  display_name: string;
-  payload: MovePayload;
-  turn_number: number;
-}
-
-interface Score {
-  user_id: string;
-  value: number;
-  display_name: string;
-}
-
-interface GameData {
-  game: {
-    id: string;
-    status: string;
-    max_players: number;
-  };
-  scores: Score[];
-  moves: Move[]; 
-  game_participants: { user_id: string; display_name: string }[];
-}
 
 const gameId = window.GAME_ID;
 
@@ -76,7 +48,7 @@ function renderWinner(data: GameData) {
   } else {
     container.innerHTML = `
       <div class="text-center animate-bounce-in">
-        <div class="text-6xl mb-4">👑</div>
+        <div class="text-6xl mb-4"></div>
         <h2 class="text-4xl font-extrabold text-slate-800 mb-2">${winner.display_name} Wins!</h2>
         <p class="text-2xl text-blue-600 font-bold">${winner.value} points</p>
       </div>
@@ -93,7 +65,6 @@ function renderStats(data: GameData) {
     return;
   }
 
-  // --- Calculate Statistics ---
 
   let longestWord = "";
   let longestWordPlayer = "";
@@ -105,7 +76,7 @@ function renderStats(data: GameData) {
   data.moves.forEach((move) => {
     const payload = move.payload;
     // Some moves might be skips/exchanges with no payload.words
-    if (!payload || !payload.words) return;
+    if (!payload?.words) return;
 
     // 1. Check Longest Word
     payload.words.forEach((word) => {

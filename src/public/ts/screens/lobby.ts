@@ -200,7 +200,7 @@ function renderGames(games: GameSummary[]) {
       
       <div>
         <div class="flex items-center justify-between gap-2">
-          <h3 class="font-bold text-slate-800 text-lg truncate">${escapeHtml(game.title || game.creator_name + "'s Game")}</h3>
+          <h3 class="font-bold text-slate-800 text-lg truncate">${escapeHtml(game.title || `${game.creator_name  }'s Game`)}</h3>
           ${statusBadge}
         </div>
         <div class="flex items-center gap-2 mt-1">
@@ -224,9 +224,9 @@ function renderGames(games: GameSummary[]) {
 
 gamesContainer?.addEventListener("click", async (event) => {
   const target = event.target as HTMLElement;
-  const button = target.closest(".join-game-btn, .rejoin-game-btn") as HTMLElement | null;
+  const button = target.closest(".join-game-btn, .rejoin-game-btn");
 
-  if (!button || !button.dataset.gameId) return;
+  if (!button?.dataset.gameId) return;
 
   const gameId = button.dataset.gameId;
   const isRejoin = button.classList.contains("rejoin-game-btn");
@@ -263,7 +263,7 @@ createGameForm?.addEventListener("submit", async (event) => {
   const timeLimit = parseInt(timeLimitInput.value, 10);
 
   // Disable button to prevent double-clicks
-  const submitBtn = createGameForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+  const submitBtn = createGameForm.querySelector('button[type="submit"]')!;
   if (submitBtn) submitBtn.disabled = true;
 
   try {

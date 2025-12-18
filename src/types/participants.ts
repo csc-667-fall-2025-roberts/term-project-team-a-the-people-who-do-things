@@ -1,4 +1,4 @@
-import { Users } from "./users.js";
+import type { Users } from "./users.js";
 
 export type Participants = {
   playerID?: keyof Users;

@@ -1,7 +1,8 @@
+/* eslint-disable no-unsanitized/property */
 // noinspection DuplicatedCode
 
 import * as ScrabbleConstants from "../../../server/services/scrabbleConstants.js";
-import { ChatMessage } from "../../../types/client/dom.js";
+import type { ChatMessage } from "../../../types/client/dom.js";
 import type {
   GameParticipant,
   GameStateResponse,
@@ -30,7 +31,7 @@ async function init(): Promise<void> {
 
   const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
 
-  // Save the participants so 'updateScores' knows thier names
+
   participants = gameData.game_participants;
 
   renderPlayers(gameData.game_participants);
@@ -81,33 +82,33 @@ function showNotification(message: string, type: "error" | "success" | "info" = 
   // Remove any existing notifications
   document.querySelectorAll(".game-notification").forEach(el => el.remove());
   
-  const notification = document.createElement("div");
+  // const notification = document.createElement("div");
   
-  // Style based on type using inline styles (works without Tailwind loading)
-  const colors = {
-    error: { bg: "#ef4444", text: "#ffffff" },
-    success: { bg: "#22c55e", text: "#ffffff" },
-    info: { bg: "#3b82f6", text: "#ffffff" }
-  };
-  const color = colors[type];
+  // // Style based on type using inline styles (works without Tailwind loading)
+  // const colors = {
+  //   error: { bg: "#ef4444", text: "#ffffff" },
+  //   success: { bg: "#22c55e", text: "#ffffff" },
+  //   info: { bg: "#3b82f6", text: "#ffffff" }
+  // };
+  // const color = colors[type];
   
-  notification.className = "game-notification";
-  notification.style.cssText = `
-    position: fixed;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: ${color.bg};
-    color: ${color.text};
-    padding: 12px 24px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    z-index: 9999;
-    font-weight: 600;
-    font-size: 16px;
-    text-align: center;
-    animation: slideDown 0.3s ease-out;
-  `;
+  // notification.className = "game-notification";
+  // notification.style.cssText = `
+  //   position: fixed;
+  //   top: 80px;
+  //   left: 50%;
+  //   transform: translateX(-50%);
+  //   background-color: ${color.bg};
+  //   color: ${color.text};
+  //   padding: 12px 24px;
+  //   border-radius: 8px;
+  //   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  //   z-index: 9999;
+  //   font-weight: 600;
+  //   font-size: 16px;
+  //   text-align: center;
+  //   animation: slideDown 0.3s ease-out;
+  // `;
   notification.textContent = message;
   
   // Add animation keyframes

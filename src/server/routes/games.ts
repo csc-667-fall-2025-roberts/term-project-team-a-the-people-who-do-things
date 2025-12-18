@@ -148,7 +148,7 @@ export default function gamesRouter(io: Server) {
         [game.id, r.session.userId],
       );
 
-      const gameLogic = new ScrabbleGame(game.id, [r.session.userId!]);
+      const gameLogic = new ScrabbleGame(game.id, [r.session.userId]);
 
       if (gameLogic.tileBag.length > 0) {
         const bagValues = gameLogic.tileBag
@@ -158,7 +158,7 @@ export default function gamesRouter(io: Server) {
         await client.query(`INSERT INTO tile_bag (game_id, letter) VALUES ${bagValues}`);
       }
 
-      const sessionUserId = r.session.userId!;
+      const sessionUserId = r.session.userId;
       const hostHand = gameLogic.playerHands[sessionUserId];
 
       if (hostHand && hostHand.length > 0) {

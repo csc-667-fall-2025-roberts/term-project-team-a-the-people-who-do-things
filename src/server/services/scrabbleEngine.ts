@@ -88,7 +88,7 @@ export class ScrabbleGame {
   initializeTileBag(): string[] {
     const tiles: string[] = [];
     for (const [letter, count] of Object.entries(LETTER_DISTRIBUTION)) {
-      for (let i = 0; i < (count as number); i++) tiles.push(letter);
+      for (let i = 0; i < (count); i++) tiles.push(letter);
     }
     return this.shuffle(tiles);
   }

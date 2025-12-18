@@ -3,9 +3,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import pgSession from "connect-pg-simple";
-import express, { Request, RequestHandler, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
+import express from "express";
 import session from "express-session";
-import { Server, Socket } from "socket.io";
+import type { Socket } from "socket.io";
+import { Server } from "socket.io";
 
 import pool from "./config/database.js";
 import { attachUser, requireAuth } from "./middleware/auth.js";
@@ -297,7 +299,7 @@ io.on("connection", (socket: Socket) => {
             .fill(null)
             .map(() => Array(15).fill(null));
           for (const tile of boardResult.rows) {
-            boardState[(tile as any).row][(tile as any).col] = (tile as any).letter;
+            boardState[(tile).row][(tile).col] = (tile).letter;
           }
 
           // 4. Get tile bag

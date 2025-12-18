@@ -1,4 +1,5 @@
-import { ScrabbleGame, RestoredGameState } from "./scrabbleEngine.js";
+import type { RestoredGameState } from "./scrabbleEngine.js";
+import { ScrabbleGame } from "./scrabbleEngine.js";
 
 class GameManager {
   games: Map<string, ScrabbleGame>;

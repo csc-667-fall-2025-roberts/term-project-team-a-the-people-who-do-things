@@ -116,12 +116,12 @@ export type GameData = {
     winner?: string;
     ended_at?: string;
   };
-  moves: Array<{
+  moves: {
     payload: {
       words: string[];
       score: number;
     };
-  }>;
+  }[];
   participants: GameParticipant[];
   scores: ScoreEntry[];
 };

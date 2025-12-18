@@ -58,7 +58,7 @@ export class SocketManager {
 
     const redact = (obj: unknown): unknown => {
       if (!isObject(obj)) return obj;
-      const out = { ...(obj as Record<string, unknown>) };
+      const out = { ...(obj) };
       const keys = [
         "email",
         "password",
@@ -82,8 +82,7 @@ export class SocketManager {
     const isProd =
       typeof process !== "undefined" &&
       typeof process.env === "object" &&
-      process.env &&
-      process.env.NODE_ENV === "production";
+      process.env?.NODE_ENV === "production";
 
     const getProdBehavior = (): "log" | "redact" | "block" => {
       if (typeof process === "undefined" || typeof process.env !== "object" || !process.env) {

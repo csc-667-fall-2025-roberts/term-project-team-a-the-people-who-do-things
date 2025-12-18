@@ -1,3 +1,4 @@
+ /* global process, console */
 import { z } from "zod";
 
 export const TileSchema = z.object({

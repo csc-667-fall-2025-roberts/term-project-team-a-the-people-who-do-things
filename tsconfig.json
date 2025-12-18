@@ -1,24 +1,40 @@
 {
-  "compilerOptions": {
-    "target": "ES2020",
+	"compilerOptions": {
+    "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ES2020", "DOM"],
+    "lib": ["ES2022"],
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
     "outDir": "./dist",
     "rootDir": "./src",
+    "removeComments": true,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "types": ["node"]
-  },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/server/pii-check.js"],
-  "exclude": ["node_modules", "dist"],
-  "ts-node": {
+		},
+	  "include": [
+	    "src/**/*.ts",
+	    "src/**/*.d.ts",
+	    "**/*.test.ts",
+	    "**/*.spec.ts"
+	  ],
+			"exclude": [
+		    "node_modules",
+		    "dist",
+		    "src/server/pii-check.ts",
+		    "**/*.config.ts",
+		    "vite.config.ts",
+		    "vitest.config.ts",
+		    "vitest.browser.config.ts",
+				"scripts"
+		],
+"ts-node": {
     "esm": true,
     "experimentalSpecifierResolution": "node"
   }
