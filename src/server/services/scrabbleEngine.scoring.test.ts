@@ -1,5 +1,5 @@
-/* eslint-disable simple-import-sort/imports */
 import { beforeEach, describe, expect, it } from "vitest";
+
 import { ScrabbleGame } from "./scrabbleEngine.js";
 
 describe("ScrabbleGame - scoring and cross-word behavior", () => {

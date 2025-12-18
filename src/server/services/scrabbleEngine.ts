@@ -10,13 +10,13 @@ export type PlacedTile = { letter: string; row: number; col: number };
 export type WordCell = { letter: string; row: number; col: number; isNew: boolean };
 export type FormedWord = { word: string; cells: WordCell[] };
 
-export interface RestoredGameState {
+export type RestoredGameState = {
   board: (string | null)[][];
   tileBag: string[];
   playerHands: Record<string, string[]>;
   scores: Record<string, number>;
   currentPlayerId: string | null;
-}
+};
 
 export class ScrabbleGame {
   gameId: string;

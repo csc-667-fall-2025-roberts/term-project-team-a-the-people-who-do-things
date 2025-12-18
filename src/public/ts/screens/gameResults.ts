@@ -1,27 +1,28 @@
 import "../../styles/main.css";
+
 import { api } from "../api.js";
 
 // Types matching the new API response structure
-interface MovePayload {
+type MovePayload = {
   words: string[];
   score: number;
   tiles: { letter: string }[];
-}
+};
 
-interface Move {
+type Move = {
   user_id: string;
   display_name: string;
   payload: MovePayload;
   turn_number: number;
-}
+};
 
-interface Score {
+type Score = {
   user_id: string;
   value: number;
   display_name: string;
-}
+};
 
-interface GameData {
+type GameData = {
   game: {
     id: string;
     status: string;
@@ -30,7 +31,7 @@ interface GameData {
   scores: Score[];
   moves: Move[];
   game_participants: { user_id: string; display_name: string }[];
-}
+};
 
 const gameId = window.GAME_ID;
 

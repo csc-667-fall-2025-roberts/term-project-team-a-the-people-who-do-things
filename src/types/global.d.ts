@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
 /* Socket.IO global (browser/runtime)
  */
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-type-definitions */
 import "express";
 
 import type { Request as ExRequest } from "express-serve-static-core";
@@ -11,8 +10,8 @@ import type { Moves } from "./moves";
 import type { Participants } from "./participants.js";
 import type { Scores } from "./scores";
 import type { SocketEvents } from "./socket-events.js";
-import type { UserSettings } from "./user_settings.js";
 import type { Users } from "./users";
+import type { UserSettings } from "./userSettings.js";
 
 declare global {
   namespace Express {
