@@ -205,11 +205,8 @@ io.on("connection", (socket: Socket) => {
     //console.log("User left game lobby:", userId, "gameId:", gameId);
 
     try {
-      // Check if the game is still in 'waiting' status
-      // Only remove player if they're abandoning a waiting game, not starting one
       const gameResult = await pool.query("SELECT status FROM games WHERE id = $1", [gameId]);
 
-      // If game doesn't exist or is already started, don't remove player
       if (gameResult.rows.length === 0 || gameResult.rows[0].status !== "waiting") {
         console.log("Game already started or doesn't exist, not removing player");
         return;
