@@ -1,11 +1,11 @@
 import type { Tile } from "./socket-events.js";
 
-export type ElementById<T extends HTMLElement = HTMLElement> = T | null;
+export type ElementByID<T extends HTMLElement = HTMLElement> = T | null;
 
 export type ChatMessage = {
   id: number;
-  game_id: string | null;
-  user_id: string;
+  game_ID: string | null;
+  user_ID: string;
   message: string;
   created_at: string;
   display_name: string;

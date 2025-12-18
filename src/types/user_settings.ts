@@ -1,7 +1,7 @@
 import type { Users } from "./users.js";
 
 export type UserSettings = {
-  userID?: keyof Users;
+  user_ID?: keyof Users;
   preferences?: JSON;
   updated_at?: Date;
 };

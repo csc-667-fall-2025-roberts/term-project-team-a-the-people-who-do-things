@@ -2,6 +2,6 @@ import "express-session";
 
 declare module "express-session" {
   type SessionData = {
-    userId?: string;
+    user_ID?: string;
   }
 }

@@ -3,8 +3,8 @@ import type { Participants } from "./participants.js";
 import type { Users } from "./users.js";
 
 export type GameState = {
-  gameID?: keyof Games;
-  userID?: keyof Users;
+  game_ID?: keyof Games;
+  user_ID?: keyof Users;
   board?: number[];
   currentPlayers?: Participants[];
   scores?: number;

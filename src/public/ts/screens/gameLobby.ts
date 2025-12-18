@@ -1,7 +1,7 @@
 //console.log("gameLobby.ts script loaded!");
 /* pii-ignore */
 
-import type {
+import {
   GameStartedData,
   PlayerJoinedLobbyData,
   PlayerLeftLobbyData,
@@ -23,10 +23,10 @@ type LobbyChatMessage = {
   game_id: string | null;
 };
 
-const gameId = window.GAME_ID;
+const gameID = window.GAME_ID;
 console.log("gameLobby.ts: window.GAME_ID =", window.GAME_ID);
 
-if (!gameId) {
+if (!gameID) {
   console.error(
     "gameLobby.ts: ERROR - window.GAME_ID is not set! Bailing out of game lobby script.",
   );
@@ -95,7 +95,7 @@ if (!gameId) {
 
   async function loadGameLobbyData() {
     try {
-      console.log("Loading game lobby data for gameId:", gameId);
+      console.log("Loading game lobby data for gameID:", gameID);
 
       const { user } = await api.auth.me(); // pii-ignore-next-line
       // as { user: { id: string; display_name: string } } // pii-ignore-next-line
@@ -106,7 +106,7 @@ if (!gameId) {
       currentUser = user;
       // console.log("Current user:", currentUser);
 
-      const response = await api.games.get(gameId);
+      const response = await api.games.get(gameID);
       // as {
       //   game: { max_players: number; created_by: string };
       //   game_participants: {
@@ -131,7 +131,7 @@ if (!gameId) {
       const participants: GameParticipant[] = Array.from(
         new Map(
           (game_participants || [])
-            .filter((p) => p?.user_id && p.display_name)
+            .filter((p) => p && p.user_id && p.display_name)
             .map((p) => [
               String(p.user_id),
               {
@@ -152,7 +152,7 @@ if (!gameId) {
         isHost,
       });
 
-      if (gameIdDisplay) gameIdDisplay.textContent = gameId;
+      if (gameIdDisplay) gameIdDisplay.textContent = gameID;
       if (maxPlayersDisplay) maxPlayersDisplay.textContent = game.max_players.toString();
 
       currentMaxPlayers = game.max_players;
@@ -162,7 +162,7 @@ if (!gameId) {
       updateStartButtonVisibility();
       initLobbyChat();
 
-      socket.emit("join-game-lobby", {gameId});
+      socket.emit("join-game-lobby", {gameID});
     } catch (error) {
       console.error("Failed to load game lobby data:", error);
       console.error("Error details:", error instanceof Error ? error.message : String(error));
@@ -258,7 +258,7 @@ if (!gameId) {
     if (!chatMessages) return;
 
     try {
-      const { messages } = (await api.chat.getMessages(gameId)) as { messages: LobbyChatMessage[] };
+      const { messages } = (await api.chat.getMessages(gameID)) as { messages: LobbyChatMessage[] };
       chatMessages.innerHTML = "";
 
       const initMessage = chatMessages.querySelector(".text-center.text-xs.text-gray-400");
@@ -267,7 +267,7 @@ if (!gameId) {
       messages.forEach((message) => {
         addChatMessage({
           ...message,
-          game_id: gameId,
+          game_id: gameID,
         });
       });
     } catch {
@@ -288,12 +288,12 @@ if (!gameId) {
       const message = chatInput.value.trim();
       if (!message) return;
       chatInput.value = "";
-      socket.emit("send-message", { gameId, message });
+      socket.emit("send-message", { gameID, message });
     });
     //TODO
     socket.on("new-message", (data: unknown) => {
       const message = data as LobbyChatMessage & { game_id?: string | null };
-      if (message && (message.game_id === gameId || String(message.game_id) === String(gameId))) {
+      if (message && (message.game_id === gameID || String(message.game_id) === String(gameID))) {
         addChatMessage(message as LobbyChatMessage);
       }
     });
@@ -309,7 +309,7 @@ if (!gameId) {
       }
 
       try {
-        await api.games.start(gameId);
+        await api.games.start(gameID);
       } catch (error) {
         console.error("Failed to start game:", error);
         alert("Failed to start game. Please try again.");
@@ -324,14 +324,14 @@ if (!gameId) {
     void loadGameLobbyData();
   });
   socket.on("game-started", (data: GameStartedData) => {
-    if (data.gameId === gameId) {
-      window.location.href = `/game/${gameId}`;
+    if (data.gameID === gameID) {
+      window.location.href = `/game/${gameID}`;
     }
   });
 
   // console.log("gameLobby.ts: Setting up DOMContentLoaded listener");
   // console.log("gameLobby.ts: window.GAME_ID =", window.GAME_ID);
-  // console.log("gameLobby.ts: gameId =", gameId);
+  // console.log("gameLobby.ts: gameID =", gameID);
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
@@ -342,8 +342,8 @@ if (!gameId) {
   }
 
   window.addEventListener("beforeunload", () => {
-    if (gameId) {
-      socket.emit("leave-game-lobby", gameId);
+    if (gameID) {
+      socket.emit("leave-game-lobby", gameID);
     }
   });
 } // end gameLobby guard

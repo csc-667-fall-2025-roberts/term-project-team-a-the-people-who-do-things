@@ -17,7 +17,7 @@ import type { Users } from "./users";
 declare global {
   namespace Express {
     interface SessionData extends ExpressSessionData {
-      userId?: string;
+      user_ID?: string;
       user?: {
         id?: string;
         display_name?: string;

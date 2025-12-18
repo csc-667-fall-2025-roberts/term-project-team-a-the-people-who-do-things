@@ -9,7 +9,7 @@ export type AppUser = {
 
 export type AppSession = Session &
   ExpressSessionData & {
-    userId?: string;
+    user_ID?: string;
     user?: AppUser | null;
     [key: string]: unknown;
   };

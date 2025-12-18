@@ -1,18 +1,18 @@
 export type JoinGameData = {
-  userId: string;
-  gameId: string;
+  user_ID: string;
+  game_ID: string;
 };
 
 export type MakeMoveData = {
-  gameId: string;
+  game_ID: string;
   tiles: Tile[];
   words: string[];
   score: number;
 };
 
 export type PassTurnData = {
-  gameId: string;
-  userId: string;
+  game_ID: string;
+  user_ID: string;
 };
 
 export type CurrentPlayerData = {
@@ -34,8 +34,8 @@ export type ScoreEntry = {
 };
 
 export type Scores = {
-  gameID: string;
-  userID: string;
+  game_ID: string;
+  user_ID: string;
   value: number;
   recorded_at: Date;
 };
@@ -62,7 +62,7 @@ export type SendMessageData = {
 };
 
 export type ExchangeTilesData = {
-  gameId: string;
+  game_ID: string;
   tiles: string[];
 };
 
@@ -78,7 +78,7 @@ export type GameStateResponse = {
 
 export type MoveMadeResponse = {
   gameState: GameStateResponse;
-  userId: string;
+  user_ID: string;
   tiles: Tile[];
   words: string[];
   score: number;
@@ -100,13 +100,13 @@ export type NewTilesResponse = {
 
 export type TurnPassedResponse = {
   currentPlayer: string;
-  userId: string;
+  user_ID: string;
 };
 
 export type GameOverResponse = {
   winner: string;
   finalScores: Record<string, number>;
-  gameId: string;
+  game_ID: string;
   isOver: boolean;
 };
 
@@ -124,6 +124,7 @@ export type GameData = {
   }[];
   participants: GameParticipant[];
   scores: ScoreEntry[];
+  user_ID: string;
 };
 
 export type NewMessageResponse = {
@@ -156,17 +157,17 @@ export type GameSummaryResponse = {
 };
 
 export type PlayerJoinedLobbyData = {
-  userId: string;
+  user_ID: string;
   isHost: boolean;
 };
 
 export type PlayerLeftLobbyData = {
-  userId: string;
+  user_ID: string;
   isHost: boolean;
 };
 
 export type GameStartedData = {
-  gameId: string;
+  game_ID: string;
 };
 
 // Socket event map

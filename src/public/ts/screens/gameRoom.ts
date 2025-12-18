@@ -80,10 +80,10 @@ function mapErrorMessage(serverMessage: string): string {
 
 function showNotification(message: string, type: "error" | "success" | "info" = "error") {
   document.querySelectorAll(".game-notification").forEach(el => el.remove());
-  const notification = document.createElement("div");
-  notification.className = "game-notification";
-  notification.textContent = message;
-  document.body.appendChild(notification);
+  const showNotification = document.createElement("div");
+  showNotification.className = "game-notification";
+  showNotification.textContent = message;
+  document.body.appendChild(showNotification);
 }  
   if (!document.getElementById("notification-styles")) {
     const style = document.createElement("style");
@@ -97,13 +97,13 @@ function showNotification(message: string, type: "error" | "success" | "info" = 
     document.head.appendChild(style);
   }
   
-  document.body.appendChild(notification);
+  document.body.appendChild(showNotification);
 
   // Fade out after 4 seconds
   setTimeout(() => {
-    notification.style.transition = "opacity 0.5s";
-    notification.style.opacity = "0";
-    setTimeout(() => notification.remove(), 500);
+    showNotification.style.transition = "opacity 0.5s";
+    showNotification.style.opacity = "0";
+    setTimeout(() => showNotification.remove(), 500);
   }, 4000);
 
 // Keep alert as alias for backward compatibility
@@ -185,15 +185,15 @@ function renderPlayers(participantsList: GameParticipant[]) {
 
   // Sort players by score (highest first)
   const sorted = [...participantsList].sort((a, b) => {
-    const scoreA = playerScores[a.user_id] || 0;
-    const scoreB = playerScores[b.user_id] || 0;
+    const scoreA = playerScores[a.user_ID] || 0;
+    const scoreB = playerScores[b.user_ID] || 0;
     return scoreB - scoreA;
   });
 
   playersList.innerHTML = sorted
     .map((participant, index) => {
-      const isMe = currentUser && participant.user_id === currentUser.id;
-      const score = playerScores[participant.user_id] || 0;
+      const isMe = currentUser && participant.user_ID === currentUser.id;
+      const score = playerScores[participant.user_ID] || 0;
       const isLeader = index === 0 && score > 0;
       
       // Highlight current user and leader
@@ -221,7 +221,7 @@ function renderPlayers(participantsList: GameParticipant[]) {
 function renderScores(scores: ScoreEntry[]) {
   // Convert array of score entries to a simple object
   playerScores = scores.reduce<Record<string, number>>((acc, scoreEntry) => {
-    acc[scoreEntry.user_id] = scoreEntry.value;
+    acc[scoreEntry.user_ID] = scoreEntry.value;
     return acc;
   }, {});
   // Re-render players with updated scores
@@ -387,7 +387,7 @@ const handlers = {
     updateScores(typedData.gameState.scores);
 
     // 4. If *I* made the move, clear my selection so I don't see stuck tiles
-    if (currentUser && typedData.userId === currentUser.id) {
+    if (currentUser && typedData.user_ID === currentUser.id) {
       // pii-ignore-next-line
       board.clearSelection();
     }
