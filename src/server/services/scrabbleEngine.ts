@@ -27,8 +27,14 @@ export class ScrabbleGame {
   playerHands: Record<string, string[]>;
   scores: Record<string, number>;
   consecutivePasses: number;
+  settings: Record<string, unknown>;
 
-  constructor(gameId: string, players: string[], board: (string | null)[][] | null = null) {
+  constructor(
+    gameId: string,
+    players: string[],
+    board: (string | null)[][] | null = null,
+    settings: Record<string, unknown> = {},
+  ) {
     this.gameId = gameId;
     this.board = board ?? this.createEmptyBoard();
     this.tileBag = this.initializeTileBag();
@@ -37,6 +43,7 @@ export class ScrabbleGame {
     this.playerHands = {};
     this.scores = {};
     this.consecutivePasses = 0;
+    this.settings = settings;
 
     for (const p of players) {
       this.scores[p] = 0;
@@ -45,9 +52,13 @@ export class ScrabbleGame {
   }
 
   // Restore a game from saved database state
-  static restore(gameId: string, players: string[], state: RestoredGameState): ScrabbleGame {
-    const game = new ScrabbleGame(gameId, players, state.board);
-
+  static restore(
+    gameId: string,
+    players: string[],
+    state: RestoredGameState,
+    settings: Record<string, unknown> = {},
+  ): ScrabbleGame {
+    const game = new ScrabbleGame(gameId, players, state.board, settings);
     // Override with restored state
     game.tileBag = state.tileBag;
     game.playerHands = state.playerHands;
@@ -445,12 +456,14 @@ export class ScrabbleGame {
     currentPlayer: string;
     scores: Record<string, number>;
     tilesRemaining: number;
+    settings: Record<string, unknown>;
   } {
     return {
       board: this.board,
       currentPlayer: this.players[this.currentPlayerIndex],
       scores: this.scores,
       tilesRemaining: this.tileBag.length,
+      settings: this.settings,
     };
   }
 

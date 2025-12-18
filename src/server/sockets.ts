@@ -104,10 +104,7 @@ export function registerSocketHandlers(io: Server, sessionMiddleware: RequestHan
               [gameId, newHostId],
             );
 
-            await pool.query("UPDATE games SET created_by = $1 WHERE id = $2", [
-              newHostId,
-              gameId,
-            ]);
+            await pool.query("UPDATE games SET created_by = $1 WHERE id = $2", [newHostId, gameId]);
           }
         }
 
@@ -519,5 +516,3 @@ export function registerSocketHandlers(io: Server, sessionMiddleware: RequestHan
     });
   });
 }
-
-
