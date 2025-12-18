@@ -1,5 +1,4 @@
 /* eslint-disable simple-import-sort/imports */
-//console.log("gameLobby.ts script loaded!");
 /* pii-ignore */
 
 import {
