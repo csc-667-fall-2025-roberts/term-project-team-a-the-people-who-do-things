@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const PlacedTileSchema = z.object({
-  letter: z.string().min(1).max(1), // single letter
+  letter: z.string().min(1).max(1),
   row: z.number().int().min(0),
   col: z.number().int().min(0),
 });
@@ -18,7 +18,6 @@ export const JoinGameSchema = z.object({
   gameId: z.string().min(1),
 });
 
-// Lobby join/leave
 export const JoinGameLobbySchema = z.object({
   gameId: z.string().min(1),
 });
@@ -30,12 +29,10 @@ export const MakeMoveSchema = z.object({
   score: z.number().int().nonnegative().optional(),
 });
 
-// Pass turn
 export const PassTurnSchema = z.object({
   gameId: z.string().min(1),
 });
 
-// Exchange tiles
 export const ExchangeTilesSchema = z.object({
   gameId: z.string().min(1),
   tiles: z.array(z.string().min(1)).min(1),
@@ -120,7 +117,6 @@ export function redactPII(payload: unknown): unknown {
 }
 
 export default {
-  // schemas
   JoinGameSchema,
   JoinGameLobbySchema,
   MakeMoveSchema,
@@ -129,7 +125,6 @@ export default {
   SendMessageSchema,
   PlacedTileSchema,
   SelectedTileSchema,
-  // helpers
   validateOrEmitError,
   validateAndRun,
   redactPII,

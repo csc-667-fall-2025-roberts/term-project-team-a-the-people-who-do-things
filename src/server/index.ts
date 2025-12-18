@@ -14,7 +14,7 @@ import chatRoutes from "./routes/chat.js";
 import dictionaryRoutes from "./routes/dictionary.js";
 import gameRoutes from "./routes/games.js";
 import usersRoutes from "./routes/users.js";
-import { registerSocketHandlers } from "./sockets.js";
+import { registerSocketHandlers } from "./socket/handlers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
