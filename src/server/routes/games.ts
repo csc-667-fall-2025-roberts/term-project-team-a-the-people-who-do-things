@@ -10,14 +10,8 @@ import { ScrabbleGame } from "../services/scrabbleEngine.js";
 export default function gamesRouter(io: Server) {
   const router = express.Router();
 
-  // Cleanup old/inactive games from the database
   async function cleanupGames() {
     try {
-      // Delete games that are:
-      // 1. Finished games (delete immediately)
-      // 2. Waiting games older than 15 minutes (abandoned lobbies)
-      // 3. In-progress games older than 15 minutes (abandoned games)
-      // 4. Games with no participants
       const result = await pool.query(`
         DELETE FROM games
         WHERE id IN (
@@ -47,7 +41,7 @@ export default function gamesRouter(io: Server) {
         )
         RETURNING id
       `);
-      
+
       if (result.rowCount && result.rowCount > 0) {
         console.log(`[Cleanup] Deleted ${result.rowCount} old/inactive games`);
       }
@@ -60,9 +54,9 @@ export default function gamesRouter(io: Server) {
     try {
       // Run cleanup before fetching lobby games
       await cleanupGames();
-      
+
       const userId = req.session?.userId;
-      
+
       const result = await pool.query(
         `SELECT g.id, g.title, g.game_type, g.status, g.max_players, g.created_at,
               u.display_name as creator_name,
@@ -124,12 +118,11 @@ export default function gamesRouter(io: Server) {
       await client.query("BEGIN");
 
       // Get user's display name for the game title
-      const userResult = await client.query(
-        "SELECT display_name FROM users WHERE id = $1",
-        [r.session.userId]
-      );
+      const userResult = await client.query("SELECT display_name FROM users WHERE id = $1", [
+        r.session.userId,
+      ]);
       const userName = userResult.rows[0]?.display_name || "Player";
-      
+
       // Always use "[User's Name]'s Game" as the title
       const gameTitle = `${userName}'s Game`;
 
@@ -290,7 +283,7 @@ export default function gamesRouter(io: Server) {
          JOIN users u ON m.user_id = u.id
          WHERE m.game_id = $1
          ORDER BY m.turn_number ASC`,
-        [gameId]
+        [gameId],
       );
 
       const response = {

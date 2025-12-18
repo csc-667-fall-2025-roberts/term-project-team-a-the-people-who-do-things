@@ -1,4 +1,4 @@
-import "express-session"
+import "express-session";
 
 import bcrypt from "bcrypt";
 import express from "express";

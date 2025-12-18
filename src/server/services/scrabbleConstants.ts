@@ -61,9 +61,32 @@ export const LETTER_VALUES: Record<string, number> = {
 // 14 tiles go to players immediately.
 // 16 tiles remain in the bag (approx 2-3 turns each).
 export const LETTER_DISTRIBUTION: Record<string, number> = {
-  A: 3, B: 1, C: 1, D: 1, E: 4, F: 0, G: 1, H: 1, I: 3,
-  J: 0, K: 0, L: 2, M: 1, N: 2, O: 3, P: 1, Q: 0, R: 2,
-  S: 2, T: 2, U: 0, V: 0, W: 0, X: 0, Y: 0, Z: 0,
+  A: 3,
+  B: 1,
+  C: 1,
+  D: 1,
+  E: 4,
+  F: 0,
+  G: 1,
+  H: 1,
+  I: 3,
+  J: 0,
+  K: 0,
+  L: 2,
+  M: 1,
+  N: 2,
+  O: 3,
+  P: 1,
+  Q: 0,
+  R: 2,
+  S: 2,
+  T: 2,
+  U: 0,
+  V: 0,
+  W: 0,
+  X: 0,
+  Y: 0,
+  Z: 0,
 };
 
 export const PREMIUM_SQUARES: Record<string, [number, number][]> = {

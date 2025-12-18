@@ -1,5 +1,3 @@
-// noinspection DuplicatedCode
-
 import * as ScrabbleConstants from "../../../server/services/scrabbleConstants.js";
 import { ChatMessage } from "../../../types/client/dom.js";
 import type {
@@ -18,7 +16,7 @@ const gameId = window.GAME_ID;
 const board = new ScrabbleBoard("scrabble-board");
 let currentUser: { id: string; display_name: string } | null = null;
 let participants: GameParticipant[] = [];
-let playerScores: Record<string, number> = {}; // Track scores for each player
+let playerScores: Record<string, number> = {};
 let currentPlayerId: string | null = null;
 let turnTimer: number | null = null;
 let timeLeft = 60;
@@ -37,7 +35,7 @@ async function init(): Promise<void> {
   renderScores(gameData.scores);
   await loadChatHistory();
 
-  socket.emit("join-game", {gameId});
+  socket.emit("join-game", { gameId });
 
   // Initialize timer display
   updateTimerDisplay();
@@ -48,7 +46,6 @@ init().catch((error) => {
 });
 
 function mapErrorMessage(serverMessage: string): string {
-  // If it's already a readable message, format it nicely
   if (serverMessage.startsWith("Invalid word")) {
     return `${serverMessage} - not a valid Scrabble word!`;
   }
@@ -67,7 +64,7 @@ function mapErrorMessage(serverMessage: string): string {
   if (serverMessage.startsWith("Must place")) {
     return "You must place at least one tile!";
   }
-  
+
   const errorMap: Record<string, string> = {
     invalid_move: "That move is not allowed",
     tiles_already_placed: "Tiles are already placed this turn",
@@ -78,19 +75,17 @@ function mapErrorMessage(serverMessage: string): string {
 }
 
 function showNotification(message: string, type: "error" | "success" | "info" = "error") {
-  // Remove any existing notifications
-  document.querySelectorAll(".game-notification").forEach(el => el.remove());
-  
+  document.querySelectorAll(".game-notification").forEach((el) => el.remove());
+
   const notification = document.createElement("div");
-  
-  // Style based on type using inline styles (works without Tailwind loading)
+
   const colors = {
     error: { bg: "#ef4444", text: "#ffffff" },
     success: { bg: "#22c55e", text: "#ffffff" },
-    info: { bg: "#3b82f6", text: "#ffffff" }
+    info: { bg: "#3b82f6", text: "#ffffff" },
   };
   const color = colors[type];
-  
+
   notification.className = "game-notification";
   notification.style.cssText = `
     position: fixed;
@@ -109,8 +104,7 @@ function showNotification(message: string, type: "error" | "success" | "info" = 
     animation: slideDown 0.3s ease-out;
   `;
   notification.textContent = message;
-  
-  // Add animation keyframes
+
   if (!document.getElementById("notification-styles")) {
     const style = document.createElement("style");
     style.id = "notification-styles";
@@ -122,10 +116,9 @@ function showNotification(message: string, type: "error" | "success" | "info" = 
     `;
     document.head.appendChild(style);
   }
-  
+
   document.body.appendChild(notification);
 
-  // Fade out after 4 seconds
   setTimeout(() => {
     notification.style.transition = "opacity 0.5s";
     notification.style.opacity = "0";
@@ -133,7 +126,6 @@ function showNotification(message: string, type: "error" | "success" | "info" = 
   }, 4000);
 }
 
-// Keep alert as alias for backward compatibility
 function alert(message: string) {
   showNotification(message, "error");
 }
@@ -199,7 +191,6 @@ document.getElementById("shuffle-btn")?.addEventListener("click", () => {
   board.setHand(shuffleArray(hand));
 });
 
-// Chat
 const chatForm = document.getElementById("chat-form") as HTMLFormElement | null;
 const chatInput = document.getElementById("chat-message-input") as HTMLInputElement | null;
 const chatMessages = document.getElementById("chat-messages");
@@ -231,7 +222,6 @@ function renderPlayers(participantsList: GameParticipant[]) {
   const playersList = document.getElementById("players-list");
   if (!playersList) return;
 
-  // Sort players by score (highest first)
   const sorted = [...participantsList].sort((a, b) => {
     const scoreA = playerScores[a.user_id] || 0;
     const scoreB = playerScores[b.user_id] || 0;
@@ -243,21 +233,21 @@ function renderPlayers(participantsList: GameParticipant[]) {
       const isMe = currentUser && participant.user_id === currentUser.id;
       const score = playerScores[participant.user_id] || 0;
       const isLeader = index === 0 && score > 0;
-      
-      // Highlight current user and leader
+
       let containerClass = "bg-white border-slate-200";
       if (isMe) containerClass = "bg-blue-50 border-blue-300";
       if (isLeader && !isMe) containerClass = "bg-yellow-50 border-yellow-300";
-      if (isLeader && isMe) containerClass = "bg-gradient-to-r from-blue-50 to-yellow-50 border-yellow-300";
+      if (isLeader && isMe)
+        containerClass = "bg-gradient-to-r from-blue-50 to-yellow-50 border-yellow-300";
 
       return `
         <div class="flex items-center justify-between p-3 border rounded-lg shadow-sm ${containerClass}">
           <div class="flex items-center gap-2 min-w-0">
-            ${isLeader ? '<span class="text-yellow-500">👑</span>' : ''}
+            ${isLeader ? '<span class="text-yellow-500">👑</span>' : ""}
             <span class="text-sm font-bold text-slate-700 truncate">
               ${escapeHtml(participant.display_name)}
             </span>
-            ${isMe ? '<span class="text-xs text-blue-500">(you)</span>' : ''}
+            ${isMe ? '<span class="text-xs text-blue-500">(you)</span>' : ""}
           </div>
           <span class="text-lg font-bold text-blue-600 ml-2">${score}</span>
         </div>
@@ -267,19 +257,15 @@ function renderPlayers(participantsList: GameParticipant[]) {
 }
 
 function renderScores(scores: ScoreEntry[]) {
-  // Convert array of score entries to a simple object
   playerScores = scores.reduce<Record<string, number>>((acc, scoreEntry) => {
     acc[scoreEntry.user_id] = scoreEntry.value;
     return acc;
   }, {});
-  // Re-render players with updated scores
   renderPlayers(participants);
 }
 
 function updateScores(scores: Record<string, number>) {
-  // Update the global scores object
   playerScores = { ...playerScores, ...scores };
-  // Re-render players with updated scores
   renderPlayers(participants);
 }
 
@@ -313,7 +299,6 @@ function updateCurrentTurn(playerId: string) {
   const isCurrentUser = playerId === currentUser.id;
   currentTurnEl.textContent = isCurrentUser ? "Your turn" : "Opponent's turn";
 
-  // Enable/disable submit button based on turn
   const submitBtn = document.getElementById("submit-move-btn") as HTMLButtonElement | null;
   const passBtn = document.getElementById("pass-btn") as HTMLButtonElement | null;
 
@@ -329,12 +314,10 @@ function updateCurrentTurn(playerId: string) {
     passBtn.classList.toggle("cursor-not-allowed", !isCurrentUser);
   }
 
-  // Reset and start timer
   resetTurnTimer();
   if (isCurrentUser) {
     startTurnTimer();
   } else {
-    // Update timer display to show "Waiting..." when not your turn
     updateTimerDisplay();
   }
 }
@@ -374,9 +357,7 @@ function updateTimerDisplay() {
     return;
   }
 
-  // Always show the timer, even when it's not your turn
   if (currentPlayerId === currentUser?.id) {
-    // It's your turn - show countdown
     if (timeLeft <= 10) {
       timerEl.classList.remove("text-slate-600", "text-blue-600");
       timerEl.classList.add("text-red-600", "font-bold");
@@ -389,13 +370,11 @@ function updateTimerDisplay() {
     }
     timerEl.textContent = `${timeLeft}s`;
   } else {
-    // Not your turn - show waiting message
     timerEl.classList.remove("text-red-600", "text-blue-600", "font-bold");
     timerEl.classList.add("text-slate-400");
     timerEl.textContent = "Waiting...";
   }
 }
-//IGNORE THE DUPLICATE WARNING
 function shuffleArray<T>(array: T[]) {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -424,19 +403,13 @@ const handlers = {
     const typedData = data as MoveMadeResponse;
     // console.log("Move made event received:", typedData);
 
-    // 1. Update the Board (Show the tiles the other player placed!)
     board.updateBoard(typedData.gameState.board);
 
-    // 2. Update Gae Info (Tiles Remaining and Current turn)
-    //updateCurrentTurn(typedData.currentPlayer);
     updateGameInfo(typedData.gameState);
 
-    // 3. Update the Scores
     updateScores(typedData.gameState.scores);
 
-    // 4. If *I* made the move, clear my selection so I don't see stuck tiles
     if (currentUser && typedData.userId === currentUser.id) {
-      // pii-ignore-next-line
       board.clearSelection();
     }
   },
@@ -457,7 +430,6 @@ const handlers = {
     }
   },
   newTiles: (data: unknown) => {
-    //console.log("Received new tiles:", data);
     const typedData = data as { tiles: string[] };
     if (typedData && Array.isArray(typedData.tiles)) {
       board.setHand(typedData.tiles);

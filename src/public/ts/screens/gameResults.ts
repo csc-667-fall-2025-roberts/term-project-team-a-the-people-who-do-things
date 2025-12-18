@@ -28,7 +28,7 @@ interface GameData {
     max_players: number;
   };
   scores: Score[];
-  moves: Move[]; 
+  moves: Move[];
   game_participants: { user_id: string; display_name: string }[];
 }
 
@@ -43,7 +43,6 @@ async function init() {
     renderStats(data);
     renderScoreboard(data);
     setupButtons(data);
-
   } catch (error) {
     console.error("Failed to load results:", error);
     alert("Could not load game results.");
@@ -62,7 +61,7 @@ function renderWinner(data: GameData) {
   // Sort scores high to low
   const sortedScores = [...data.scores].sort((a, b) => b.value - a.value);
   const winner = sortedScores[0];
-  
+
   // Check for a tie
   const isDraw = sortedScores.length > 1 && sortedScores[0].value === sortedScores[1].value;
 
@@ -86,10 +85,12 @@ function renderWinner(data: GameData) {
 
 function renderStats(data: GameData) {
   const container = document.getElementById("stats-grid");
-  
+
   // Safety check: if no moves exist (e.g. empty game), show specific message
   if (!container || !data.moves || data.moves.length === 0) {
-    if (container) container.innerHTML = "<p class='col-span-3 text-center text-gray-500'>No moves were played this game.</p>";
+    if (container)
+      container.innerHTML =
+        "<p class='col-span-3 text-center text-gray-500'>No moves were played this game.</p>";
     return;
   }
 
@@ -97,7 +98,7 @@ function renderStats(data: GameData) {
 
   let longestWord = "";
   let longestWordPlayer = "";
-  
+
   let bestTurnScore = -1;
   let bestTurnPlayer = "";
   let bestTurnWord = "";
@@ -123,7 +124,7 @@ function renderStats(data: GameData) {
     }
   });
 
-  //Render Cards 
+  //Render Cards
   container.innerHTML = `
     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center">
       <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Longest Word</div>
@@ -151,16 +152,17 @@ function renderScoreboard(data: GameData) {
 
   const sortedScores = [...data.scores].sort((a, b) => b.value - a.value);
 
-  list.innerHTML = sortedScores.map((score, index) => {
-    const rank = index + 1;
-    let rankBadge = `<span class="text-slate-400 font-bold w-6">#${rank}</span>`;
-    
-    // Medals for top 3
-    if (rank === 1) rankBadge = `<span class="text-2xl w-8 text-center">🥇</span>`;
-    if (rank === 2) rankBadge = `<span class="text-2xl w-8 text-center">🥈</span>`;
-    if (rank === 3) rankBadge = `<span class="text-2xl w-8 text-center">🥉</span>`;
+  list.innerHTML = sortedScores
+    .map((score, index) => {
+      const rank = index + 1;
+      let rankBadge = `<span class="text-slate-400 font-bold w-6">#${rank}</span>`;
 
-    return `
+      // Medals for top 3
+      if (rank === 1) rankBadge = `<span class="text-2xl w-8 text-center">🥇</span>`;
+      if (rank === 2) rankBadge = `<span class="text-2xl w-8 text-center">🥈</span>`;
+      if (rank === 3) rankBadge = `<span class="text-2xl w-8 text-center">🥉</span>`;
+
+      return `
       <div class="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 shadow-sm mb-3">
         <div class="flex items-center gap-4">
           ${rankBadge}
@@ -172,7 +174,8 @@ function renderScoreboard(data: GameData) {
         <span class="text-2xl font-bold text-blue-600">${score.value} pts</span>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 }
 
 function setupButtons(_data: GameData) {

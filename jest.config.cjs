@@ -20,8 +20,8 @@ module.exports = {
         tsconfig: {
           module: "ESNext", // Use uppercase to be safe
           target: "ES2020",
-          esModuleInterop: true
-        }
+          esModuleInterop: true,
+        },
       },
     ],
   },

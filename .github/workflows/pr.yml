@@ -429,4 +429,3 @@ jobs:
           [ "${{ needs.build.result }}" != "success" ] && echo "  - Build"
           [ "${{ needs.migration-check.result }}" != "success" ] && echo "  - Migration Check"
           exit 1
-

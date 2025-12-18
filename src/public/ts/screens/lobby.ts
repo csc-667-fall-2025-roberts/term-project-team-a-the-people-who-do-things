@@ -185,13 +185,13 @@ function renderGames(games: GameSummary[]) {
     .map((game) => {
       // Check if this is an in-progress game the user is part of
       const isRejoin = game.status === "in_progress" && game.is_my_game;
-      
+
       // Style differences for rejoin vs join
       const buttonText = isRejoin ? "Rejoin Game" : "Join Game";
-      const buttonClass = isRejoin 
+      const buttonClass = isRejoin
         ? "rejoin-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-green-600 border-none rounded-md cursor-pointer hover:bg-green-700 hover:-translate-y-px hover:shadow-lg"
         : "join-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-blue-600 border-none rounded-md cursor-pointer hover:bg-blue-700 hover:-translate-y-px hover:shadow-lg";
-      const statusBadge = isRejoin 
+      const statusBadge = isRejoin
         ? `<span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">In Progress</span>`
         : "";
 
