@@ -44,7 +44,7 @@ function initScrabbleLogo() {
     }
   });
 
-  container.addEventListener("mouse-up", (e: MouseEvent) => {
+  container.addEventListener("mouseup", (e: MouseEvent) => {
     if (pressTimer) {
       clearTimeout(pressTimer);
       pressTimer = null;
@@ -69,7 +69,7 @@ function initScrabbleLogo() {
   });
 
   container.addEventListener(
-    "drag-start",
+    "dragstart",
     (e: DragEvent) => {
       const tile = (e.target as HTMLElement).closest(".scrabble-tile")!;
       if (!tile || tile.getAttribute("draggable") !== "true") {

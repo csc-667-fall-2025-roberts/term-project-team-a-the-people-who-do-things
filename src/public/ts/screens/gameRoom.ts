@@ -80,10 +80,10 @@ function mapErrorMessage(serverMessage: string): string {
 
 function showNotification(message: string, type: "error" | "success" | "info" = "error") {
   document.querySelectorAll(".game-notification").forEach(el => el.remove());
-  const showNotification = document.createElement("div");
-  showNotification.className = "game-notification";
-  showNotification.textContent = message;
-  document.body.appendChild(showNotification);
+  const notificationElement = document.createElement("div");
+  notificationElement.className = "game-notification";
+  notificationElement.textContent = message;
+  document.body.appendChild(notificationElement);
 }  
   if (!document.getElementById("notification-styles")) {
     const style = document.createElement("style");
@@ -97,13 +97,13 @@ function showNotification(message: string, type: "error" | "success" | "info" = 
     document.head.appendChild(style);
   }
   
-  document.body.appendChild(showNotification);
+  document.body.appendChild(notificationElement);
 
   // Fade out after 4 seconds
   setTimeout(() => {
-    showNotification.style.transition = "opacity 0.5s";
-    showNotification.style.opacity = "0";
-    setTimeout(() => showNotification.remove(), 500);
+    notificationElement.style.transition = "opacity 0.5s";
+    notificationElement.style.opacity = "0";
+    setTimeout(() => notificationElement.remove(), 500);
   }, 4000);
 
 // Keep alert as alias for backward compatibility
