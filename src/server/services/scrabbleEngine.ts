@@ -24,7 +24,7 @@ export type WordCell = { letter: string; row: number; col: number; isNew: boolea
 export type FormedWord = { word: string; cells: WordCell[] };
 
 // Data structure for restoring a game from database
-export interface RestoredGameState {
+export type RestoredGameState = {
   board: (string | null)[][];
   tileBag: string[];
   playerHands: Record<string, string[]>;
