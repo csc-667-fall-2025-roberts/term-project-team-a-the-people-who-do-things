@@ -62,6 +62,7 @@ export type GameStateResponse = {
   gameOver?: boolean;
   winner?: string;
   settings?: Record<string, unknown>;
+  turnEndsAt: number
 };
 
 export type MoveMadeResponse = {
@@ -71,6 +72,7 @@ export type MoveMadeResponse = {
   words: string[];
   score: number;
   currentPlayer: string;
+  turnEndsAt: number;
 };
 
 export type Tile = {
@@ -89,6 +91,13 @@ export type NewTilesResponse = {
 export type TurnPassedResponse = {
   currentPlayer: string;
   userId: string;
+  turnEndsAt: number;
+};
+
+export type TurnChangedResponse = {
+  currentPlayer: string;
+  turnEndsAt?: number;
+  reason?: "timeout" | "exchange";
 };
 
 export type GameOverResponse = {
@@ -158,6 +167,7 @@ export type SocketEvents = {
   "move-made": MoveMadeResponse;
   "new-tiles": NewTilesResponse;
   "turn-passed": TurnPassedResponse;
+  "turn-changed": TurnChangedResponse;
   "game-over": GameOverResponse;
   "new-message": NewMessageResponse;
   error: ErrorResponse;

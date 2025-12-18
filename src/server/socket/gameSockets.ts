@@ -27,10 +27,11 @@ export function registerGameSockets(io: Server, socket: Socket, userId: string) 
           console.log(`[Game Restore] Loading game ${gameId} from database...`);
 
           const gameInfoResult = await pool.query(
-            "SELECT current_turn_user_id FROM games WHERE id = $1",
+            "SELECT current_turn_user_id, settings_json FROM games WHERE id = $1",
             [gameId],
           );
           const currentPlayerId = gameInfoResult.rows[0]?.current_turn_user_id || null;
+          const settings = gameInfoResult.rows[0]?.settings_json || {};
 
           const participantsResult = await pool.query(
             "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at",
@@ -80,21 +81,34 @@ export function registerGameSockets(io: Server, socket: Socket, userId: string) 
             }
           }
 
-          game = gameManager.restoreGame(gameId, players, {
-            board: boardState,
-            tileBag,
-            playerHands,
-            scores,
-            currentPlayerId,
-          });
+          game = gameManager.restoreGame(
+            gameId,
+            players,
+            {
+              board: boardState,
+              tileBag,
+              playerHands,
+              scores,
+              currentPlayerId,
+            },
+            settings,
+          );
         }
 
         const gameState = game.getGameState();
         const playerHand = userId ? game.getPlayerHand(userId) : [];
+        let turnEndsAt = gameManager.getTurnEndTime(gameId);
+
+        if (!turnEndsAt) {
+          const timeLimit = Number(game.settings.timeLimit) || 60;
+          gameManager.startTurnTimer(gameId, io, timeLimit);
+          turnEndsAt = gameManager.getTurnEndTime(gameId);
+        }
 
         socket.emit("game-state", {
           ...gameState,
           hand: playerHand,
+          turnEndsAt,
         });
 
         io.to(gameId).emit("player-joined", { userId });
@@ -124,13 +138,21 @@ export function registerGameSockets(io: Server, socket: Socket, userId: string) 
       const calculatedScore = game.calculateScore(tiles);
       const result = game.applyMove(userId, tiles, calculatedScore);
 
+      const timeLimit = Number(game.settings.timeLimit) || 60;
+      const turnEndsAt = Date.now() + timeLimit * 1000;
+
       io.to(gameId).emit("move-made", {
         userId,
         tiles,
         score: calculatedScore,
         currentPlayer: result.currentPlayer,
         gameState: game.getGameState(),
+        turnEndsAt,
       });
+
+      if (!result.gameOver) {
+        gameManager.startTurnTimer(gameId, io, timeLimit);
+      }
 
       socket.emit("new-tiles", { tiles: game.getPlayerHand(userId) });
 
@@ -267,10 +289,16 @@ export function registerGameSockets(io: Server, socket: Socket, userId: string) 
           gameId,
         ]);
 
+        const timeLimit = Number(game.settings.timeLimit) || 60;
+        const turnEndsAt = Date.now() + timeLimit * 1000;
         io.to(gameId).emit("turn-passed", {
           userId,
           currentPlayer: result.currentPlayer,
+          turnEndsAt,
         });
+        if (!result.gameOver) {
+          gameManager.startTurnTimer(gameId, io, timeLimit);
+        }
       }
     })();
   });
@@ -348,10 +376,13 @@ export function registerGameSockets(io: Server, socket: Socket, userId: string) 
       socket.emit("tiles-exchanged", {
         newTiles: result.newTiles,
       });
-
+      const timeLimit = Number(game.settings.timeLimit) || 60;
+      const turnEndsAt = Date.now() + timeLimit * 1000;
       io.to(gameId).emit("turn-changed", {
         currentPlayer: result.currentPlayer,
+        turnEndsAt,
       });
+      gameManager.startTurnTimer(gameId, io, timeLimit);
     })();
   });
 
