@@ -1,4 +1,5 @@
 export type JoinGameData = {
+  userId: string;
   gameId: string;
 };
 
@@ -11,21 +12,29 @@ export type MakeMoveData = {
 
 export type PassTurnData = {
   gameId: string;
+  userId: string;
+};
+
+export type CurrentPlayerData = {
+  game_ID?: string;
+  user_ID?: string;
 };
 
 export type GameParticipant = {
-  id: string;
-  is_host: boolean;
-  user_id: string;
-  display_name: string;
+  game_ID?: string;
+  is_host?: boolean;
+  user_ID?: string;
+  display_name?: string;
 };
 
 export type ScoreEntry = {
-  user_id: string;
+  game_ID: string;
+  user_ID: string;
   value: number;
 };
 
 export type Scores = {
+  gameID: string;
   userID: string;
   value: number;
   recorded_at: Date;
@@ -44,8 +53,12 @@ export type PlacedTile = {
 };
 
 export type SendMessageData = {
-  gameId: string;
-  message: string;
+  id?: number;
+  game_ID?: string | null;
+  user_ID?: string;
+  message?: string;
+  created_at?: string;
+  display_name?: string;
 };
 
 export type ExchangeTilesData = {
@@ -97,10 +110,35 @@ export type GameOverResponse = {
   isOver: boolean;
 };
 
+export type GameData = {
+  game: {
+    id: string;
+    winner?: string;
+    ended_at?: string;
+  };
+  moves: Array<{
+    payload: {
+      words: string[];
+      score: number;
+    };
+  }>;
+  participants: GameParticipant[];
+  scores: ScoreEntry[];
+};
+
 export type NewMessageResponse = {
+  id?: number;
+  game_ID?: string | null;
+  user_ID?: string;
+  message?: string;
+  created_at?: string;
+  display_name?: string;
+};
+
+export type ChatMessage = {
   id: number;
-  game_id: string | null;
-  user_id: string;
+  game_ID: string | null;
+  user_ID: string;
   message: string;
   created_at: string;
   display_name: string;
@@ -112,6 +150,7 @@ export type ErrorResponse = {
 };
 
 export type GameSummaryResponse = {
+  game_ID: string;
   game_participants: GameParticipant[];
   scores: ScoreEntry[];
 };
@@ -153,6 +192,7 @@ export type SocketEvents = {
   "player-joined-lobby": PlayerJoinedLobbyData;
   "player-left-lobby": PlayerLeftLobbyData;
   "game-started": GameStartedData;
+  "current-players": CurrentPlayerData;
 };
 
 export {};

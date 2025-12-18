@@ -565,7 +565,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("send-message", (payload) => {
     const data = validateOrEmitError(socket, SendMessageSchema, payload);
     if (!data) return;
-    const { gameId, message } = data;
+    const { game_ID: gameId, message } = data;
 
     (async () => {
       try {

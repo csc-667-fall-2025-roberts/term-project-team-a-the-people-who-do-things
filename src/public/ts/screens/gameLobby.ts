@@ -143,7 +143,7 @@ if (!gameId) {
         ).values(),
       );
       
-      const userParticipant = participants.find((p) => p.id === currentUser?.id);
+      const userParticipant = participants.find((p) => p.user_ID === currentUser?.id);
       isHost = game.created_by === currentUser.id || userParticipant?.is_host === true;
       console.log("Is host check:", {
         // created_by: game.created_by,
@@ -220,7 +220,7 @@ if (!gameId) {
         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border ${
           participant.is_host ? "border-blue-500 bg-blue-50" : "border-gray-200"
         }">
-          <span class="font-medium text-gray-800">${escapeHtml(participant.display_name)}</span>  
+          <span class="font-medium text-gray-800">${escapeHtml(participant.display_name || "")}</span>  
           ${participant.is_host ? '<span class="bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full">Host</span>' : ""}
         </div>
       `,
