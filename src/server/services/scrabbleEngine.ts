@@ -23,6 +23,15 @@ export type PlacedTile = { letter: string; row: number; col: number };
 export type WordCell = { letter: string; row: number; col: number; isNew: boolean };
 export type FormedWord = { word: string; cells: WordCell[] };
 
+// Data structure for restoring a game from database
+export interface RestoredGameState {
+  board: (string | null)[][];
+  tileBag: string[];
+  playerHands: Record<string, string[]>;
+  scores: Record<string, number>;
+  currentPlayerId: string | null;
+}
+
 export class ScrabbleGame {
   gameId: string;
   board: (string | null)[][];
@@ -47,6 +56,29 @@ export class ScrabbleGame {
       this.scores[p] = 0;
       this.playerHands[p] = this.drawTiles(7);
     }
+  }
+
+  // Restore a game from saved database state
+  static restore(gameId: string, players: string[], state: RestoredGameState): ScrabbleGame {
+    const game = new ScrabbleGame(gameId, players, state.board);
+    
+    // Override with restored state
+    game.tileBag = state.tileBag;
+    game.playerHands = state.playerHands;
+    game.scores = state.scores;
+    
+    // Set current player index based on currentPlayerId
+    if (state.currentPlayerId) {
+      const idx = players.indexOf(state.currentPlayerId);
+      game.currentPlayerIndex = idx >= 0 ? idx : 0;
+    }
+    
+    console.log(`[Game Restore] Restored game ${gameId}:`);
+    console.log(`  - Board tiles: ${state.board.flat().filter(t => t !== null).length}`);
+    console.log(`  - Tile bag: ${state.tileBag.length} tiles`);
+    console.log(`  - Current player: ${players[game.currentPlayerIndex]}`);
+    
+    return game;
   }
 
   createEmptyBoard(): (string | null)[][] {
@@ -142,10 +174,14 @@ export class ScrabbleGame {
       return { valid: false, error: "Tile not in hand" };
 
     const line = this.singleLine(tiles);
+    console.log("[Move Validation] Tiles placed:", tiles.map(t => `${t.letter}@(${t.row},${t.col})`).join(", "));
+    console.log("[Move Validation] Single line check:", line);
     if (!line.ok) return { valid: false, error: "Tiles must be in a single row or column" };
     const horizontal = !!line.horizontal;
 
-    if (!this.continuity(tiles, horizontal))
+    const contResult = this.continuity(tiles, horizontal);
+    console.log("[Move Validation] Continuity check:", contResult, "(horizontal:", horizontal, ")");
+    if (!contResult)
       return { valid: false, error: "Tiles must be continuous" };
 
     if (this.boardIsEmpty()) {
@@ -155,8 +191,11 @@ export class ScrabbleGame {
     }
 
     const formed = this.getFormedWords(tiles);
+    console.log("[Move Validation] Words formed:", formed.map(f => `"${f.word}"`).join(", "));
     for (const f of formed) {
-      if (!isValidWord(f.word)) return { valid: false, error: `Invalid word: ${f.word}` };
+      const valid = isValidWord(f.word);
+      console.log(`[Move Validation] Checking "${f.word}": ${valid ? "✓ VALID" : "✗ INVALID"}`);
+      if (!valid) return { valid: false, error: `Invalid word: ${f.word}` };
     }
 
     return { valid: true };
@@ -197,15 +236,19 @@ export class ScrabbleGame {
     let end = maxCol;
     while (end < BOARD_SIZE - 1 && this.board[row][end + 1]) end++;
 
+    console.log(`[Word Scan] Horizontal scan: row=${row}, cols ${start} to ${end}`);
+
     let word = "";
     const cells: WordCell[] = [];
     for (let c = start; c <= end; c++) {
       const boardLetter = this.board[row][c];
       const tile = tiles.find((t) => t.row === row && t.col === c);
       const letter = boardLetter ?? tile?.letter ?? "";
+      console.log(`  Col ${c}: board="${boardLetter || '-'}", tile="${tile?.letter || '-'}", using="${letter}"`);
       word += letter;
       cells.push({ letter, row, col: c, isNew: !!tile });
     }
+    console.log(`[Word Scan] Horizontal word formed: "${word}"`);
     return { word, cells };
   }
 
@@ -219,15 +262,19 @@ export class ScrabbleGame {
     let end = maxRow;
     while (end < BOARD_SIZE - 1 && this.board[end + 1][col]) end++;
 
+    console.log(`[Word Scan] Vertical scan: col=${col}, rows ${start} to ${end}`);
+
     let word = "";
     const cells: WordCell[] = [];
     for (let r = start; r <= end; r++) {
       const boardLetter = this.board[r][col];
       const tile = tiles.find((t) => t.row === r && t.col === col);
       const letter = boardLetter ?? tile?.letter ?? "";
+      console.log(`  Row ${r}: board="${boardLetter || '-'}", tile="${tile?.letter || '-'}", using="${letter}"`);
       word += letter;
       cells.push({ letter, row: r, col, isNew: !!tile });
     }
+    console.log(`[Word Scan] Vertical word formed: "${word}"`);
     return { word, cells };
   }
 
@@ -309,24 +356,64 @@ export class ScrabbleGame {
     playerId: string,
     tiles: PlacedTile[],
     score: number,
-  ): { newTiles: string[]; currentPlayer: string } {
+  ): { newTiles: string[]; currentPlayer: string; gameOver?: boolean } {
+    // Place tiles on the board
     for (const t of tiles) this.board[t.row][t.col] = t.letter;
 
+    // Remove used tiles from player's hand
     const hand = this.playerHands[playerId];
     for (const t of tiles) {
       const idx = hand.indexOf(t.letter);
       if (idx !== -1) hand.splice(idx, 1);
     }
 
+    // Draw new tiles from the bag
     const newTiles = this.drawTiles(tiles.length);
     this.playerHands[playerId].push(...newTiles);
 
+    // Add score
     this.scores[playerId] = (this.scores[playerId] || 0) + score;
 
-    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+    // Reset consecutive passes since a move was made
     this.consecutivePasses = 0;
 
+    // Check if game ends: player has no tiles left AND bag is empty
+    if (this.playerHands[playerId].length === 0 && this.tileBag.length === 0) {
+      // Game over! Apply end-game scoring
+      this.applyEndGameScoring(playerId);
+      return { newTiles, currentPlayer: playerId, gameOver: true };
+    }
+
+    // Move to next player
+    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+
     return { newTiles, currentPlayer: this.players[this.currentPlayerIndex] };
+  }
+
+  // End game scoring: player who went out gets bonus from other players' remaining tiles
+  private applyEndGameScoring(winningPlayerId: string): void {
+    let totalDeducted = 0;
+
+    // Subtract remaining tile values from each player (except winner)
+    for (const playerId of this.players) {
+      if (playerId === winningPlayerId) continue;
+
+      const hand = this.playerHands[playerId];
+      let handValue = 0;
+      for (const letter of hand) {
+        handValue += LETTER_VALUES[letter] || 0;
+      }
+
+      // Deduct from their score
+      this.scores[playerId] = (this.scores[playerId] || 0) - handValue;
+      totalDeducted += handValue;
+
+      console.log(`[End Game] ${playerId} loses ${handValue} points for remaining tiles: ${hand.join(", ")}`);
+    }
+
+    // Winner gets the total deducted points as bonus
+    this.scores[winningPlayerId] = (this.scores[winningPlayerId] || 0) + totalDeducted;
+    console.log(`[End Game] ${winningPlayerId} gains ${totalDeducted} bonus points for going out!`);
   }
 
   pass(playerId: string): {

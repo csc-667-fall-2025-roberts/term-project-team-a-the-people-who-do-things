@@ -7,6 +7,8 @@ type GameSummary = {
   creator_name: string;
   current_players: number;
   max_players: number;
+  status: string;
+  is_my_game: boolean;
 };
 
 type LobbyChatMessage = {
@@ -180,12 +182,27 @@ function renderGames(games: GameSummary[]) {
   }
 
   gamesContainer.innerHTML = games
-    .map(
-      (game) => `
-    <div class="flex flex-col justify-between p-5 bg-white border border-slate-200 rounded-xl hover:border-blue-400 hover:shadow-md transition-all gap-4 h-full">
+    .map((game) => {
+      // Check if this is an in-progress game the user is part of
+      const isRejoin = game.status === "in_progress" && game.is_my_game;
+      
+      // Style differences for rejoin vs join
+      const buttonText = isRejoin ? "Rejoin Game" : "Join Game";
+      const buttonClass = isRejoin 
+        ? "rejoin-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-green-600 border-none rounded-md cursor-pointer hover:bg-green-700 hover:-translate-y-px hover:shadow-lg"
+        : "join-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-blue-600 border-none rounded-md cursor-pointer hover:bg-blue-700 hover:-translate-y-px hover:shadow-lg";
+      const statusBadge = isRejoin 
+        ? `<span class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">In Progress</span>`
+        : "";
+
+      return `
+    <div class="flex flex-col justify-between p-5 bg-white border ${isRejoin ? "border-green-400 ring-2 ring-green-200" : "border-slate-200"} rounded-xl hover:border-blue-400 hover:shadow-md transition-all gap-4 h-full">
       
       <div>
-        <h3 class="font-bold text-slate-800 text-lg truncate">${escapeHtml(game.title || game.creator_name + "'s Game")}</h3>
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="font-bold text-slate-800 text-lg truncate">${escapeHtml(game.title || game.creator_name + "'s Game")}</h3>
+          ${statusBadge}
+        </div>
         <div class="flex items-center gap-2 mt-1">
             <span class="w-2 h-2 rounded-full ${game.current_players < game.max_players ? "bg-green-500" : "bg-red-500"}"></span>
             <span class="text-sm text-slate-500 font-medium">${game.current_players} / ${game.max_players} Players</span>
@@ -193,28 +210,36 @@ function renderGames(games: GameSummary[]) {
       </div>
 
       <button 
-        class="join-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-blue-600 border-none rounded-md cursor-pointer hover:bg-blue-700 hover:-translate-y-px hover:shadow-lg" 
+        class="${buttonClass}" 
         data-game-id="${game.id}"
+        data-game-status="${game.status}"
       >
-        Join Game
+        ${buttonText}
       </button>
     </div>
-  `,
-    )
+  `;
+    })
     .join("");
 }
 
 gamesContainer?.addEventListener("click", async (event) => {
   const target = event.target as HTMLElement;
-  const button = target.closest(".join-game-btn") as HTMLElement | null;
+  const button = target.closest(".join-game-btn, .rejoin-game-btn") as HTMLElement | null;
 
   if (!button || !button.dataset.gameId) return;
 
   const gameId = button.dataset.gameId;
+  const isRejoin = button.classList.contains("rejoin-game-btn");
 
   try {
-    await api.games.join(gameId);
-    window.location.href = `/game/${gameId}/lobby`;
+    // For rejoin, we skip the join API call (user is already a participant)
+    if (!isRejoin) {
+      await api.games.join(gameId);
+      window.location.href = `/game/${gameId}/lobby`;
+    } else {
+      // Go directly to the game room for in-progress games
+      window.location.href = `/game/${gameId}`;
+    }
   } catch (error) {
     if (error instanceof Error) {
       alert(error.message);
@@ -230,24 +255,20 @@ createGameForm?.addEventListener("submit", async (event) => {
   // 1. Get all input elements
   const maxPlayersInput = document.getElementById("max-players") as HTMLSelectElement | null;
   const timeLimitInput = document.getElementById("time-limit") as HTMLInputElement | null;
-  const titleInput = document.getElementById("game-title") as HTMLInputElement | null;
 
   if (!maxPlayersInput || !timeLimitInput) return;
 
   // 2. Read values
   const maxPlayers = parseInt(maxPlayersInput.value, 10);
   const timeLimit = parseInt(timeLimitInput.value, 10);
-  const title = titleInput?.value.trim() || "";
 
   // Disable button to prevent double-clicks
   const submitBtn = createGameForm.querySelector('button[type="submit"]') as HTMLButtonElement;
   if (submitBtn) submitBtn.disabled = true;
 
   try {
-    // 3. Send to Server (Refactored to pass a single object)
-    //
+    // 3. Send to Server
     const { game } = (await api.games.create({
-      title,
       maxPlayers,
       settings: { timeLimit },
     })) as {
@@ -268,6 +289,11 @@ socket.on("game-created", () => {
 });
 
 socket.on("game-started", () => {
+  void loadGames();
+});
+
+// Refresh lobby when a player leaves a game (player count changed)
+socket.on("lobby-updated", () => {
   void loadGames();
 });
 

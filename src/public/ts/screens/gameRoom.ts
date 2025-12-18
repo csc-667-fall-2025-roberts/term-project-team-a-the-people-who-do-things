@@ -18,6 +18,7 @@ const gameId = window.GAME_ID;
 const board = new ScrabbleBoard("scrabble-board");
 let currentUser: { id: string; display_name: string } | null = null;
 let participants: GameParticipant[] = [];
+let playerScores: Record<string, number> = {}; // Track scores for each player
 let currentPlayerId: string | null = null;
 let turnTimer: number | null = null;
 let timeLeft = 60;
@@ -36,7 +37,7 @@ async function init(): Promise<void> {
   renderScores(gameData.scores);
   await loadChatHistory();
 
-  socket.emit("join-game", gameId);
+  socket.emit("join-game", {gameId});
 
   // Initialize timer display
   updateTimerDisplay();
@@ -45,27 +46,96 @@ async function init(): Promise<void> {
 init().catch((error) => {
   console.error("Failed to initialize:", error);
 });
-init().catch((error) => {
-  console.error("Failed to initialize:", error);
-});
 
 function mapErrorMessage(serverMessage: string): string {
+  // If it's already a readable message, format it nicely
+  if (serverMessage.startsWith("Invalid word")) {
+    return `${serverMessage} - not a valid Scrabble word!`;
+  }
+  if (serverMessage.startsWith("Tiles must be")) {
+    return serverMessage;
+  }
+  if (serverMessage.startsWith("Not your turn")) {
+    return "Wait for your turn!";
+  }
+  if (serverMessage.startsWith("Tile not in hand")) {
+    return "You don't have that tile!";
+  }
+  if (serverMessage.startsWith("First word must")) {
+    return "First word must cover the center square!";
+  }
+  if (serverMessage.startsWith("Must place")) {
+    return "You must place at least one tile!";
+  }
+  
   const errorMap: Record<string, string> = {
     invalid_move: "That move is not allowed",
     tiles_already_placed: "Tiles are already placed this turn",
     insufficient_tiles: "Not enough tiles available",
   };
 
-  return errorMap[serverMessage] || "An error occurred. Please try again.";
+  return errorMap[serverMessage] || serverMessage || "An error occurred. Please try again.";
 }
 
-function alert(message: string) {
+function showNotification(message: string, type: "error" | "success" | "info" = "error") {
+  // Remove any existing notifications
+  document.querySelectorAll(".game-notification").forEach(el => el.remove());
+  
   const notification = document.createElement("div");
-  notification.className = "error-notification";
+  
+  // Style based on type using inline styles (works without Tailwind loading)
+  const colors = {
+    error: { bg: "#ef4444", text: "#ffffff" },
+    success: { bg: "#22c55e", text: "#ffffff" },
+    info: { bg: "#3b82f6", text: "#ffffff" }
+  };
+  const color = colors[type];
+  
+  notification.className = "game-notification";
+  notification.style.cssText = `
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: ${color.bg};
+    color: ${color.text};
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 9999;
+    font-weight: 600;
+    font-size: 16px;
+    text-align: center;
+    animation: slideDown 0.3s ease-out;
+  `;
   notification.textContent = message;
+  
+  // Add animation keyframes
+  if (!document.getElementById("notification-styles")) {
+    const style = document.createElement("style");
+    style.id = "notification-styles";
+    style.textContent = `
+      @keyframes slideDown {
+        from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
   document.body.appendChild(notification);
 
-  setTimeout(() => notification.remove(), 5000);
+  // Fade out after 4 seconds
+  setTimeout(() => {
+    notification.style.transition = "opacity 0.5s";
+    notification.style.opacity = "0";
+    setTimeout(() => notification.remove(), 500);
+  }, 4000);
+}
+
+// Keep alert as alias for backward compatibility
+function alert(message: string) {
+  showNotification(message, "error");
 }
 
 document.getElementById("submit-move-btn")?.addEventListener("click", () => {
@@ -136,26 +206,39 @@ function addChatMessage(message: ChatMessage) {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function renderPlayers(participants: GameParticipant[]) {
+function renderPlayers(participantsList: GameParticipant[]) {
   const playersList = document.getElementById("players-list");
   if (!playersList) return;
 
-  playersList.innerHTML = participants
-    .map((participant) => {
-      const isMe = currentUser && participant.user_id === currentUser.id; // pii-ignore-next-line
-      const containerClass = isMe ? "bg-blue-50 border-blue-200" : "bg-white border-slate-200";
+  // Sort players by score (highest first)
+  const sorted = [...participantsList].sort((a, b) => {
+    const scoreA = playerScores[a.user_id] || 0;
+    const scoreB = playerScores[b.user_id] || 0;
+    return scoreB - scoreA;
+  });
+
+  playersList.innerHTML = sorted
+    .map((participant, index) => {
+      const isMe = currentUser && participant.user_id === currentUser.id;
+      const score = playerScores[participant.user_id] || 0;
+      const isLeader = index === 0 && score > 0;
+      
+      // Highlight current user and leader
+      let containerClass = "bg-white border-slate-200";
+      if (isMe) containerClass = "bg-blue-50 border-blue-300";
+      if (isLeader && !isMe) containerClass = "bg-yellow-50 border-yellow-300";
+      if (isLeader && isMe) containerClass = "bg-gradient-to-r from-blue-50 to-yellow-50 border-yellow-300";
 
       return `
         <div class="flex items-center justify-between p-3 border rounded-lg shadow-sm ${containerClass}">
+          <div class="flex items-center gap-2 min-w-0">
+            ${isLeader ? '<span class="text-yellow-500">👑</span>' : ''}
             <span class="text-sm font-bold text-slate-700 truncate">
               ${escapeHtml(participant.display_name)}
             </span>
-          
-          ${
-            participant.is_host
-              ? '<span class="px-2 py-0.5 text-[10px] font-bold text-gray-100 bg-gray-800 rounded uppercase tracking-wider">HOST</span>'
-              : ""
-          }
+            ${isMe ? '<span class="text-xs text-blue-500">(you)</span>' : ''}
+          </div>
+          <span class="text-lg font-bold text-blue-600 ml-2">${score}</span>
         </div>
       `;
     })
@@ -163,30 +246,20 @@ function renderPlayers(participants: GameParticipant[]) {
 }
 
 function renderScores(scores: ScoreEntry[]) {
-  const aggregated = scores.reduce<Record<string, number>>((acc, scoreEntry) => {
-    acc[scoreEntry.user_id] = scoreEntry.value; // pii-ignore-next-line
+  // Convert array of score entries to a simple object
+  playerScores = scores.reduce<Record<string, number>>((acc, scoreEntry) => {
+    acc[scoreEntry.user_id] = scoreEntry.value;
     return acc;
   }, {});
-  updateScores(aggregated);
+  // Re-render players with updated scores
+  renderPlayers(participants);
 }
 
 function updateScores(scores: Record<string, number>) {
-  const scoresContainer = document.getElementById("scores-list");
-  if (!scoresContainer) return;
-
-  scoresContainer.innerHTML = Object.entries(scores)
-    .map(([userId, score]) => {
-      const participant = participants.find((p: GameParticipant) => p.user_id === userId); // pii-ignore-next-line
-      const displayName = participant?.display_name || "Unknown"; // pii-ignore-next-line
-
-      return `
-        <div class="score-item ${currentUser?.id === userId ? "current-user" : ""}">
-          <span class="player-name">${displayName}</span>
-          <span class="score-value">${score}</span>
-        </div>
-      `;
-    })
-    .join("");
+  // Update the global scores object
+  playerScores = { ...playerScores, ...scores };
+  // Re-render players with updated scores
+  renderPlayers(participants);
 }
 
 function updateGameInfo(state: GameStateResponse) {
