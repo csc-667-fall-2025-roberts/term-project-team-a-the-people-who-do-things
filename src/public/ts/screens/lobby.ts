@@ -141,7 +141,7 @@ function initLobbyChat() {
     // console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
 
     const isLobbyMessage =
-      message.game_id === null || message.game_id === undefined || message.game_id === LOBBY_ID;
+      message.game_id === null || message.game_id === string || message.game_id === LOBBY_ID;
 
     if (isLobbyMessage) {
       console.log("Adding lobby message to UI");
