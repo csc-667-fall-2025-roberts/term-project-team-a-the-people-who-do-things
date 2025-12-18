@@ -169,7 +169,28 @@ document.getElementById("pass-btn")?.addEventListener("click", () => {
 });
 
 document.getElementById("exchange-btn")?.addEventListener("click", () => {
-  alert("Select tiles to exchange (feature coming soon).");
+  if (!currentUser || currentPlayerId !== currentUser.id) {
+    alert("You can only exchange tiles on your turn.");
+    return;
+  }
+
+  const hand = board.getHand();
+  if (!hand || hand.length === 0) {
+    alert("You have no tiles to exchange.");
+    return;
+  }
+
+  const confirmExchange = confirm(
+    "Exchange all tiles in your hand for new ones? This will use your turn.",
+  );
+  if (!confirmExchange) return;
+
+  const tilesToExchange = hand.map((t) => t.letter);
+
+  socket.emit("exchange-tiles", {
+    gameId,
+    tiles: tilesToExchange,
+  });
 });
 
 document.getElementById("shuffle-btn")?.addEventListener("click", () => {
@@ -442,6 +463,12 @@ const handlers = {
       board.setHand(typedData.tiles);
     }
   },
+  tilesExchanged: (data: unknown) => {
+    const typedData = data as { newTiles: string[] };
+    if (typedData && Array.isArray(typedData.newTiles)) {
+      board.setHand(typedData.newTiles);
+    }
+  },
   turnPassed: (data: unknown) => {
     const typedData = data as { currentPlayer: string };
     updateCurrentTurn(typedData.currentPlayer);
@@ -467,6 +494,7 @@ const handlers = {
 socket.on("game-state", handlers.gameState);
 socket.on("move-made", handlers.moveMade);
 socket.on("new-tiles", handlers.newTiles);
+socket.on("tiles-exchanged", handlers.tilesExchanged);
 socket.on("player-joined", handlers.playerJoined);
 socket.on("turn-passed", handlers.turnPassed);
 socket.on("turn-changed", handlers.turnChanged);
@@ -479,6 +507,7 @@ function cleanup() {
   socket.off("game-state", handlers.gameState);
   socket.off("move-made", handlers.moveMade);
   socket.off("new-tiles", handlers.newTiles);
+  socket.off("tiles-exchanged", handlers.tilesExchanged);
   socket.off("player-joined-lobby", handlers.playerJoined);
   socket.off("turn-passed", handlers.turnPassed);
   socket.off("game-over", handlers.gameOver);

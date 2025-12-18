@@ -585,10 +585,73 @@ io.on("connection", (socket: Socket) => {
         return socket.emit("error", { message: result.error });
       }
 
+      try {
+        // 1. Update player_tiles in the database
+        // Remove exchanged tiles from the player's hand in DB
+        for (const letter of tiles) {
+          await pool.query(
+            `DELETE FROM player_tiles
+             WHERE id IN (
+               SELECT id FROM player_tiles
+               WHERE game_id = $1 AND user_id = $2 AND letter = $3
+               LIMIT 1
+             )`,
+            [gameId, userId, letter],
+          );
+        }
+
+        // Insert the new tiles the player received
+        if (result.newTiles && result.newTiles.length > 0) {
+          const handValues = result.newTiles
+            .map((letter) => `('${gameId}', '${userId}', '${letter}')`) // pii-ignore-next-line
+            .join(",");
+
+          await pool.query(
+            `INSERT INTO player_tiles (game_id, user_id, letter)
+             VALUES ${handValues}`,
+          );
+        }
+
+        // 2. Update tile_bag in the database
+        // Remove tiles drawn from the bag (we don't track exact letters in DB, just count)
+        if (result.newTiles && result.newTiles.length > 0) {
+          await pool.query(
+            `DELETE FROM tile_bag
+             WHERE id IN (
+               SELECT id FROM tile_bag
+               WHERE game_id = $1
+               LIMIT $2
+             )`,
+            [gameId, result.newTiles.length],
+          );
+        }
+
+        // Add exchanged tiles back into the bag
+        if (tiles.length > 0) {
+          const bagValues = tiles.map((letter) => `('${gameId}', '${letter}')`).join(",");
+          await pool.query(
+            `INSERT INTO tile_bag (game_id, letter)
+             VALUES ${bagValues}`,
+          );
+        }
+
+        // 3. Save whose turn is next
+        if (result.currentPlayer) {
+          await pool.query("UPDATE games SET current_turn_user_id = $1 WHERE id = $2", [
+            result.currentPlayer,
+            gameId,
+          ]);
+        }
+      } catch (error) {
+        console.error("Error persisting tile exchange:", error);
+      }
+
+      // Tell the player about their new tiles
       socket.emit("tiles-exchanged", {
         newTiles: result.newTiles,
       });
 
+      // Tell everyone whose turn it is now
       io.to(gameId).emit("turn-changed", {
         currentPlayer: result.currentPlayer,
       });
