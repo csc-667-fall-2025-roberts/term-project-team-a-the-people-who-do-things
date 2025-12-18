@@ -1,8 +1,7 @@
 /* eslint-disable simple-import-sort/imports */
+import type { GameSummary, NewMessageResponse } from "../../../types/client/socket-events.js";
 import { api } from "../api.js";
 import { socket } from "../socket.js";
-import type { NewMessageResponse, GameSummary } from "../../../types/client/socket-events.js";
-
 
 const gamesContainer = document.getElementById("games-container");
 const createGameForm = document.getElementById("create-game-form") as HTMLFormElement | null;
@@ -25,7 +24,7 @@ function clearElement(el: Element | null) {
 function createTextElement<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   text: string,
-  className?: string
+  className?: string,
 ): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
   if (className) el.className = className;
@@ -71,7 +70,9 @@ async function loadLobbyMessages() {
   }
 
   try {
-    const { messages } = (await api.chat.getMessages(LOBBY_ID)) as { messages: NewMessageResponse[] };
+    const { messages } = (await api.chat.getMessages(LOBBY_ID)) as {
+      messages: NewMessageResponse[];
+    };
     clearElement(chatMessages);
     messages.forEach((message) => {
       const normalized = {
@@ -143,7 +144,9 @@ function initLobbyChat() {
   socket.on("new-message", (data: unknown) => {
     const message = data as NewMessageResponse;
     const isLobbyMessage =
-      message.game_ID === null || message.game_ID === undefined || String(message.game_ID) === LOBBY_ID;
+      message.game_ID === null ||
+      message.game_ID === undefined ||
+      String(message.game_ID) === LOBBY_ID;
 
     if (isLobbyMessage) {
       addChatMessage({ ...message, game_ID: message.game_ID ?? null });
@@ -223,7 +226,11 @@ async function loadGames() {
   } catch (error) {
     console.error("Failed to load games:", error);
     clearElement(gamesContainer);
-    const p = createTextElement("p", "Failed to load games. Please refresh.", "text-red-500 text-center py-8");
+    const p = createTextElement(
+      "p",
+      "Failed to load games. Please refresh.",
+      "text-red-500 text-center py-8",
+    );
     gamesContainer.appendChild(p);
   }
 }

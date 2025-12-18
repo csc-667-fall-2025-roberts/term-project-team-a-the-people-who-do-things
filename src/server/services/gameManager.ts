@@ -20,19 +20,12 @@ class GameManager {
     return game;
   }
 
-  // Restore a game from database state
-  restoreGame(
-    gameId: string,
-    players: string[],
-    state: RestoredGameState,
-  ): ScrabbleGame {
-    // If game already exists in memory, return it
+  restoreGame(gameId: string, players: string[], state: RestoredGameState): ScrabbleGame {
     const existing = this.games.get(gameId);
     if (existing) {
       return existing;
     }
-    
-    // Restore from database state
+
     const game = ScrabbleGame.restore(gameId, players, state);
     this.games.set(gameId, game);
     return game;

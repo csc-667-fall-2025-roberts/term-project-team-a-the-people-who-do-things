@@ -237,18 +237,18 @@ class ScrabbleBoard {
     }
     if (tilesToReturn.length > 0) {
       this.hand.push(...tilesToReturn);
-      console.log("Returned tiles to hand:", tilesToReturn.map(t => t.letter).join(", "));
+      console.log("Returned tiles to hand:", tilesToReturn.map((t) => t.letter).join(", "));
     }
 
     this.selectedTiles = remainingSelected;
 
     this.board = boardState.map((row, rowIdx) =>
       row.map((cell, colIdx) => {
-        const staged = remainingSelected.find(s => s.row === rowIdx && s.col === colIdx);
+        const staged = remainingSelected.find((s) => s.row === rowIdx && s.col === colIdx);
         if (staged) {
           return { letter: staged.letter, value: LETTER_VALUES[staged.letter] || 0, locked: false };
         }
-        
+
         if (!cell) return null;
         if (typeof cell === "string") {
           return { letter: cell, value: LETTER_VALUES[cell] || 0, locked: true };

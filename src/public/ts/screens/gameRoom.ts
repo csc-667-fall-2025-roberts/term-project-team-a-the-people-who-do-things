@@ -183,30 +183,31 @@ function renderPlayers(participantsList: GameParticipant[]) {
   if (!playersList) return;
 
   const sorted = [...participantsList].sort((a, b) => {
-    const scoreA = a.user_ID ? (playerScores[a.user_ID as string] || 0) : 0;
-    const scoreB = b.user_ID ? (playerScores[b.user_ID as string] || 0) : 0;
+    const scoreA = a.user_ID ? playerScores[a.user_ID as string] || 0 : 0;
+    const scoreB = b.user_ID ? playerScores[b.user_ID as string] || 0 : 0;
     return scoreB - scoreA;
   });
 
   playersList.innerHTML = sorted
     .map((participant, index) => {
       const isMe = currentUser && participant.user_ID === currentUser.id;
-      const score = participant.user_ID ? (playerScores[participant.user_ID as string] || 0) : 0;
+      const score = participant.user_ID ? playerScores[participant.user_ID as string] || 0 : 0;
       const isLeader = index === 0 && score > 0;
 
       let containerClass = "bg-white border-slate-200";
       if (isMe) containerClass = "bg-blue-50 border-blue-300";
       if (isLeader && !isMe) containerClass = "bg-yellow-50 border-yellow-300";
-      if (isLeader && isMe) containerClass = "bg-gradient-to-r from-blue-50 to-yellow-50 border-yellow-300";
+      if (isLeader && isMe)
+        containerClass = "bg-gradient-to-r from-blue-50 to-yellow-50 border-yellow-300";
 
       return `
         <div class="flex items-center justify-between p-3 border rounded-lg shadow-sm ${containerClass}">
           <div class="flex items-center gap-2 min-w-0">
-            ${isLeader ? '<span class="text-yellow-500">👑</span>' : ''}
+            ${isLeader ? '<span class="text-yellow-500">👑</span>' : ""}
             <span class="text-sm font-bold text-slate-700 truncate">
               ${escapeHtml(participant.display_name ?? "")}
             </span>
-            ${isMe ? '<span class="text-xs text-blue-500">(you)</span>' : ''}
+            ${isMe ? '<span class="text-xs text-blue-500">(you)</span>' : ""}
           </div>
           <span class="text-lg font-bold text-blue-600 ml-2">${score}</span>
         </div>

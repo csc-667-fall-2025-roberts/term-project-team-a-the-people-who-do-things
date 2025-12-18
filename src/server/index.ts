@@ -31,8 +31,6 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
-
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
@@ -209,28 +207,25 @@ io.on("connection", (socket: Socket) => {
     try {
       // Check if the game is still in 'waiting' status
       // Only remove player if they're abandoning a waiting game, not starting one
-      const gameResult = await pool.query(
-        "SELECT status FROM games WHERE id = $1",
-        [gameId]
-      );
+      const gameResult = await pool.query("SELECT status FROM games WHERE id = $1", [gameId]);
 
       // If game doesn't exist or is already started, don't remove player
-      if (gameResult.rows.length === 0 || gameResult.rows[0].status !== 'waiting') {
+      if (gameResult.rows.length === 0 || gameResult.rows[0].status !== "waiting") {
         console.log("Game already started or doesn't exist, not removing player");
         return;
       }
 
       // Remove player from the waiting game in database
-      await pool.query(
-        "DELETE FROM game_participants WHERE game_id = $1 AND user_id = $2",
-        [gameId, userId]
-      );
+      await pool.query("DELETE FROM game_participants WHERE game_id = $1 AND user_id = $2", [
+        gameId,
+        userId,
+      ]);
       console.log("Removed player from game_participants:", userId, "gameId:", gameId);
 
       // Get updated player count
       const countResult = await pool.query(
         "SELECT COUNT(*) as count FROM game_participants WHERE game_id = $1",
-        [gameId]
+        [gameId],
       );
       const playerCount = parseInt(countResult.rows[0].count);
 
@@ -270,7 +265,7 @@ io.on("connection", (socket: Socket) => {
           // 1. Get game info (current turn)
           const gameInfoResult = await pool.query(
             "SELECT current_turn_user_id FROM games WHERE id = $1",
-            [gameId]
+            [gameId],
           );
           const currentPlayerId = gameInfoResult.rows[0]?.current_turn_user_id || null;
 
@@ -292,7 +287,7 @@ io.on("connection", (socket: Socket) => {
             .fill(null)
             .map(() => Array(15).fill(null));
           for (const tile of boardResult.rows) {
-            boardState[(tile).row][(tile).col] = (tile).letter;
+            boardState[tile.row][tile.col] = tile.letter;
           }
 
           // 4. Get tile bag
@@ -356,7 +351,10 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("make-move", (payload) => {
-    const normalizedPayload = { ...(payload as any), gameId: (payload as any).gameId ?? (payload as any).game_ID };
+    const normalizedPayload = {
+      ...(payload as any),
+      gameId: (payload as any).gameId ?? (payload as any).game_ID,
+    };
     const data = validateOrEmitError(socket, MakeMoveSchema, normalizedPayload);
     if (!data) return;
 
@@ -480,7 +478,7 @@ io.on("connection", (socket: Socket) => {
               `INSERT INTO scores (game_id, user_id, value)
                VALUES ($1, $2, $3)
                ON CONFLICT (game_id, user_id) DO UPDATE SET value = $3`,
-              [gameId, odId, finalScore]
+              [gameId, odId, finalScore],
             );
           }
 

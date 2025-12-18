@@ -1,4 +1,4 @@
- /* global process, console */
+/* global process, console */
 import { z } from "zod";
 
 export const TileSchema = z.object({
@@ -21,7 +21,6 @@ export const SelectedTileSchema = z.object({
   col: z.number().int().min(0),
   letter: z.string().min(1).max(1),
 });
-
 
 export const JoinGameSchema = z.object({
   userId: z.string().min(1),
@@ -153,7 +152,6 @@ export const GameSummaryResponseSchema = z.object({
   scores: z.array(ScoreEntrySchema),
 });
 
-
 export const ChatMessageSchema = z.object({
   id: z.number(),
   game_ID: z.union([z.string(), z.null()]),
@@ -185,7 +183,6 @@ export const PlayerLeftLobbySchema = z.object({
 export const GameStartedSchema = z.object({
   gameId: z.string(),
 });
-
 
 export const GamesSchema = z.object({
   created_at: z.date().optional(),
@@ -254,11 +251,12 @@ export const ApiResponseSchema = z.object({
   message: z.string().optional(),
 });
 
-export const AppSessionSchema = z.object({
-  userId: z.string().optional(),
-  user: AppUserSchema.nullable().optional(),
-}).catchall(z.unknown());
-
+export const AppSessionSchema = z
+  .object({
+    userId: z.string().optional(),
+    user: AppUserSchema.nullable().optional(),
+  })
+  .catchall(z.unknown());
 
 // Client to Server
 export type JoinGameData = z.infer<typeof JoinGameSchema>;
@@ -312,7 +310,7 @@ export type GameState = z.infer<typeof GameStateSchema>;
 export type ClientChatMessage = z.infer<typeof ClientChatMessageSchema>;
 export type ClientUsers = z.infer<typeof ClientUsersSchema>;
 export type ClientGameState = z.infer<typeof ClientGameStateSchema>;
-export type ApiResponse<T = any> = Omit<z.infer<typeof ApiResponseSchema>, 'data'> & { data?: T };
+export type ApiResponse<T = any> = Omit<z.infer<typeof ApiResponseSchema>, "data"> & { data?: T };
 
 // Session Types
 export type AppSession = z.infer<typeof AppSessionSchema>;
@@ -348,7 +346,7 @@ export function validateAndRun<T extends z.ZodTypeAny>(
 ): void {
   const data = validateOrEmitError(socket, schema, payload, code);
   if (!data) return;
-  
+
   try {
     handler(data);
   } catch (err) {
@@ -363,7 +361,7 @@ export function validateAndRun<T extends z.ZodTypeAny>(
 
 export function redactPII(payload: unknown): unknown {
   if (!payload || typeof payload !== "object") return payload;
-  
+
   const obj = { ...(payload as Record<string, unknown>) };
   const keysToRedact = [
     "email",
@@ -376,13 +374,13 @@ export function redactPII(payload: unknown): unknown {
     "userID",
     "userId",
   ];
-  
+
   for (const k of keysToRedact) {
     if (Object.prototype.hasOwnProperty.call(obj, k)) {
       (obj as any)[k] = "[REDACTED]";
     }
   }
-  
+
   return obj;
 }
 
@@ -394,19 +392,19 @@ export default {
   PassTurnSchema,
   ExchangeTilesSchema,
   SendMessageSchema,
-  
+
   // Tile Schemas
   PlacedTileSchema,
   SelectedTileSchema,
   TileSchema,
-  
+
   // User & Participant Schemas
   AppUserSchema,
   UsersSchema,
   CurrentPlayerDataSchema,
   GameParticipantSchema,
   ParticipantsSchema,
-  
+
   // Server to Client Response Schemas
   GameStateResponseSchema,
   MoveMadeResponseSchema,
@@ -414,36 +412,36 @@ export default {
   TurnPassedResponseSchema,
   GameOverResponseSchema,
   ErrorResponseSchema,
-  
+
   // Score Schemas
   ScoreEntrySchema,
   ScoresSchema,
   GameSummaryResponseSchema,
-  
+
   // Chat Schemas
   ChatMessageSchema,
   NewMessageResponseSchema,
-  
+
   // Lobby Event Schemas
   PlayerJoinedLobbySchema,
   PlayerLeftLobbySchema,
   GameStartedSchema,
-  
+
   // Database Schemas
   GamesSchema,
   UserSettingsSchema,
   MovesSchema,
   GameStateSchema,
-  
+
   // Client-side Schemas
   ClientChatMessageSchema,
   ClientUsersSchema,
   ClientGameStateSchema,
   ApiResponseSchema,
-  
+
   // Session Schemas
   AppSessionSchema,
-  
+
   // Helper Functions
   validateOrEmitError,
   validateAndRun,

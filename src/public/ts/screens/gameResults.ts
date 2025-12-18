@@ -56,7 +56,9 @@ function renderStats(data: GameData) {
   const container = document.getElementById("stats-grid");
 
   if (!container || !data.moves || data.moves.length === 0) {
-    if (container) container.innerHTML = "<p class='col-span-3 text-center text-gray-500'>No moves were played this game.</p>";
+    if (container)
+      container.innerHTML =
+        "<p class='col-span-3 text-center text-gray-500'>No moves were played this game.</p>";
     return;
   }
 
@@ -112,17 +114,18 @@ function renderScoreboard(data: GameData) {
 
   const sortedScores = [...data.scores].sort((a, b) => b.value - a.value);
 
-  list.innerHTML = sortedScores.map((score, index) => {
-    const rank = index + 1;
-    let rankBadge = `<span class="text-slate-400 font-bold w-6">#${rank}</span>`;
+  list.innerHTML = sortedScores
+    .map((score, index) => {
+      const rank = index + 1;
+      let rankBadge = `<span class="text-slate-400 font-bold w-6">#${rank}</span>`;
 
-    if (rank === 1) rankBadge = `<span class="text-2xl w-8 text-center">🥇</span>`;
-    if (rank === 2) rankBadge = `<span class="text-2xl w-8 text-center">🥈</span>`;
-    if (rank === 3) rankBadge = `<span class="text-2xl w-8 text-center">🥉</span>`;
+      if (rank === 1) rankBadge = `<span class="text-2xl w-8 text-center">🥇</span>`;
+      if (rank === 2) rankBadge = `<span class="text-2xl w-8 text-center">🥈</span>`;
+      if (rank === 3) rankBadge = `<span class="text-2xl w-8 text-center">🥉</span>`;
 
-    const displayName = score.display_name ?? "Player";
+      const displayName = score.display_name ?? "Player";
 
-    return `
+      return `
       <div class="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 shadow-sm mb-3">
         <div class="flex items-center gap-4">
           ${rankBadge}
@@ -134,7 +137,8 @@ function renderScoreboard(data: GameData) {
         <span class="text-2xl font-bold text-blue-600">${score.value} pts</span>
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 }
 
 function setupButtons(_data: GameData) {

@@ -18,7 +18,7 @@ function initScrabbleLogo() {
   let startY = 0;
 
   container.addEventListener("mousedown", (e: MouseEvent) => {
-    const tile = ((e.target as HTMLElement).closest(".scrabble-tile") as HTMLElement | null);
+    const tile = (e.target as HTMLElement).closest(".scrabble-tile") as HTMLElement | null;
     if (!tile) return;
 
     pressStartTime = Date.now();
@@ -49,7 +49,7 @@ function initScrabbleLogo() {
       pressTimer = null;
     }
 
-    const tile = ((e.target as HTMLElement).closest(".scrabble-tile") as HTMLElement | null);
+    const tile = (e.target as HTMLElement).closest(".scrabble-tile") as HTMLElement | null;
     if (tile) {
       tile.style.opacity = "";
       tile.style.transform = "";
@@ -70,7 +70,7 @@ function initScrabbleLogo() {
   container.addEventListener(
     "dragstart",
     (e: DragEvent) => {
-      const tile = ((e.target as HTMLElement).closest(".scrabble-tile") as HTMLElement | null);
+      const tile = (e.target as HTMLElement).closest(".scrabble-tile") as HTMLElement | null;
       if (!tile || tile.getAttribute("draggable") !== "true") {
         e.preventDefault();
         e.stopPropagation();
@@ -106,7 +106,7 @@ function initScrabbleLogo() {
     e.dataTransfer!.dropEffect = "move";
 
     const target = e.target as HTMLElement;
-    const targetTile = (target?.closest(".scrabble-tile") as HTMLElement | null);
+    const targetTile = target?.closest(".scrabble-tile") as HTMLElement | null;
 
     container.querySelectorAll(".scrabble-tile").forEach((t) => {
       const tile = t as HTMLElement;
@@ -142,7 +142,7 @@ function initScrabbleLogo() {
     }
 
     const target = e.target as HTMLElement;
-    const targetTile = (target.closest(".scrabble-tile") as HTMLElement | null);
+    const targetTile = target.closest(".scrabble-tile") as HTMLElement | null;
 
     console.log("Drop target:", { targetTile, target, draggedTile });
 
@@ -229,7 +229,7 @@ function initScrabbleLogo() {
 
   container.addEventListener("dragleave", (e: DragEvent) => {
     const target = e.target as HTMLElement;
-    const targetTile = (target.closest(".scrabble-tile") as HTMLElement | null);
+    const targetTile = target.closest(".scrabble-tile") as HTMLElement | null;
     if (targetTile) {
       targetTile.style.borderColor = "";
       targetTile.style.borderWidth = "";
@@ -239,7 +239,7 @@ function initScrabbleLogo() {
   container.addEventListener(
     "click",
     (e: MouseEvent) => {
-      const tile = ((e.target as HTMLElement).closest(".scrabble-tile") as HTMLElement | null);
+      const tile = (e.target as HTMLElement).closest(".scrabble-tile") as HTMLElement | null;
       if (!tile) return;
 
       if (tile.getAttribute("draggable") !== "true" && !hasMoved) {
@@ -259,7 +259,7 @@ function initScrabbleLogo() {
     "dragstart",
     (e: DragEvent) => {
       const target = e.target as HTMLElement;
-      const tile = (target.closest(".scrabble-tile") as HTMLElement | null);
+      const tile = target.closest(".scrabble-tile") as HTMLElement | null;
       if (!tile || tile.getAttribute("draggable") !== "true") {
         e.preventDefault();
         e.stopPropagation();
@@ -271,7 +271,7 @@ function initScrabbleLogo() {
   );
 
   container.addEventListener("contextmenu", (e: MouseEvent) => {
-    const tile = ((e.target as HTMLElement).closest(".scrabble-tile") as HTMLElement | null);
+    const tile = (e.target as HTMLElement).closest(".scrabble-tile") as HTMLElement | null;
     if (tile) {
       e.preventDefault();
     }

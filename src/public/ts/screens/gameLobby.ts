@@ -2,11 +2,11 @@
 /* pii-ignore */
 
 import {
+  GameParticipant,
   GameStartedData,
+  NewMessageResponse,
   PlayerJoinedLobbyData,
   PlayerLeftLobbyData,
-  GameParticipant,
-  NewMessageResponse
 } from "../../../types/client/socket-events.js";
 import { api } from "../api.js";
 import { socket } from "../socket.js";
@@ -19,7 +19,6 @@ if (!gameID) {
     "gameLobby.ts: ERROR - window.GAME_ID is not set! Bailing out of game lobby script.",
   );
 } else {
-
   let currentUser: { id: string; display_name?: string } | null = null; // pii-ignore-next-line
   let isHost = false;
   let currentMaxPlayers = 0;
@@ -116,7 +115,7 @@ if (!gameID) {
       updateStartButtonVisibility();
       initLobbyChat();
 
-      socket.emit("join-game-lobby", {gameID});
+      socket.emit("join-game-lobby", { gameID });
     } catch (error) {
       console.error("Failed to load game lobby data:", error);
       console.error("Error details:", error instanceof Error ? error.message : String(error));
@@ -203,7 +202,9 @@ if (!gameID) {
     if (!chatMessages) return;
 
     try {
-      const { messages } = (await api.chat.getMessages(gameID)) as { messages: NewMessageResponse[] };
+      const { messages } = (await api.chat.getMessages(gameID)) as {
+        messages: NewMessageResponse[];
+      };
       chatMessages.innerHTML = "";
 
       const initMessage = chatMessages.querySelector(".text-center.text-xs.text-gray-400");

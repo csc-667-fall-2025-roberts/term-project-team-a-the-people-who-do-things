@@ -1,5 +1,5 @@
 #!/usr/bin/env node
- 
+
 /* global process, console */
 import fs from "fs/promises";
 import path from "path";
@@ -55,14 +55,12 @@ function shouldIgnore(filePath, baseDir, patterns) {
     }
 
     if (cleanPattern.includes("**")) {
-      const regex = new RegExp(
-        `^${  cleanPattern.replace(/\*\*/g, ".*").replace(/\*/g, "[^/]*")  }$`,
-      );
+      const regex = new RegExp(`^${cleanPattern.replace(/\*\*/g, ".*").replace(/\*/g, "[^/]*")}$`);
       return regex.test(relativePath);
     }
 
     if (cleanPattern.includes("*")) {
-      const regex = new RegExp(`^${  cleanPattern.replace(/\*/g, "[^/]*")  }$`);
+      const regex = new RegExp(`^${cleanPattern.replace(/\*/g, "[^/]*")}$`);
       return regex.test(relativePath) || regex.test(path.basename(filePath));
     }
 
@@ -70,7 +68,7 @@ function shouldIgnore(filePath, baseDir, patterns) {
       return true;
     }
 
-    if (relativePath.startsWith(`${cleanPattern  }/`)) {
+    if (relativePath.startsWith(`${cleanPattern}/`)) {
       return true;
     }
 

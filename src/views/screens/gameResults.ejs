@@ -8,39 +8,40 @@
     <% if (NODE_ENV === 'production') { %>
     <link rel="stylesheet" href="/styles/main.css" />
     <% } %>
-    
+
     <script>
       window.GAME_ID = "<%= gameId %>";
     </script>
   </head>
   <body class="h-full flex flex-col bg-slate-50">
-    <%- include('../components/loading') %>
-    <%- include('../components/header', { title: 'Game Results' }) %>
+    <%- include('../components/loading') %> <%- include('../components/header', { title: 'Game
+    Results' }) %>
 
     <main class="flex-1 overflow-y-auto w-full px-4 py-10">
       <div class="mx-auto max-w-4xl">
-        
         <div class="text-center mb-12">
-          <h1 id="results-title" class="text-4xl font-extrabold text-slate-900 tracking-tight">Game Over</h1>
+          <h1 id="results-title" class="text-4xl font-extrabold text-slate-900 tracking-tight">
+            Game Over
+          </h1>
           <p class="text-slate-500 mt-2">The final results are in!</p>
         </div>
 
         <div id="winner-container" class="mb-12 flex justify-center">
-            <div class="animate-pulse bg-white p-8 rounded-full h-48 w-48 flex items-center justify-center shadow-lg">
-                <span class="text-slate-300 font-bold">Loading...</span>
-            </div>
+          <div
+            class="animate-pulse bg-white p-8 rounded-full h-48 w-48 flex items-center justify-center shadow-lg"
+          >
+            <span class="text-slate-300 font-bold">Loading...</span>
+          </div>
         </div>
 
         <div class="mb-12">
-            <h3 class="text-lg font-bold text-slate-700 mb-4 px-1">Match Statistics</h3>
-            <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            </div>
+          <h3 class="text-lg font-bold text-slate-700 mb-4 px-1">Match Statistics</h3>
+          <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
         </div>
 
         <div class="mb-12">
-            <h3 class="text-lg font-bold text-slate-700 mb-4 px-1">Final Standings</h3>
-            <div id="final-scores-list" class="space-y-3">
-            </div>
+          <h3 class="text-lg font-bold text-slate-700 mb-4 px-1">Final Standings</h3>
+          <div id="final-scores-list" class="space-y-3"></div>
         </div>
 
         <div class="flex justify-center mt-8 pb-12">
@@ -51,14 +52,13 @@
             Return to Lobby
           </button>
         </div>
-
       </div>
     </main>
 
     <% if (NODE_ENV === 'production') { %>
-      <script type="module" src="/js/screens/gameResults.js"></script>
+    <script type="module" src="/js/screens/gameResults.js"></script>
     <% } else { %>
-      <script type="module" src="http://localhost:5173/ts/screens/gameResults.ts"></script>
+    <script type="module" src="http://localhost:5173/ts/screens/gameResults.ts"></script>
     <% } %>
   </body>
 </html>

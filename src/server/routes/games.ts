@@ -129,19 +129,25 @@ export default function gamesRouter(io: Server) {
 
       // Init game logic and tile bag / hands
       const sessionUserId = String(
-        (r.session && (((r.session as any).userId ?? (r.session as any).user_ID) as string)) ?? ""
+        (r.session && (((r.session as any).userId ?? (r.session as any).user_ID) as string)) ?? "",
       );
 
       const gameLogic = new ScrabbleGame(game.id, [sessionUserId]);
       if (gameLogic.tileBag.length > 0) {
-        const bagValues = gameLogic.tileBag.map((letter: string) => `('${game.id}', '${letter}')`).join(",");
+        const bagValues = gameLogic.tileBag
+          .map((letter: string) => `('${game.id}', '${letter}')`)
+          .join(",");
         await client.query(`INSERT INTO tile_bag (game_id, letter) VALUES ${bagValues}`);
       }
 
       const hostHand = gameLogic.playerHands[sessionUserId];
       if (hostHand && hostHand.length > 0) {
-        const handValues = hostHand.map((letter: string) => `('${game.id}', '${sessionUserId}', '${letter}')`).join(",");
-        await client.query(`INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`);
+        const handValues = hostHand
+          .map((letter: string) => `('${game.id}', '${sessionUserId}', '${letter}')`)
+          .join(",");
+        await client.query(
+          `INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`,
+        );
       }
 
       await client.query("COMMIT");
@@ -276,145 +282,145 @@ export default function gamesRouter(io: Server) {
   });
 
   // POST /api/games/:gameId/start
-  router.post(
-    "/:gameId/start",
-    requireAuth,
-    async (req: AppRequest, res: express.Response) => {
-      const r = req;
-      const { gameId } = req.params;
-      const client = await pool.connect();
+  router.post("/:gameId/start", requireAuth, async (req: AppRequest, res: express.Response) => {
+    const r = req;
+    const { gameId } = req.params;
+    const client = await pool.connect();
 
-      try {
-        if (!r.session || !r.session.userId) {
-          return res.status(401).json({ error: "Not authenticated" });
-        }
+    try {
+      if (!r.session || !r.session.userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
 
-        await client.query("BEGIN");
+      await client.query("BEGIN");
 
-        const hostCheck = await client.query(
-          `SELECT is_host FROM game_participants
+      const hostCheck = await client.query(
+        `SELECT is_host FROM game_participants
            WHERE game_id = $1 AND user_id = $2`,
-          [gameId, r.session.userId],
-        );
+        [gameId, r.session.userId],
+      );
 
-        if (hostCheck.rows.length === 0) {
-          await client.query("ROLLBACK");
-          return res.status(403).json({ error: "You are not a participant in this game" });
-        }
+      if (hostCheck.rows.length === 0) {
+        await client.query("ROLLBACK");
+        return res.status(403).json({ error: "You are not a participant in this game" });
+      }
 
-        if (!hostCheck.rows[0].is_host) {
-          await client.query("ROLLBACK");
-          return res.status(403).json({ error: "Only host can start a waiting game" });
-        }
+      if (!hostCheck.rows[0].is_host) {
+        await client.query("ROLLBACK");
+        return res.status(403).json({ error: "Only host can start a waiting game" });
+      }
 
-        const gameCheckResult = await client.query(
-          `SELECT g.max_players, COUNT(gp.user_id) as player_count
+      const gameCheckResult = await client.query(
+        `SELECT g.max_players, COUNT(gp.user_id) as player_count
            FROM games g
            LEFT JOIN game_participants gp ON g.id = gp.game_id
            WHERE g.id = $1
            GROUP BY g.id, g.max_players`,
-          [gameId],
-        );
+        [gameId],
+      );
 
-        if (gameCheckResult.rows.length === 0) {
-          await client.query("ROLLBACK");
-          return res.status(404).json({ error: "Game not found" });
-        }
+      if (gameCheckResult.rows.length === 0) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ error: "Game not found" });
+      }
 
-        const { max_players, player_count } = gameCheckResult.rows[0];
+      const { max_players, player_count } = gameCheckResult.rows[0];
 
-        if (player_count > max_players) {
-          await client.query("ROLLBACK");
-          return res.status(400).json({
-            error: `Cannot start game: Too many players (${player_count}/${max_players})`,
-          });
-        }
+      if (player_count > max_players) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          error: `Cannot start game: Too many players (${player_count}/${max_players})`,
+        });
+      }
 
-        const result = await client.query(
-          `UPDATE games
+      const result = await client.query(
+        `UPDATE games
            SET status = 'in_progress', started_at = now()
            WHERE id = $1
              AND status = 'waiting'
            RETURNING id`,
-          [gameId],
+        [gameId],
+      );
+
+      if (result.rows.length === 0) {
+        await client.query("ROLLBACK");
+        return res.status(403).json({ error: "Game not found or already started" });
+      }
+
+      const participantsResult = await client.query(
+        `SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at`,
+        [gameId],
+      );
+
+      const participants = participantsResult.rows.map((r2: any) => String(r2.user_id));
+      const firstPlayerId = participants[0];
+
+      await client.query(`UPDATE games SET current_turn_user_id = $1 WHERE id = $2`, [
+        firstPlayerId,
+        gameId,
+      ]);
+
+      const tileBagResult = await client.query(
+        `SELECT letter FROM tile_bag WHERE game_id = $1 ORDER BY id`,
+        [gameId],
+      );
+      const tileBag = tileBagResult.rows.map((r2: any) => r2.letter);
+
+      for (const userId of participants) {
+        const existingTiles = await client.query(
+          `SELECT COUNT(*) as count FROM player_tiles WHERE game_id = $1 AND user_id = $2`,
+          [gameId, userId],
         );
 
-        if (result.rows.length === 0) {
-          await client.query("ROLLBACK");
-          return res.status(403).json({ error: "Game not found or already started" });
-        }
-
-        const participantsResult = await client.query(
-          `SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at`,
-          [gameId],
-        );
-
-        const participants = participantsResult.rows.map((r2: any) => String(r2.user_id));
-        const firstPlayerId = participants[0];
-
-        await client.query(`UPDATE games SET current_turn_user_id = $1 WHERE id = $2`, [
-          firstPlayerId,
-          gameId,
-        ]);
-
-        const tileBagResult = await client.query(
-          `SELECT letter FROM tile_bag WHERE game_id = $1 ORDER BY id`,
-          [gameId],
-        );
-        const tileBag = tileBagResult.rows.map((r2: any) => r2.letter);
-
-        for (const userId of participants) {
-          const existingTiles = await client.query(
-            `SELECT COUNT(*) as count FROM player_tiles WHERE game_id = $1 AND user_id = $2`,
-            [gameId, userId],
-          );
-
-          if (parseInt(existingTiles.rows[0].count) === 0 && tileBag.length >= 7) {
-            const hand = tileBag.splice(0, 7);
-            if (hand.length > 0) {
-              const handValues = hand.map((letter: string) => `('${gameId}', '${userId}', '${letter}')`).join(",");
-              await client.query(`INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`);
-            }
+        if (parseInt(existingTiles.rows[0].count) === 0 && tileBag.length >= 7) {
+          const hand = tileBag.splice(0, 7);
+          if (hand.length > 0) {
+            const handValues = hand
+              .map((letter: string) => `('${gameId}', '${userId}', '${letter}')`)
+              .join(",");
+            await client.query(
+              `INSERT INTO player_tiles (game_id, user_id, letter) VALUES ${handValues}`,
+            );
           }
         }
+      }
 
-        // Remove consumed tile bag rows
-        if (tileBagResult.rows.length > tileBag.length) {
-          const tilesToRemove = tileBagResult.rows.length - tileBag.length;
-          await client.query(
-            `DELETE FROM tile_bag
+      // Remove consumed tile bag rows
+      if (tileBagResult.rows.length > tileBag.length) {
+        const tilesToRemove = tileBagResult.rows.length - tileBag.length;
+        await client.query(
+          `DELETE FROM tile_bag
              WHERE id IN (
                SELECT id FROM tile_bag
                WHERE game_id = $1
                ORDER BY id
                LIMIT $2
              )`,
-            [gameId, tilesToRemove],
-          );
-        }
-
-        await client.query("COMMIT");
-
-        // Emit game-started Guard emit target.
-        if (typeof gameId === "string" && gameId) {
-          io.to(gameId).emit("game-started", { game_ID: gameId });
-        } else {
-          console.warn("Attempted to emit game-started for invalid gameId:", gameId);
-        }
-
-        // Notify lobby list refresh (guarded)
-        io.to("lobby").emit("lobby-updated");
-
-        return res.json({ success: true });
-      } catch (err) {
-        await client.query("ROLLBACK");
-        console.error("Start game error:", err);
-        return res.status(500).json({ error: "Failed to start game" });
-      } finally {
-        client.release();
+          [gameId, tilesToRemove],
+        );
       }
-    },
-  );
+
+      await client.query("COMMIT");
+
+      // Emit game-started Guard emit target.
+      if (typeof gameId === "string" && gameId) {
+        io.to(gameId).emit("game-started", { game_ID: gameId });
+      } else {
+        console.warn("Attempted to emit game-started for invalid gameId:", gameId);
+      }
+
+      // Notify lobby list refresh (guarded)
+      io.to("lobby").emit("lobby-updated");
+
+      return res.json({ success: true });
+    } catch (err) {
+      await client.query("ROLLBACK");
+      console.error("Start game error:", err);
+      return res.status(500).json({ error: "Failed to start game" });
+    } finally {
+      client.release();
+    }
+  });
 
   // POST /api/games/:gameId/move
   const submitMoveSchema = z.object({

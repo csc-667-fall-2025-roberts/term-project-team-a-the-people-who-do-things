@@ -26,15 +26,20 @@
     font-size: 14px;
     font-weight: 500;
     color: #6b7280;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>
 
 <div id="page-loader">
-  <div style="display: flex; flex-direction: column; align-items: center;">
+  <div style="display: flex; flex-direction: column; align-items: center">
     <div class="spinner"></div>
     <span class="text">Loading...</span>
   </div>
@@ -42,12 +47,13 @@
 
 <script>
   // Hide loader once page is fully loaded
-  window.addEventListener('load', function() {
-    var loader = document.getElementById('page-loader');
+  window.addEventListener("load", function () {
+    var loader = document.getElementById("page-loader");
     if (loader) {
-      loader.style.opacity = '0';
-      setTimeout(function() { loader.remove(); }, 300);
+      loader.style.opacity = "0";
+      setTimeout(function () {
+        loader.remove();
+      }, 300);
     }
   });
 </script>
-

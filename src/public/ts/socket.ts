@@ -58,7 +58,7 @@ export class SocketManager {
 
     const redact = (obj: unknown): unknown => {
       if (!isObject(obj)) return obj;
-      const out = { ...(obj) };
+      const out = { ...obj };
       const keys = [
         "email",
         "password",

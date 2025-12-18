@@ -30,7 +30,7 @@ export type RestoredGameState = {
   playerHands: Record<string, string[]>;
   scores: Record<string, number>;
   currentPlayerId: string | null;
-}
+};
 
 export class ScrabbleGame {
   gameId: string;
@@ -61,23 +61,23 @@ export class ScrabbleGame {
   // Restore a game from saved database state
   static restore(gameId: string, players: string[], state: RestoredGameState): ScrabbleGame {
     const game = new ScrabbleGame(gameId, players, state.board);
-    
+
     // Override with restored state
     game.tileBag = state.tileBag;
     game.playerHands = state.playerHands;
     game.scores = state.scores;
-    
+
     // Set current player index based on currentPlayerId
     if (state.currentPlayerId) {
       const idx = players.indexOf(state.currentPlayerId);
       game.currentPlayerIndex = idx >= 0 ? idx : 0;
     }
-    
+
     console.log(`[Game Restore] Restored game ${gameId}:`);
-    console.log(`  - Board tiles: ${state.board.flat().filter(t => t !== null).length}`);
+    console.log(`  - Board tiles: ${state.board.flat().filter((t) => t !== null).length}`);
     console.log(`  - Tile bag: ${state.tileBag.length} tiles`);
     console.log(`  - Current player: ${players[game.currentPlayerIndex]}`);
-    
+
     return game;
   }
 
@@ -88,7 +88,7 @@ export class ScrabbleGame {
   initializeTileBag(): string[] {
     const tiles: string[] = [];
     for (const [letter, count] of Object.entries(LETTER_DISTRIBUTION)) {
-      for (let i = 0; i < (count); i++) tiles.push(letter);
+      for (let i = 0; i < count; i++) tiles.push(letter);
     }
     return this.shuffle(tiles);
   }
@@ -174,15 +174,17 @@ export class ScrabbleGame {
       return { valid: false, error: "Tile not in hand" };
 
     const line = this.singleLine(tiles);
-    console.log("[Move Validation] Tiles placed:", tiles.map(t => `${t.letter}@(${t.row},${t.col})`).join(", "));
+    console.log(
+      "[Move Validation] Tiles placed:",
+      tiles.map((t) => `${t.letter}@(${t.row},${t.col})`).join(", "),
+    );
     console.log("[Move Validation] Single line check:", line);
     if (!line.ok) return { valid: false, error: "Tiles must be in a single row or column" };
     const horizontal = !!line.horizontal;
 
     const contResult = this.continuity(tiles, horizontal);
     console.log("[Move Validation] Continuity check:", contResult, "(horizontal:", horizontal, ")");
-    if (!contResult)
-      return { valid: false, error: "Tiles must be continuous" };
+    if (!contResult) return { valid: false, error: "Tiles must be continuous" };
 
     if (this.boardIsEmpty()) {
       const center = Math.floor(BOARD_SIZE / 2);
@@ -191,7 +193,7 @@ export class ScrabbleGame {
     }
 
     const formed = this.getFormedWords(tiles);
-    console.log("[Move Validation] Words formed:", formed.map(f => `"${f.word}"`).join(", "));
+    console.log("[Move Validation] Words formed:", formed.map((f) => `"${f.word}"`).join(", "));
     for (const f of formed) {
       const valid = isValidWord(f.word);
       console.log(`[Move Validation] Checking "${f.word}": ${valid ? "✓ VALID" : "✗ INVALID"}`);
@@ -244,7 +246,9 @@ export class ScrabbleGame {
       const boardLetter = this.board[row][c];
       const tile = tiles.find((t) => t.row === row && t.col === c);
       const letter = boardLetter ?? tile?.letter ?? "";
-      console.log(`  Col ${c}: board="${boardLetter || '-'}", tile="${tile?.letter || '-'}", using="${letter}"`);
+      console.log(
+        `  Col ${c}: board="${boardLetter || "-"}", tile="${tile?.letter || "-"}", using="${letter}"`,
+      );
       word += letter;
       cells.push({ letter, row, col: c, isNew: !!tile });
     }
@@ -270,7 +274,9 @@ export class ScrabbleGame {
       const boardLetter = this.board[r][col];
       const tile = tiles.find((t) => t.row === r && t.col === col);
       const letter = boardLetter ?? tile?.letter ?? "";
-      console.log(`  Row ${r}: board="${boardLetter || '-'}", tile="${tile?.letter || '-'}", using="${letter}"`);
+      console.log(
+        `  Row ${r}: board="${boardLetter || "-"}", tile="${tile?.letter || "-"}", using="${letter}"`,
+      );
       word += letter;
       cells.push({ letter, row: r, col, isNew: !!tile });
     }
@@ -408,7 +414,9 @@ export class ScrabbleGame {
       this.scores[playerId] = (this.scores[playerId] || 0) - handValue;
       totalDeducted += handValue;
 
-      console.log(`[End Game] ${playerId} loses ${handValue} points for remaining tiles: ${hand.join(", ")}`);
+      console.log(
+        `[End Game] ${playerId} loses ${handValue} points for remaining tiles: ${hand.join(", ")}`,
+      );
     }
 
     // Winner gets the total deducted points as bonus
