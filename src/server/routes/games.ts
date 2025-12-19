@@ -232,7 +232,8 @@ export default function gamesRouter(io: Server) {
 
     try {
       const gameResult = await pool.query(
-        "SELECT id, game_type, status, max_players, created_at, started_at, ended_at, created_by FROM games WHERE id = $1",
+        `SELECT id, game_type, status, max_players, settings_json as settings, created_at, started_at, ended_at, created_by 
+         FROM games WHERE id = $1`,
         [gameId],
       );
 

@@ -77,6 +77,7 @@ export type GameStateResponse = {
   scores: Record<string, number>;
   gameOver?: boolean;
   winner?: string;
+  settings?: Record<string, unknown>;
 };
 
 export type MoveMadeResponse = {
