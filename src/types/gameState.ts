@@ -5,7 +5,7 @@ import { Users } from "./users.js";
 export type GameState = {
   gameID?: keyof Games;
   userID?: keyof Users;
-  board?: Array<number>;
+  board?: number[];
   currentPlayers?: Participants[];
   scores?: number;
   tilesRemaining?: number;

@@ -1,130 +1,162 @@
-// Socket event data types
-//socket communication contracts between client/server
-// DEFINE TYPES FOR DATA SENT FROM CLIENT TO SERVER
-
-export interface JoinGameData {
+export type JoinGameData = {
   gameId: string;
-}
+};
 
-export interface MakeMoveData {
+export type MakeMoveData = {
   gameId: string;
   tiles: Tile[];
   words: string[];
   score: number;
-}
+};
 
-export interface PassTurnData {
+export type PassTurnData = {
   gameId: string;
-}
+};
 
-// Game participant interface
-export interface GameParticipant {
+export type GameParticipant = {
   id: string;
   is_host: boolean;
   user_id: string;
   display_name: string;
-}
+};
 
 export type ScoreEntry = {
   user_id: string;
   value: number;
 };
 
-// Score interface
-export interface Scores {
+export type Scores = {
   userID: string;
   value: number;
   recorded_at: Date;
-}
+};
 
-export interface SelectedTile {
+export type SelectedTile = {
   row: number;
   col: number;
   letter: string;
-}
+};
 
-export interface PlacedTile {
+export type PlacedTile = {
   letter: string;
   row: number;
   col: number;
-}
+};
 
-//tilesRemaining
-export interface SendMessageData {
+export type SendMessageData = {
   gameId: string;
   message: string;
-}
+};
 
-export interface ExchangeTilesData {
+export type ExchangeTilesData = {
   gameId: string;
   tiles: string[];
-}
+};
 
-// Socket event response types
-export interface GameStateResponse {
+export type GameStateResponse = {
   board: (Tile | null)[][];
   hand: Tile[];
   currentPlayer: string;
   tilesRemaining: number;
-  scores: { [userId: string]: number };
+  scores: Record<string, number>;
   gameOver?: boolean;
   winner?: string;
-}
+  settings?: Record<string, unknown>;
+  turnEndsAt: number;
+};
 
-export interface MoveMadeResponse {
+export type MoveMadeResponse = {
   gameState: GameStateResponse;
   userId: string;
   tiles: Tile[];
   words: string[];
   score: number;
-}
+  currentPlayer: string;
+  turnEndsAt: number;
+};
 
-export interface Tile {
+export type Tile = {
   letter: string;
   value: number;
   x?: number;
   y?: number;
   isPlaced?: boolean;
   locked?: boolean;
-}
+};
 
-export interface NewTilesResponse {
+export type NewTilesResponse = {
   tiles: Tile[];
-}
+};
 
-export interface TurnPassedResponse {
+export type TilesExchangedResponse = {
+  newTiles: string[];
+};
+
+export type TurnPassedResponse = {
   currentPlayer: string;
   userId: string;
-}
+  turnEndsAt: number;
+};
 
-export interface GameOverResponse {
+export type TurnChangedResponse = {
+  currentPlayer: string;
+  turnEndsAt?: number;
+  reason?: "timeout" | "exchange";
+};
+
+export type GameOverResponse = {
   winner: string;
-  finalScores: { [userId: string]: number };
+  finalScores: Record<string, number>;
   gameId: string;
   isOver: boolean;
-}
+};
 
-export interface NewMessageResponse {
+export type NewMessageResponse = {
   id: number;
   game_id: string | null;
   user_id: string;
   message: string;
   created_at: string;
   display_name: string;
-}
+};
 
-export interface ErrorResponse {
+export type ErrorResponse = {
   message: string;
   code?: string;
-}
+};
 
-export interface GameSummaryResponse {
+export type GameSummaryResponse = {
+  game: {
+    id: string;
+    game_type: string;
+    status: string;
+    max_players: number;
+    settings: Record<string, unknown>;
+    created_at: string;
+    started_at?: string;
+    ended_at?: string;
+    created_by: string;
+  };
   game_participants: GameParticipant[];
   scores: ScoreEntry[];
-}
+};
+
+export type PlayerJoinedLobbyData = {
+  userId: string;
+  isHost: boolean;
+};
+
+export type PlayerLeftLobbyData = {
+  userId: string;
+  isHost: boolean;
+};
+
+export type GameStartedData = {
+  gameId: string;
+};
 
 // Socket event map
-export interface SocketEvents {
+export type SocketEvents = {
   // Client to Server
   "join-game": JoinGameData;
   "make-move": MakeMoveData;
@@ -138,11 +170,16 @@ export interface SocketEvents {
   "game-state": GameStateResponse;
   "move-made": MoveMadeResponse;
   "new-tiles": NewTilesResponse;
+  "tiles-exchanged": TilesExchangedResponse;
   "turn-passed": TurnPassedResponse;
+  "turn-changed": TurnChangedResponse;
   "game-over": GameOverResponse;
   "new-message": NewMessageResponse;
   error: ErrorResponse;
   "game-summary": GameSummaryResponse;
-}
+  "player-joined-lobby": PlayerJoinedLobbyData;
+  "player-left-lobby": PlayerLeftLobbyData;
+  "game-started": GameStartedData;
+};
 
 export {};

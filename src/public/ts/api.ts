@@ -4,7 +4,7 @@ export const api = {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        ...(options as any).headers,
+        ...(options as { headers?: Record<string, string> }).headers,
       },
     });
 
@@ -48,12 +48,15 @@ export const api = {
       return api.request("/api/games/lobby");
     },
 
-    create(maxPlayers: number, user_settings: unknown) {
-      return api.request("/api/games/create", {
+    create: (data: { maxPlayers: number; settings: any }) =>
+      fetch("/api/games/create", {
         method: "POST",
-        body: JSON.stringify({ maxPlayers, user_settings }),
-      });
-    },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }).then((res) => {
+        if (!res.ok) throw new Error("Failed to create game");
+        return res.json();
+      }),
 
     join(gameId: string) {
       return api.request(`/api/games/${gameId}/join`, {
@@ -78,7 +81,6 @@ export const api = {
       if (before) params.set("before", before);
       return api.request(`/api/chat/${gameId}?${params}`);
     },
-    //TODO  Unused function sendMessage
     sendMessage(gameId: string) {
       return api.request(`/api/chat/${gameId}`, {
         method: "POST",

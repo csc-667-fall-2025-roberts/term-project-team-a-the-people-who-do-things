@@ -53,7 +53,6 @@ npm i
 1. Set up environment variables:
    Create a `.env` file in the root directory:
 
-
 1. Run database migrations:
 
 ```bash

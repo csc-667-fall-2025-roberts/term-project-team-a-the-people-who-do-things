@@ -1,0 +1,35 @@
+<style>
+  /* Inline styles so the loader appears immediately (before Tailwind/main.css finishes loading) */
+  #page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9fafb;
+    transition: opacity 0.3s ease;
+  }
+</style>
+
+<div id="page-loader">
+  <div class="flex flex-col items-center">
+    <div
+      class="h-12 w-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"
+      aria-hidden="true"
+    ></div>
+    <span class="mt-4 text-sm font-medium text-slate-500">Loading...</span>
+  </div>
+</div>
+
+<script>
+  window.addEventListener("load", function () {
+    var loader = document.getElementById("page-loader");
+    if (loader) {
+      loader.style.opacity = "0";
+      setTimeout(function () {
+        loader.remove();
+      }, 300);
+    }
+  });
+</script>

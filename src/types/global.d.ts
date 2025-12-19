@@ -1,8 +1,9 @@
-// Socket.IO global
-export declare const io: any;
+/* Socket.IO global (browser/runtime)
+ */
 
-// Window object extensions
 declare global {
+  var io: any;
+
   interface Window {
     GAME_ID: string;
     USER_ID?: string;

@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Game Lobby - Scrabble</title>
+    <title>Lobby - Scrabble</title>
 
     <% if (NODE_ENV === 'production') { %>
     <link rel="stylesheet" href="/styles/main.css" />
     <% } %>
   </head>
   <body class="flex flex-col h-full bg-gray-50">
-    <%- include('../components/header') %>
+    <%- include('../components/loading') %> <%- include('../components/header') %>
 
     <main class="flex-1 w-full max-w-[1400px] mx-auto px-4 py-8">
       <div class="w-full">
@@ -103,10 +103,8 @@
       </div>
     </main>
 
-    <script src="/socket.io/socket.io.js"></script>
     <script>
-      // Make io available globally for socket.js
-      window.io = io;
+      window.GAME_ID = window.GAME_ID || null;
     </script>
 
     <% if (NODE_ENV === 'production') { %>

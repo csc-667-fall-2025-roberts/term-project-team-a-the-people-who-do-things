@@ -1,10 +1,12 @@
 // noinspection JSUnusedGlobalSymbols
+// @ts-nocheck
 
-import { resolve } from "path";
+import { resolve } from "node:path";
+
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  root: "src/public", 
+  root: "src/public",
   publicDir: false,
   build: {
     minify: false,

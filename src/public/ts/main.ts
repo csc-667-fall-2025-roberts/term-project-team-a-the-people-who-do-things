@@ -11,6 +11,8 @@ if (path === "/lobby" || path.startsWith("/lobby")) {
   import("./screens/signup.js");
 } else if (path.startsWith("/game/") && path.endsWith("/results")) {
   import("./screens/gameResults.js");
+} else if (path.startsWith("/game/") && path.endsWith("/lobby")) {
+  import("./screens/gameLobby.js");
 } else if (path.startsWith("/game/")) {
   import("./screens/gameRoom.js");
 } else if (path === "/settings" || path.startsWith("/settings")) {
