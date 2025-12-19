@@ -12,7 +12,6 @@ if (path === "/lobby" || path.startsWith("/lobby")) {
 } else if (path.startsWith("/game/") && path.endsWith("/results")) {
   import("./screens/gameResults.js");
 } else if (path.startsWith("/game/") && path.endsWith("/lobby")) {
-  //console.log("main.ts: Loading gameLobby screen for path:", path);
   import("./screens/gameLobby.js");
 } else if (path.startsWith("/game/")) {
   import("./screens/gameRoom.js");

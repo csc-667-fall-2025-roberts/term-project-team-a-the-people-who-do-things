@@ -107,35 +107,32 @@ export class SocketManager {
       return;
     }
 
-    // Payload has PII
     if (!isProd) {
-      console.warn(
-        `[SocketManager] Blocking emit of event "${event}" because payload appears to contain PII keys (development).`,
-      );
+      console.warn(`Blocking emit of event "${event}": payload contains PII keys (development).`);
       return;
     }
 
     switch (getProdBehavior()) {
       case "redact": {
         const safe = redact(data);
-        console.warn(`[SocketManager] Emitting event "${event}" with PII redacted (production).`);
+        console.warn(`Emitting event "${event}" with PII redacted (production).`);
         try {
           this.socket.emit(event as any, safe);
         } catch (e) {
-          console.warn("[SocketManager] Failed to emit event after redaction:", e);
+          console.warn("Failed to emit event after redaction:", e);
         }
         return;
       }
       case "block": {
         console.warn(
-          `[SocketManager] Blocking emit of event "${event}" in production due to configured PII policy.`,
+          `Blocking emit of event "${event}" in production due to configured PII policy.`,
         );
         return;
       }
       case "log":
       default: {
         console.warn(
-          `[SocketManager] PII detected in payload for event "${event}" (production). Emitting original payload per configuration.`,
+          `PII detected in payload for event "${event}" (production). Emitting original payload.`,
         );
         this.socket.emit(event as any, data);
         return;
@@ -172,5 +169,4 @@ export class SocketManager {
   }
 }
 
-// Export a singleton instance
 export const socket = new SocketManager();

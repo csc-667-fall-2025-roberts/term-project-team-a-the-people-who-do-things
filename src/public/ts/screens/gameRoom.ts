@@ -1,13 +1,17 @@
-import { date } from "zod";
 import * as ScrabbleConstants from "../../../server/services/scrabbleConstants.js";
 import { ChatMessage } from "../../../types/client/dom.js";
 import type {
+  ErrorResponse,
   GameParticipant,
   GameStateResponse,
   GameSummaryResponse,
   MoveMadeResponse,
+  NewTilesResponse,
   ScoreEntry,
   SelectedTile,
+  TilesExchangedResponse,
+  TurnChangedResponse,
+  TurnPassedResponse,
 } from "../../../types/client/socket-events.js";
 import { api } from "../api.js";
 import ScrabbleBoard from "../scrabbleBoard.js";
@@ -27,14 +31,12 @@ async function init(): Promise<void> {
   currentUser = user;
 
   const gameData = (await api.games.get(gameId)) as GameSummaryResponse;
-  // Read time limit from settings (default to 60 if missing)
   const settings = (gameData.game as any).settings;
   if (settings && settings.timeLimit) {
     turnDuration = Number(settings.timeLimit);
     console.log("Timer set to:", turnDuration);
   }
 
-  // Save the participants so 'updateScores' knows thier names
   participants = gameData.game_participants;
 
   renderPlayers(gameData.game_participants);
@@ -43,7 +45,6 @@ async function init(): Promise<void> {
 
   socket.emit("join-game", { gameId });
 
-  // Initialize timer display
   updateTimerDisplay();
 }
 
@@ -149,8 +150,6 @@ document.getElementById("submit-move-btn")?.addEventListener("click", () => {
     (sum, tile) => sum + (ScrabbleConstants.LETTER_VALUES[tile.letter] || 0),
     0,
   );
-
-  //console.log("Submitting Move:", { gameId, tiles, words, score });
 
   socket.emit("make-move", {
     gameId,
@@ -296,8 +295,7 @@ async function loadChatHistory() {
   }
 }
 
-function updateCurrentTurn(playerId: string, turnEndsAt: number) {
-//   console.log("DEBUG: updateCurrentTurn called with:", { playerId, turnEndsAt });
+function updateCurrentTurn(playerId: string, turnEndsAt: number | undefined) {
   if (!currentUser) return;
   const currentTurnEl = document.getElementById("current-turn");
   if (!currentTurnEl) return;
@@ -328,24 +326,24 @@ function updateCurrentTurn(playerId: string, turnEndsAt: number) {
       clearInterval(turnTimer);
       turnTimer = null;
     }
-    timeLeft = 0; 
+    timeLeft = 0;
     updateTimerDisplay();
   }
 }
 
 function startTimer(endTime: number) {
-    if (turnTimer !== null) clearInterval(turnTimer);
+  if (turnTimer !== null) clearInterval(turnTimer);
 
-    turnTimer = window.setInterval(() => {
-        timeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
-    
-        updateTimerDisplay();
+  turnTimer = window.setInterval(() => {
+    timeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
 
-        if (timeLeft <= 0) {
-            clearInterval(turnTimer!);
-            turnTimer = null;
-        }
-    }, 1000);
+    updateTimerDisplay();
+
+    if (timeLeft <= 0) {
+      clearInterval(turnTimer!);
+      turnTimer = null;
+    }
+  }, 1000);
 }
 
 function updateTimerDisplay() {
@@ -383,28 +381,24 @@ function escapeHtml(text: string) {
   return div.innerHTML;
 }
 const handlers = {
-  gameState: (state: unknown) => {
+  gameState: (state: GameStateResponse) => {
     const typedState = state as GameStateResponse;
     if (typedState.settings && (typedState.settings as any).timeLimit) {
       turnDuration = Number((typedState.settings as any).timeLimit);
-    //   console.log("Updated turnDuration from settings:", turnDuration);
     }
     board.updateBoard(typedState.board);
     board.setHand(typedState.hand);
     updateGameInfo(typedState);
   },
-  moveMade: (data: unknown) => {
-    const typedData = data as MoveMadeResponse;
-    // console.log("Move made event received:", typedData);
+  moveMade: (data: MoveMadeResponse) => {
+    board.updateBoard(data.gameState.board);
 
-    board.updateBoard(typedData.gameState.board);
+    updateGameInfo(data.gameState);
 
-    updateGameInfo(typedData.gameState);
+    updateScores(data.gameState.scores);
+    updateCurrentTurn(data.currentPlayer, data.turnEndsAt);
 
-    updateScores(typedData.gameState.scores);
-    updateCurrentTurn(typedData.currentPlayer, typedData.turnEndsAt);
-
-    if (currentUser && typedData.userId === currentUser.id) {
+    if (currentUser && data.userId === currentUser.id) {
       board.clearSelection();
     }
   },
@@ -424,38 +418,32 @@ const handlers = {
       console.error("Failed to refresh player list:", e);
     }
   },
-  newTiles: (data: unknown) => {
-    const typedData = data as { tiles: string[] };
-    if (typedData && Array.isArray(typedData.tiles)) {
-      board.setHand(typedData.tiles);
+  newTiles: (data: NewTilesResponse) => {
+    if (data && Array.isArray(data.tiles)) {
+      board.setHand(data.tiles);
     }
   },
-  tilesExchanged: (data: unknown) => {
-    const typedData = data as { newTiles: string[] };
-    if (typedData && Array.isArray(typedData.newTiles)) {
-      board.setHand(typedData.newTiles);
+  tilesExchanged: (data: TilesExchangedResponse) => {
+    if (data && Array.isArray(data.newTiles)) {
+      board.setHand(data.newTiles);
     }
   },
-  turnPassed: (data: unknown) => {
-    const typedData = data as { currentPlayer: string, turnEndsAt: number };
-    updateCurrentTurn(typedData.currentPlayer, typedData.turnEndsAt);
+  turnPassed: (data: TurnPassedResponse) => {
+    updateCurrentTurn(data.currentPlayer, data.turnEndsAt);
   },
 
-  turnChanged: (data: unknown) => {
-    const typedData = data as { currentPlayer: string,  turnEndsAt: number};
-    updateCurrentTurn(typedData.currentPlayer, typedData.turnEndsAt);
+  turnChanged: (data: TurnChangedResponse) => {
+    updateCurrentTurn(data.currentPlayer, data.turnEndsAt);
   },
   gameOver: () => {
     window.location.href = `/game/${gameId}/results`;
   },
-  error: (data: unknown) => {
-    const typedData = data as { message: string };
-    const userMessage: string = mapErrorMessage(typedData.message);
+  error: (data: ErrorResponse) => {
+    const userMessage: string = mapErrorMessage(data.message);
     alert(userMessage);
   },
-  newMessage: (message: unknown) => {
-    const typedMessage = message as ChatMessage;
-    addChatMessage(typedMessage);
+  newMessage: (message: ChatMessage) => {
+    addChatMessage(message);
   },
 };
 

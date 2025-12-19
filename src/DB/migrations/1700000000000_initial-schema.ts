@@ -3,10 +3,7 @@ import { MigrationBuilder } from "node-pg-migrate";
 export const shorthands = undefined;
 
 export async function up(pgm: MigrationBuilder): Promise<void> {
-  // Enable pgcrypto extension for UUID generation
   pgm.createExtension("pgcrypto", { ifNotExists: true });
-
-  // Create users table
   pgm.createTable("users", {
     id: {
       type: "uuid",
@@ -42,7 +39,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     },
   });
 
-  // Create games table
   pgm.createTable("games", {
     id: {
       type: "uuid",
@@ -89,7 +85,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     },
   });
 
-  // Create game_participants table
   pgm.createTable("game_participants", {
     game_id: {
       type: "uuid",
@@ -132,7 +127,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     primaryKey: ["game_id", "user_id"],
   });
 
-  // Create board_tiles table
   pgm.createTable("board_tiles", {
     game_id: {
       type: "uuid",
@@ -170,7 +164,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     primaryKey: ["game_id", "row", "col"],
   });
 
-  // Create player_tiles table
   pgm.createTable("player_tiles", {
     id: {
       type: "uuid",
@@ -203,7 +196,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     },
   });
 
-  // Create tile_bag table
   pgm.createTable("tile_bag", {
     id: {
       type: "uuid",
@@ -222,7 +214,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     },
   });
 
-  // Create chat_messages table
   pgm.createTable("chat_messages", {
     id: {
       type: "uuid",
@@ -251,7 +242,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     },
   });
 
-  // Create moves table
   pgm.createTable("moves", {
     id: {
       type: "uuid",
@@ -285,7 +275,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     },
   });
 
-  // Create scores table
   pgm.createTable("scores", {
     id: {
       type: "uuid",
@@ -319,7 +308,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     unique: ["game_id", "user_id"],
   });
 
-  // Create user_settings table
   pgm.createTable("user_settings", {
     user_id: {
       type: "uuid",
@@ -339,7 +327,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     },
   });
 
-  // Create user_sessions table
   pgm.createTable("user_sessions", {
     sid: {
       type: "varchar",
@@ -355,7 +342,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     },
   });
 
-  // Create indexes
   pgm.createIndex("game_participants", "user_id", {
     name: "idx_game_participants_user_id",
   });
@@ -390,7 +376,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {
-  // Drop tables in reverse order (respecting foreign key dependencies)
   pgm.dropTable("user_sessions");
   pgm.dropTable("user_settings");
   pgm.dropTable("scores");
@@ -403,6 +388,5 @@ export async function down(pgm: MigrationBuilder): Promise<void> {
   pgm.dropTable("games");
   pgm.dropTable("users");
 
-  // Drop extension
   pgm.dropExtension("pgcrypto");
 }

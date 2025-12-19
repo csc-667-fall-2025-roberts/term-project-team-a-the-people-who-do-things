@@ -118,10 +118,7 @@ function initLobbyChat() {
     return;
   }
 
-  console.log("Initializing lobby chat...");
-
   socket.emit("join-lobby", {});
-  console.log("Joined lobby room");
 
   void loadLobbyMessages();
 
@@ -139,17 +136,11 @@ function initLobbyChat() {
   socket.on("new-message", (data: unknown) => {
     const message = data as LobbyChatMessage;
 
-    // console.log("Received new-message event:", message);
-    // console.log("Message game_id:", message.game_id, "Type:", typeof message.game_id);
-
-    const isLobbyMessage =
-      message.game_id === null || message.game_id === string || message.game_id === LOBBY_ID;
+    const isLobbyMessage = message.game_id === null || message.game_id === LOBBY_ID;
 
     if (isLobbyMessage) {
-      console.log("Adding lobby message to UI");
       addChatMessage({ ...message, game_id: message.game_id ?? null });
     } else {
-      //console.log("Ignoring non-lobby message, game_id:", message.game_id);
     }
   });
 }
@@ -183,10 +174,8 @@ function renderGames(games: GameSummary[]) {
 
   gamesContainer.innerHTML = games
     .map((game) => {
-      // Check if this is an in-progress game the user is part of
       const isRejoin = game.status === "in_progress" && game.is_my_game;
 
-      // Style differences for rejoin vs join
       const buttonText = isRejoin ? "Rejoin Game" : "Join Game";
       const buttonClass = isRejoin
         ? "rejoin-game-btn w-full px-6 py-2 text-base font-medium text-white transition-all duration-200 bg-green-600 border-none rounded-md cursor-pointer hover:bg-green-700 hover:-translate-y-px hover:shadow-lg"
@@ -232,12 +221,10 @@ gamesContainer?.addEventListener("click", async (event) => {
   const isRejoin = button.classList.contains("rejoin-game-btn");
 
   try {
-    // For rejoin, we skip the join API call (user is already a participant)
     if (!isRejoin) {
       await api.games.join(gameId);
       window.location.href = `/game/${gameId}/lobby`;
     } else {
-      // Go directly to the game room for in-progress games
       window.location.href = `/game/${gameId}`;
     }
   } catch (error) {
@@ -252,22 +239,18 @@ gamesContainer?.addEventListener("click", async (event) => {
 createGameForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  // 1. Get all input elements
   const maxPlayersInput = document.getElementById("max-players") as HTMLSelectElement | null;
   const timeLimitInput = document.getElementById("time-limit") as HTMLInputElement | null;
 
   if (!maxPlayersInput || !timeLimitInput) return;
 
-  // 2. Read values
   const maxPlayers = parseInt(maxPlayersInput.value, 10);
   const timeLimit = parseInt(timeLimitInput.value, 10);
 
-  // Disable button to prevent double-clicks
   const submitBtn = createGameForm.querySelector('button[type="submit"]') as HTMLButtonElement;
   if (submitBtn) submitBtn.disabled = true;
 
   try {
-    // 3. Send to Server
     const { game } = (await api.games.create({
       maxPlayers,
       settings: { timeLimit },
@@ -283,21 +266,16 @@ createGameForm?.addEventListener("submit", async (event) => {
   }
 });
 
-// Socket events
 socket.on("game-created", () => {
   void loadGames();
 });
-
 socket.on("game-started", () => {
   void loadGames();
 });
-
-// Refresh lobby when a player leaves a game (player count changed)
 socket.on("lobby-updated", () => {
   void loadGames();
 });
 
-// Wait for DOM to be ready
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     void loadGames();
@@ -310,7 +288,6 @@ if (document.readyState === "loading") {
   switchTab("join");
 }
 
-// Refresh every 5 seconds
 setInterval(() => {
   void loadGames();
 }, 5000);

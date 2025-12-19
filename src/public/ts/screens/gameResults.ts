@@ -2,7 +2,6 @@ import "../../styles/main.css";
 
 import { api } from "../api.js";
 
-// Types matching the new API response structure
 type MovePayload = {
   words: string[];
   score: number;
@@ -58,9 +57,9 @@ function renderHeader() {
 function renderWinner(data: GameData) {
   const container = document.getElementById("winner-container");
   if (!container) return;
-  console.log(data.scores)
+  console.log(data.scores);
 
-  if (!data.scores || data.scores.length === 0 || data.scores.every(s => s.value === 0)) {
+  if (!data.scores || data.scores.length === 0 || data.scores.every((s) => s.value === 0)) {
     container.innerHTML = `
       <div class="text-center animate-bounce-in">
         <h2 class="text-4xl font-extrabold text-slate-800 mb-2">No Winner</h2>
@@ -70,11 +69,9 @@ function renderWinner(data: GameData) {
     return;
   }
 
-  // Sort scores high to low
   const sortedScores = [...data.scores].sort((a, b) => b.value - a.value);
   const winner = sortedScores[0];
 
-  // Check for a tie
   const isDraw = sortedScores.length > 1 && sortedScores[0].value === sortedScores[1].value;
 
   if (isDraw) {
@@ -87,7 +84,6 @@ function renderWinner(data: GameData) {
   } else {
     container.innerHTML = `
       <div class="text-center animate-bounce-in">
-        <div class="text-6xl mb-4">👑</div>
         <h2 class="text-4xl font-extrabold text-slate-800 mb-2">${winner.display_name} Wins!</h2>
         <p class="text-2xl text-blue-600 font-bold">${winner.value} points</p>
       </div>
@@ -99,7 +95,6 @@ function renderStats(data: GameData) {
   const container = document.getElementById("stats-grid");
   if (!container) return;
 
-  // Safety check: if no moves exist (e.g. empty game), show specific message
   if (!data.moves || data.moves.length === 0) {
     if (container)
       container.innerHTML =
@@ -121,7 +116,7 @@ function renderStats(data: GameData) {
     // Some moves might be skips/exchanges with no payload.words
     if (!payload || !payload.words) return;
 
-    // 1. Check Longest Word
+    // Check longest word
     payload.words.forEach((word) => {
       if (word.length > longestWord.length) {
         longestWord = word;
@@ -129,7 +124,7 @@ function renderStats(data: GameData) {
       }
     });
 
-    // 2. Check Best Turn Score
+    // Check best turn score
     if (payload.score > bestTurnScore) {
       bestTurnScore = payload.score;
       bestTurnPlayer = move.display_name;
@@ -137,7 +132,6 @@ function renderStats(data: GameData) {
     }
   });
 
-  //Render Cards
   container.innerHTML = `
     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center">
       <div class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Longest Word</div>
@@ -168,17 +162,16 @@ function renderScoreboard(data: GameData) {
   list.innerHTML = sortedScores
     .map((score, index) => {
       const rank = index + 1;
-      let rankBadge = `<span class="text-slate-400 font-bold w-6">#${rank}</span>`;
+      let rankNum = `<span class="text-slate-400 font-bold w-6">#${rank}</span>`;
 
-      // Medals for top 3
-      if (rank === 1) rankBadge = `<span class="text-2xl w-8 text-center">🥇</span>`;
-      if (rank === 2) rankBadge = `<span class="text-2xl w-8 text-center">🥈</span>`;
-      if (rank === 3) rankBadge = `<span class="text-2xl w-8 text-center">🥉</span>`;
+      if (rank === 1) rankNum = `<span class="text-2xl w-8 text-center">#1</span>`;
+      if (rank === 2) rankNum = `<span class="text-2xl w-8 text-center">#2</span>`;
+      if (rank === 3) rankNum = `<span class="text-2xl w-8 text-center">#3</span>`;
 
       return `
       <div class="flex items-center justify-between p-4 bg-white rounded-lg border border-slate-200 shadow-sm mb-3">
         <div class="flex items-center gap-4">
-          ${rankBadge}
+          ${rankNum}
           <div class="flex flex-col">
             <span class="font-bold text-lg text-slate-800">${score.display_name}</span>
             <span class="text-xs text-slate-500">Player</span>
@@ -192,7 +185,6 @@ function renderScoreboard(data: GameData) {
 }
 
 function setupButtons(_data: GameData) {
-  // Back to Lobby
   document.getElementById("back-lobby-btn")?.addEventListener("click", () => {
     window.location.href = "/lobby";
   });

@@ -1,7 +1,8 @@
+// Helper script to create dummy data
+
 import dotenv from "dotenv";
 import pg from "pg";
 
-// Load environment variables from .env file
 dotenv.config();
 
 const pool = new pg.Pool({
@@ -11,11 +12,9 @@ const pool = new pg.Pool({
 async function seed() {
   const client = await pool.connect();
   try {
-    console.log("🌱 Seeding finished game...");
+    console.log("Seeding finished game...");
     await client.query("BEGIN");
 
-    // 1. Create Users (Dummy Winner and Loser)
-    // We use ON CONFLICT to avoid crashing if you run this script twice
     const userA = (
       await client.query(`
       INSERT INTO users (email, password_hash, display_name)
@@ -34,13 +33,10 @@ async function seed() {
     `)
     ).rows[0].id;
 
-    console.log(`👤 Created Users: ${userA} (Winner), ${userB} (Loser)`);
+    console.log(`Created Users: ${userA} (Winner), ${userB} (Loser)`);
 
-    // 2. Create a "Finished" Game
-    // We manually generate a Game ID (e.g., "11111111-1111-1111-1111-111111111111") so it's easy to find URL
     const gameId = "11111111-1111-1111-1111-111111111111";
 
-    // Delete existing test game if it exists to start fresh
     await client.query(`DELETE FROM games WHERE id = $1`, [gameId]);
 
     await client.query(
@@ -51,7 +47,6 @@ async function seed() {
       [gameId, userA],
     );
 
-    // 3. Add Participants
     await client.query(
       `
       INSERT INTO game_participants (game_id, user_id, is_host)
@@ -60,8 +55,6 @@ async function seed() {
       [gameId, userA, userB],
     );
 
-    // 4. Add Final Scores
-    // Winner gets 150, Loser gets 85
     await client.query(
       `
       INSERT INTO scores (game_id, user_id, value)
@@ -70,10 +63,6 @@ async function seed() {
       [gameId, userA, userB],
     );
 
-    // 5. Add Moves (History for Stats)
-    // We insert JSON payloads so your UI can calculate "Longest Word", etc.
-
-    // Move 1: Winner plays "HELLO" (25 points)
     await client.query(
       `
       INSERT INTO moves (game_id, user_id, turn_number, payload)
@@ -96,7 +85,6 @@ async function seed() {
       ],
     );
 
-    // Move 2: Loser plays "HI" (5 points)
     await client.query(
       `
       INSERT INTO moves (game_id, user_id, turn_number, payload)
@@ -113,7 +101,6 @@ async function seed() {
       ],
     );
 
-    // Move 3: Winner plays "QUARTZ" (Longest word - 50 points)
     await client.query(
       `
       INSERT INTO moves (game_id, user_id, turn_number, payload)
@@ -138,11 +125,11 @@ async function seed() {
     );
 
     await client.query("COMMIT");
-    console.log(`✅ Game Created Successfully!`);
-    console.log(`➡️  Test URL: http://localhost:3000/game/${gameId}/results`);
+    console.log(`Game Created Successfully!`);
+    console.log(`Test URL: http://localhost:3000/game/${gameId}/results`);
   } catch (e) {
     await client.query("ROLLBACK");
-    console.error("❌ Seeding Failed:", e);
+    console.error("Seeding Failed:", e);
   } finally {
     client.release();
     pool.end();

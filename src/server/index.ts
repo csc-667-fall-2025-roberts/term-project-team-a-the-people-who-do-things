@@ -57,7 +57,7 @@ const sessionMiddleware = session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    maxAge: 30 * 24 * 60 * 60 * 1000,
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -126,8 +126,8 @@ app.get("/error", (req: AppRequest, res: Response) => {
 
 app.get("/settings", requireAuth, (req: AppRequest, res: Response) => {
   const safeUser = req.users || {
-    display_name: "Ghost User", // pii-ignore-next-line
-    email: "error@example.com", // pii-ignore-next-line
+    display_name: "Ghost User",
+    email: "error@example.com",
   };
 
   res.render("screens/settings", {
@@ -148,6 +148,5 @@ registerSocketHandlers(io, sessionMiddleware);
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
-  //   console.log(`Environment: ${NODE_ENV}`);
   console.log(`http://localhost:${PORT}`);
 });

@@ -29,65 +29,63 @@ export const LETTER_VALUES: Record<string, number> = {
   Z: 10,
 };
 
-// export const LETTER_DISTRIBUTION: Record<string, number> = {
-//   A: 9,
-//   B: 2,
-//   C: 2,
-//   D: 4,
-//   E: 12,
-//   F: 2,
-//   G: 3,
-//   H: 2,
-//   I: 9,
-//   J: 1,
-//   K: 1,
-//   L: 4,
-//   M: 2,
-//   N: 6,
-//   O: 8,
-//   P: 2,
-//   Q: 1,
-//   R: 6,
-//   S: 4,
-//   T: 6,
-//   U: 4,
-//   V: 2,
-//   W: 2,
-//   X: 1,
-//   Y: 2,
-//   Z: 1,
-// };
-// --- FAST TEST MODE (Total: 30 Tiles) ---
-// 14 tiles go to players immediately.
-// 16 tiles remain in the bag (approx 2-3 turns each).
 export const LETTER_DISTRIBUTION: Record<string, number> = {
-  A: 3,
-  B: 1,
-  C: 1,
-  D: 1,
-  E: 4,
-  F: 0,
-  G: 1,
-  H: 1,
-  I: 3,
-  J: 0,
-  K: 0,
-  L: 2,
-  M: 1,
-  N: 2,
-  O: 3,
-  P: 1,
-  Q: 0,
-  R: 2,
-  S: 2,
-  T: 2,
-  U: 0,
-  V: 0,
-  W: 0,
-  X: 0,
-  Y: 0,
-  Z: 0,
+  A: 9,
+  B: 2,
+  C: 2,
+  D: 4,
+  E: 12,
+  F: 2,
+  G: 3,
+  H: 2,
+  I: 9,
+  J: 1,
+  K: 1,
+  L: 4,
+  M: 2,
+  N: 6,
+  O: 8,
+  P: 2,
+  Q: 1,
+  R: 6,
+  S: 4,
+  T: 6,
+  U: 4,
+  V: 2,
+  W: 2,
+  X: 1,
+  Y: 2,
+  Z: 1,
 };
+// --- TEST MODE (reduced tiles) ---
+// export const LETTER_DISTRIBUTION: Record<string, number> = {
+//   A: 3,
+//   B: 1,
+//   C: 1,
+//   D: 1,
+//   E: 4,
+//   F: 0,
+//   G: 1,
+//   H: 1,
+//   I: 3,
+//   J: 0,
+//   K: 0,
+//   L: 2,
+//   M: 1,
+//   N: 2,
+//   O: 3,
+//   P: 1,
+//   Q: 0,
+//   R: 2,
+//   S: 2,
+//   T: 2,
+//   U: 0,
+//   V: 0,
+//   W: 0,
+//   X: 0,
+//   Y: 0,
+//   Z: 0,
+// };
 
 export const PREMIUM_SQUARES: Record<string, [number, number][]> = {
   TW: [
@@ -99,7 +97,7 @@ export const PREMIUM_SQUARES: Record<string, [number, number][]> = {
     [14, 0],
     [14, 7],
     [14, 14],
-  ], // Triple Word
+  ],
   DW: [
     [1, 1],
     [2, 2],
@@ -117,7 +115,7 @@ export const PREMIUM_SQUARES: Record<string, [number, number][]> = {
     [12, 12],
     [11, 11],
     [10, 10],
-  ], // Double Word
+  ],
   TL: [
     [1, 5],
     [1, 9],
@@ -131,7 +129,7 @@ export const PREMIUM_SQUARES: Record<string, [number, number][]> = {
     [9, 13],
     [13, 5],
     [13, 9],
-  ], // Triple Letter
+  ],
   DL: [
     [0, 3],
     [0, 11],
@@ -157,25 +155,22 @@ export const PREMIUM_SQUARES: Record<string, [number, number][]> = {
     [12, 8],
     [14, 3],
     [14, 11],
-  ], // Double Letter
+  ],
 };
 
 // Scrabble game constants
 export const TILES_PER_PLAYER = 7;
 export const BINGO_BONUS = 50; // Bonus  points for using all 7 tiles in one turn
-export const TOTAL_TILES = 100; // Total tiles
+export const TOTAL_TILES = 100;
 
-// Helper to get total tile count
 export function getTotalTileCount(): number {
   return Object.values(LETTER_DISTRIBUTION).reduce((sum, count) => sum + count, 0);
 }
 
-// Helper to validate letter exists
 export function isValidLetter(letter: string): boolean {
   return letter in LETTER_VALUES;
 }
 
-// Premium square type checker
 export function getPremiumType(row: number, col: number): string | null {
   for (const [type, positions] of Object.entries(PREMIUM_SQUARES)) {
     if (positions.some(([r, c]) => r === row && c === col)) {

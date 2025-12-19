@@ -1,8 +1,6 @@
 function initScrabbleLogo() {
   const logoWrapper = document.getElementById("scrabble-logo-wrapper");
   const container = document.getElementById("scrabble-logo");
-  const _logoLink = document.getElementById("scrabble-logo-link");
-  //TODO use _logoLink to navigate on click Unused constant logoLink
   if (!logoWrapper || !container) {
     console.error("Scrabble logo elements not found");
     return;
@@ -30,7 +28,6 @@ function initScrabbleLogo() {
       tile.setAttribute("draggable", "true");
       tile.style.opacity = "0.7";
       tile.style.transform = "scale(1.1)";
-      //console.log("Tile is now draggable:", tile);
     }, PRESS_DURATION);
   });
 
@@ -95,7 +92,6 @@ function initScrabbleLogo() {
         }
       }, 0);
 
-      console.log("Drag started:", tile);
       return true;
     },
     true,
@@ -135,17 +131,12 @@ function initScrabbleLogo() {
     e.preventDefault();
     e.stopPropagation();
 
-    console.log("DROP EVENT FIRED!", { draggedTile, target: e.target });
-
     if (!draggedTile) {
-      console.log("No dragged tile in drop handler");
       return;
     }
 
     const target = e.target as HTMLElement;
     const targetTile = target.closest(".scrabble-tile") as HTMLElement;
-
-    console.log("Drop target:", { targetTile, target, draggedTile });
 
     if (targetTile && targetTile !== draggedTile) {
       const parent = draggedTile.parentNode;
@@ -157,8 +148,6 @@ function initScrabbleLogo() {
       const draggedIndex = Array.from(parent.children).indexOf(draggedTile);
       const targetIndex = Array.from(parent.children).indexOf(targetTile);
 
-      console.log("Swapping tiles:", { draggedIndex, targetIndex });
-
       if (draggedIndex < targetIndex) {
         parent.insertBefore(targetTile, draggedTile);
         parent.insertBefore(draggedTile, targetTile.nextSibling);
@@ -166,8 +155,6 @@ function initScrabbleLogo() {
         parent.insertBefore(draggedTile, targetTile);
         parent.insertBefore(targetTile, draggedTile.nextSibling);
       }
-
-      console.log("Tiles swapped successfully!");
     } else if (!targetTile) {
       const tiles = Array.from(container.children) as HTMLElement[];
       const dropX = e.clientX;
@@ -191,7 +178,6 @@ function initScrabbleLogo() {
         const parent = draggedTile.parentNode;
         if (parent) {
           parent.insertBefore(draggedTile, closestTile);
-          console.log("Tile moved to closest position");
         }
       }
     }
@@ -213,7 +199,6 @@ function initScrabbleLogo() {
     }
   });
 
-  // Handle drag end
   container.addEventListener("dragend", () => {
     // Clear all highlights
     container.querySelectorAll(".scrabble-tile").forEach((t) => {
@@ -228,10 +213,8 @@ function initScrabbleLogo() {
       draggedTile.setAttribute("draggable", "false");
     }
     draggedTile = null;
-    console.log("Drag ended");
   });
 
-  // Handle drag leave
   container.addEventListener("dragleave", (e: DragEvent) => {
     const target = e.target as HTMLElement;
     const targetTile = target.closest(".scrabble-tile") as HTMLElement;

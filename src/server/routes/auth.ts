@@ -16,22 +16,17 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
   const { email, password, displayName } = req.body;
   const r = req as AppRequest;
 
-  //console.log("Signup attempt:", { email, displayName });
-
   try {
     if (!email || !password || !displayName) {
-      //console.log("Missing fields");
       return res.status(400).json({ error: "All fields are required" });
     }
 
     if (typeof password !== "string" || password.length < 6) {
-      //console.log("Password too short");
       return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    //console.log("Inserting user into database...");
     const result = await pool.query(
       `INSERT INTO users (email, password_hash, display_name)
        VALUES ($1, $2, $3)
@@ -142,25 +137,20 @@ router.get("/me", async (req: express.Request, res: express.Response) => {
 
 export default router;
 
-router.post("/signup", async (req: express.Request, res: express.Response) => {
+router.post("/signup", async (req: AppRequest, res: express.Response) => {
   const { email, password, displayName } = req.body;
-
-  //console.log("Signup attempt:", { email, displayName });
 
   try {
     if (!email || !password || !displayName) {
-      //console.log("Missing fields");
       return res.status(400).json({ error: "All fields are required" });
     }
 
     if (password.length < 6) {
-      //console.log("Password too short");
       return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    //console.log("Inserting user into database...");
     const result = await pool.query(
       `INSERT INTO users (email, password_hash, display_name)
        VALUES ($1, $2, $3)
@@ -168,7 +158,6 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
       [email, passwordHash, displayName],
     );
 
-    //console.log("User created:", result.rows[0]);
     const user = result.rows[0];
     if (req.session) {
       req.session.userId = user.id;
@@ -176,7 +165,6 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
 
     res.json({ success: true, user });
   } catch (error) {
-    // FIX: Safely cast error to our interface instead of 'any'
     const dbError = error as DbError;
     if (dbError.code === "23505") {
       return res.status(400).json({ error: "Email already exists" });
@@ -186,7 +174,7 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
   }
 });
 
-router.post("/login", async (req: express.Request, res: express.Response) => {
+router.post("/login", async (req: AppRequest, res: express.Response) => {
   const { email, password } = req.body;
 
   try {
@@ -224,8 +212,8 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
   }
 });
 
-router.post("/logout", (req: express.Request, res: express.Response) => {
-  req.session.destroy((err) => {
+router.post("/logout", (req: AppRequest, res: express.Response) => {
+  req.session!.destroy((err) => {
     if (err) {
       return res.status(500).json({ error: "Failed to logout" });
     }
@@ -233,14 +221,14 @@ router.post("/logout", (req: express.Request, res: express.Response) => {
   });
 });
 
-router.get("/me", async (req: express.Request, res: express.Response) => {
-  if (!req.session.userId) {
+router.get("/me", async (req: AppRequest, res: express.Response) => {
+  if (!req.session!.userId) {
     return res.status(401).json({ error: "Not authenticated" });
   }
 
   try {
     const result = await pool.query("SELECT id, email, display_name FROM users WHERE id = $1", [
-      req.session.userId,
+      req.session!.userId,
     ]);
 
     if (result.rows.length === 0) {

@@ -59,12 +59,10 @@ export class ScrabbleGame {
     settings: Record<string, unknown> = {},
   ): ScrabbleGame {
     const game = new ScrabbleGame(gameId, players, state.board, settings);
-    // Override with restored state
     game.tileBag = state.tileBag;
     game.playerHands = state.playerHands;
     game.scores = state.scores;
 
-    // Set current player index based on currentPlayerId
     if (state.currentPlayerId) {
       const idx = players.indexOf(state.currentPlayerId);
       game.currentPlayerIndex = idx >= 0 ? idx : 0;
@@ -387,8 +385,6 @@ export class ScrabbleGame {
   private applyEndGameScoring(winningPlayerId: string): void {
     let totalDeducted = 0;
 
-    // Classic Scrabble rule: everyone loses points for leftover tiles,
-    // and the player who went out gets that total as a bonus.
     for (const playerId of this.players) {
       if (playerId === winningPlayerId) continue;
 
@@ -398,7 +394,6 @@ export class ScrabbleGame {
         handValue += LETTER_VALUES[letter] || 0;
       }
 
-      // Deduct from their score
       this.scores[playerId] = (this.scores[playerId] || 0) - handValue;
       totalDeducted += handValue;
 
@@ -407,7 +402,6 @@ export class ScrabbleGame {
       );
     }
 
-    // Winner gets the total deducted points as bonus
     this.scores[winningPlayerId] = (this.scores[winningPlayerId] || 0) + totalDeducted;
     console.log(`[End Game] ${winningPlayerId} gains ${totalDeducted} bonus points for going out!`);
   }

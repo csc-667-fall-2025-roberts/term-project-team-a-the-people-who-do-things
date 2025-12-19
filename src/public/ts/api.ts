@@ -81,7 +81,6 @@ export const api = {
       if (before) params.set("before", before);
       return api.request(`/api/chat/${gameId}?${params}`);
     },
-    //TODO  Unused function sendMessage
     sendMessage(gameId: string) {
       return api.request(`/api/chat/${gameId}`, {
         method: "POST",
