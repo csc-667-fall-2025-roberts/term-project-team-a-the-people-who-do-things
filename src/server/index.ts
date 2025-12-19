@@ -205,7 +205,6 @@ io.on("connection", (socket: Socket) => {
     //console.log("User left game lobby:", userId, "gameId:", gameId);
 
     try {
-
       const gameResult = await pool.query("SELECT status FROM games WHERE id = $1", [gameId]);
 
       if (gameResult.rows.length === 0 || gameResult.rows[0].status !== "waiting") {
@@ -222,16 +221,16 @@ io.on("connection", (socket: Socket) => {
       // Check if the leaving user is the host
       const participantResult = await pool.query(
         "SELECT is_host FROM game_participants WHERE game_id = $1 AND user_id = $2",
-        [gameId, userId]
+        [gameId, userId],
       );
 
       const isHost = participantResult.rows.length > 0 && participantResult.rows[0].is_host;
 
       // 3. Remove the player
-      await pool.query(
-        "DELETE FROM game_participants WHERE game_id = $1 AND user_id = $2",
-        [gameId, userId]
-      );
+      await pool.query("DELETE FROM game_participants WHERE game_id = $1 AND user_id = $2", [
+        gameId,
+        userId,
+      ]);
       console.log("Removed player from game_participants:", userId, "gameId:", gameId);
 
       // 4. If they were host, promote the next oldest player
@@ -239,7 +238,7 @@ io.on("connection", (socket: Socket) => {
         // Find the oldest remaining player
         const nextHostResult = await pool.query(
           "SELECT user_id FROM game_participants WHERE game_id = $1 ORDER BY joined_at ASC LIMIT 1",
-          [gameId]
+          [gameId],
         );
 
         if (nextHostResult.rows.length > 0) {
@@ -249,14 +248,11 @@ io.on("connection", (socket: Socket) => {
           // Set is_host = true for the new person
           await pool.query(
             "UPDATE game_participants SET is_host = true WHERE game_id = $1 AND user_id = $2",
-            [gameId, newHostId]
+            [gameId, newHostId],
           );
 
           // Update the game's creator (so the lobby logic recognizes them as owner)
-          await pool.query(
-            "UPDATE games SET created_by = $1 WHERE id = $2",
-            [newHostId, gameId]
-          );
+          await pool.query("UPDATE games SET created_by = $1 WHERE id = $2", [newHostId, gameId]);
         }
       }
 
@@ -363,15 +359,18 @@ io.on("connection", (socket: Socket) => {
           }
 
           // 7. Restore the game
-          game = gameManager.restoreGame(gameId, players, {
-            board: boardState,
-            tileBag,
-            playerHands,
-            scores,
-            currentPlayerId,
-          },
-          settings
-        );
+          game = gameManager.restoreGame(
+            gameId,
+            players,
+            {
+              board: boardState,
+              tileBag,
+              playerHands,
+              scores,
+              currentPlayerId,
+            },
+            settings,
+          );
         }
 
         // Send current game state to the joining player

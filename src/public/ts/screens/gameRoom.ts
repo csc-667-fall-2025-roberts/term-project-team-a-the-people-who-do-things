@@ -360,7 +360,7 @@ const handlers = {
   gameState: (state: unknown) => {
     const typedState = state as GameStateResponse;
     if (typedState.settings && (typedState.settings as any).timeLimit) {
-       turnDuration = Number((typedState.settings as any).timeLimit);
+      turnDuration = Number((typedState.settings as any).timeLimit);
     }
     board.updateBoard(typedState.board);
     board.setHand(typedState.hand);

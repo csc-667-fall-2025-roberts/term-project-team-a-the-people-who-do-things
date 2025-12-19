@@ -43,7 +43,12 @@ export class ScrabbleGame {
   consecutivePasses: number;
   settings: Record<string, unknown>;
 
-  constructor(gameId: string, players: string[], board: (string | null)[][] | null = null, settings: Record<string, unknown> = {}) {
+  constructor(
+    gameId: string,
+    players: string[],
+    board: (string | null)[][] | null = null,
+    settings: Record<string, unknown> = {},
+  ) {
     this.gameId = gameId;
     this.board = board ?? this.createEmptyBoard();
     this.tileBag = this.initializeTileBag();
@@ -469,7 +474,7 @@ export class ScrabbleGame {
     board: (string | null)[][];
     currentPlayer: string;
     scores: Record<string, number>;
-    tilesRemaining: number,
+    tilesRemaining: number;
     settings: Record<string, unknown>;
   } {
     return {
