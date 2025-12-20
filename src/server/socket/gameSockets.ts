@@ -157,12 +157,20 @@ export function registerGameSockets(io: Server, socket: Socket, userId: string) 
       socket.emit("new-tiles", { tiles: game.getPlayerHand(userId) });
 
       try {
+        const turnQuery = await pool.query(
+          `SELECT COALESCE(MAX(turn_number), -1) + 1 as next_turn 
+            FROM moves 
+            WHERE game_id = $1`,
+          [gameId],
+        );
+        const nextTurnNumber = turnQuery.rows[0].next_turn;
+
         await pool.query(
           "INSERT INTO moves (game_id, user_id, turn_number, payload) VALUES ($1, $2, $3, $4)",
           [
             gameId,
             userId,
-            game.currentPlayerIndex,
+            nextTurnNumber,
             JSON.stringify({ tiles, words, score: calculatedScore }),
           ],
         );

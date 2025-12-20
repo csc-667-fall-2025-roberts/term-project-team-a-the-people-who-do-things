@@ -331,29 +331,41 @@ export class ScrabbleGame {
     const result: FormedWord[] = [];
     if (!tiles || tiles.length === 0) return result;
 
+    const processedWords = new Set<string>();
+
     const rows = new Set(tiles.map((t) => t.row));
     const horizontal = rows.size === 1;
+
+    // Helper to avoid duplication bug
+    const addWordIfNew = (wordObj: FormedWord | null, direction: "H" | "V") => {
+      if (!wordObj || wordObj.word.length <= 1) return;
+
+      const startCell = wordObj.cells[0];
+      const uniqueId = `${startCell.row},${startCell.col},${direction}`;
+
+      if (!processedWords.has(uniqueId)) {
+        processedWords.add(uniqueId);
+        result.push(wordObj);
+      }
+    };
 
     if (horizontal) {
       const row = tiles[0].row;
       const main = this.scanMainHorizontal(tiles, row);
-      if (main.word.length > 1) {
-        result.push(main);
-      }
+      addWordIfNew(main, "H");
+
       for (const t of tiles) {
         const cross = this.buildVerticalCross(t);
-        if (cross && cross.word.length > 1) result.push(cross);
-
-        if (main.word.length > 1) {
-          result.push(main);
-        }
+        addWordIfNew(cross, "V");
       }
     } else {
       const col = tiles[0].col;
-      result.push(this.scanMainVertical(tiles, col));
+      const main = this.scanMainVertical(tiles, col);
+      addWordIfNew(main, "V");
+
       for (const t of tiles) {
         const cross = this.buildHorizontalCross(t);
-        if (cross && cross.word.length > 1) result.push(cross);
+        addWordIfNew(cross, "H");
       }
     }
 
