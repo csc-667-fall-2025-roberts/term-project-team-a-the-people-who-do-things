@@ -336,10 +336,17 @@ export class ScrabbleGame {
 
     if (horizontal) {
       const row = tiles[0].row;
-      result.push(this.scanMainHorizontal(tiles, row));
+      const main = this.scanMainHorizontal(tiles, row);
+      if (main.word.length > 1) {
+        result.push(main);
+      }
       for (const t of tiles) {
         const cross = this.buildVerticalCross(t);
         if (cross && cross.word.length > 1) result.push(cross);
+
+        if (main.word.length > 1) {
+          result.push(main);
+        }
       }
     } else {
       const col = tiles[0].col;
