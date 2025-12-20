@@ -137,27 +137,38 @@ function alert(message: string) {
   showNotification(message, "error");
 }
 
-document.getElementById("submit-move-btn")?.addEventListener("click", () => {
-  const tiles = board.getSelectedTiles() as SelectedTile[];
+const submitBtn = document.getElementById("submit-move-btn") as HTMLButtonElement | null;
 
-  tiles.sort((a, b) => {
-    if (a.row === b.row) return a.col - b.col;
-    return a.row - b.row;
-  });
+if (submitBtn) {
+  submitBtn.onclick = () => {
+    if (submitBtn.disabled) return;
+    submitBtn.disabled = true;
 
-  const words = [tiles.map((tile) => tile.letter).join("")];
-  const score = tiles.reduce(
-    (sum, tile) => sum + (ScrabbleConstants.LETTER_VALUES[tile.letter] || 0),
-    0,
-  );
+    const tiles = board.getSelectedTiles() as SelectedTile[];
 
-  socket.emit("make-move", {
-    gameId,
-    tiles,
-    words,
-    score,
-  });
-});
+    tiles.sort((a, b) => {
+      if (a.row === b.row) return a.col - b.col;
+      return a.row - b.row;
+    });
+
+    const words = [tiles.map((tile) => tile.letter).join("")];
+    const score = tiles.reduce(
+      (sum, tile) => sum + (ScrabbleConstants.LETTER_VALUES[tile.letter] || 0),
+      0,
+    );
+
+    socket.emit("make-move", {
+      gameId,
+      tiles,
+      words,
+      score,
+    });
+
+    setTimeout(() => {
+      submitBtn.disabled = false;
+    }, 2000);
+  };
+}
 
 document.getElementById("pass-btn")?.addEventListener("click", () => {
   if (confirm("Are you sure you want to pass your turn?")) {
