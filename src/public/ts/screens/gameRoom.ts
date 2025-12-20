@@ -447,6 +447,20 @@ const handlers = {
   },
 };
 
+function cleanup() {
+  socket.off("game-state");
+  socket.off("move-made");
+  socket.off("new-tiles");
+  socket.off("tiles-exchanged");
+  socket.off("player-joined");
+  socket.off("turn-passed");
+  socket.off("game-over");
+  socket.off("error");
+  socket.off("new-message");
+}
+
+cleanup();
+
 socket.on("game-state", handlers.gameState);
 socket.on("move-made", handlers.moveMade);
 socket.on("new-tiles", handlers.newTiles);
@@ -459,14 +473,3 @@ socket.on("error", handlers.error);
 socket.on("new-message", handlers.newMessage);
 
 window.addEventListener("beforeunload", cleanup);
-function cleanup() {
-  socket.off("game-state", handlers.gameState);
-  socket.off("move-made", handlers.moveMade);
-  socket.off("new-tiles", handlers.newTiles);
-  socket.off("tiles-exchanged", handlers.tilesExchanged);
-  socket.off("player-joined-lobby", handlers.playerJoined);
-  socket.off("turn-passed", handlers.turnPassed);
-  socket.off("game-over", handlers.gameOver);
-  socket.off("error", handlers.error);
-  socket.off("new-message", handlers.newMessage);
-}

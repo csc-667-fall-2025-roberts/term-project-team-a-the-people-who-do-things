@@ -120,7 +120,6 @@ if (!gameId) {
 
       renderPlayers(participants, game.max_players);
       updateStartButtonVisibility();
-      initLobbyChat();
 
       socket.emit("join-game-lobby", { gameId });
     } catch (error) {
@@ -264,7 +263,7 @@ if (!gameId) {
     }
   });
 
-  socket.on("player-joined-lobby", (_data: PlayerJoinedLobbyData) => {
+  socket.on("player-joined", (_data: PlayerJoinedLobbyData) => {
     void loadGameLobbyData();
   });
   socket.on("player-left-lobby", (_data: PlayerLeftLobbyData) => {
@@ -279,9 +278,11 @@ if (!gameId) {
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
       void loadGameLobbyData();
+      initLobbyChat();
     });
   } else {
     void loadGameLobbyData();
+    initLobbyChat();
   }
 
   window.addEventListener("beforeunload", () => {
