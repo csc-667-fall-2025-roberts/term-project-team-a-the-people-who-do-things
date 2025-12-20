@@ -24,7 +24,7 @@ export function registerLobbySockets(
 
     socket.join(gameId);
 
-    socket.to(gameId).emit("player-joined-lobby", {
+    socket.to(gameId).emit("player-joined", {
       userId,
       displayName,
       isHost: false,

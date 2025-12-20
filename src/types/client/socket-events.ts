@@ -177,7 +177,7 @@ export type SocketEvents = {
   "new-message": NewMessageResponse;
   error: ErrorResponse;
   "game-summary": GameSummaryResponse;
-  "player-joined-lobby": PlayerJoinedLobbyData;
+  "player-joined": PlayerJoinedLobbyData;
   "player-left-lobby": PlayerLeftLobbyData;
   "game-started": GameStartedData;
 };
